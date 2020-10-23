@@ -1,5 +1,7 @@
+PYTHON = python3
+
 all :
-	python read_json.py -o output.txt sample.json
+	$(PYTHON) read_json.py -o output.txt sample.json
 
 clean :
 	rm -f output.txt
