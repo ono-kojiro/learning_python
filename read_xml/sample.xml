@@ -1,27 +1,15 @@
-<?xml version="1.0" encoding="utf-8" ?>
-
-<!-- this is comment -->
-
-<?hoge pi event ?>
+<?xml version="1.0" encoding="utf-8"?>
 
 <records>
 	<record>
+		<name>hello</name>
+		<value>world</value>
+		<verdict>passed</verdict>
+	</record>
+	<record>
 		<name>hoge</name>
-		<value>1</value>
+		<value>foo</value>
+		<verdict>failed</verdict>
 	</record>
-	<record>
-		<name>foo</name>
-		<value>2</value>
-	</record>
-	<record>
-		<name>bar</name>
-		<value>3</value>
-	</record>
-
-	<record xmlns="http://example.com">
-		<name>nstest</name>
-		<value>4</value>
-	</record>
-
 </records>
 

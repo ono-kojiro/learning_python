@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <xsd:complexType name="recordType">
+	  <xsd:sequence>
+	    <xsd:element name="name" type="xsd:string"/>
+	    <xsd:element name="value" type="xsd:string"/>
+		<xsd:element ref="verdict"/>
+	  </xsd:sequence>
+    </xsd:complexType>
+</xsd:schema>
+

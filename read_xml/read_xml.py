@@ -1,103 +1,118 @@
-#!/usr/bin/python3
-
 import sys
-
-import getopt
-import json
-
+import os
 import re
 
+import getopt
+
 from lxml import etree
-from io import StringIO, BytesIO
 
-def usage():
-    print("Usage : {0}".format(sys.argv[0]))
+def read_schema(filepath):
+    fp = open(filepath, mode='r', encoding='utf-8')
+    lines = fp.read()
+    fp.close()
 
-def parse_events(parser) :
-    for action, elem in parser.read_events() :
-        if action in ('start', 'end') :
-            sys.stdout.write("action '{0}', ".format(action))
-            sys.stdout.write("tag '{0}', ".format(elem.tag))
-            sys.stdout.write("text '{0}'".format(elem.text))
-            print("")
-        elif action == 'start-ns':
-            print('{0} : {1}'.format(action, elem))
-        else:
-            print(action)
+    doc = etree.parse(filepath)
+    doc.xinclude()
+    schema = etree.XMLSchema(doc)
+    return schema
 
-def main():
+def print_events(parser):
+    for act, elem in parser.read_events():
+        print('{0} : {1}'.format(act, elem.tag))
+
+def main() :
     ret = 0
 
     try:
-        opts, args = getopt.getopt(
-            sys.argv[1:], "hvo:", ["help", "version", "output="])
+        options, args = getopt.getopt(
+            sys.argv[1:],
+            "hvo:s:",
+            [
+                "help",
+                "version",
+                "schema=",
+                "output="
+            ]
+        )
     except getopt.GetoptError as err:
         print(str(err))
         sys.exit(2)
-	
+    
     output = None
-	
-    for o, a in opts:
-        if o == "-v":
+    schema_xml = None
+    
+    for option, arg in options:
+        if option in ("-v", "-h", "--help"):
             usage()
             sys.exit(0)
-        elif o in ("-h", "--help"):
-            usage()
-            sys.exit(0)
-        elif o in ("-o", "--output"):
-            output = a
+        elif option in ("-o", "--output"):
+            output = arg
+        elif option in ("-s", "--schema"):
+            schema_xml = arg
         else:
             assert False, "unknown option"
-	
+    
     if output == None :
         print("no output option")
         ret += 1
-	
+
+    if schema_xml == None:
+        print("no schema option")
+        ret += 1
+
     if ret != 0:
         sys.exit(1)
-    
 
-    fp = open(output, mode='w', encoding='utf-8')
+    #xmlfiles = []
+    #xsdfiles = []
 
-    event_types = (
-        "start", "end", "start-ns", "end-ns",
-        "comment", "pi"
-    )
+    #for filepath in args :
+    #    ext = os.path.splitext(filepath)[1]
+    #    if ext == '.xsd' :
+    #        xsdfiles.append(filepath)
+    #    elif ext == '.xml' :
+    #        xmlfiles.append(filepath)
 
-    for input in args:
-        print("arg : {0}".format(input))
+    #lines = ''
+    #for filepath in xsdfiles :
+    #    print('parse {0}'.format(filepath))
+    #    fp = open(filepath, mode='r', encoding='utf-8')
+    #    lines += fp.read()
+    #    fp.close()
 
+    #print(lines.encode('utf-8'))
+    #doc = etree.fromstring(lines)
+    #doc.xinclude()
+    #schema = etree.XMLSchema(doc)
+
+    doc = etree.parse(schema_xml)
+    doc.xinclude()
+    schema = etree.XMLSchema(doc)
+
+    for filepath in args :
+        fp = open(filepath, mode='r', encoding='utf-8')
         
-        fp_in = open(input, mode='r', encoding='utf-8')
-       
         parser = etree.XMLPullParser(
-            events=event_types
+            events=('start', 'end')
         )
 
         while 1:
-            line = fp_in.readline()
+            line = fp.readline()
             if not line :
                 break
 
             line = re.sub(r'\r?\n?$', '', line)
-            print('feed : {0}'.format(line))
-
             parser.feed(line)
-            parse_events(parser)
+            print_events(parser)
 
-        parse_events(parser)
+        fp.close()
+        root = parser.close()
+        print(etree.tostring(root))
+        ret = schema.assertValid(root)
+        print(ret)
+    
 
-        #print(
-        #    json.dumps(
-        #        data,
-	#        indent=4,
-        #        ensure_ascii=False
-        #    )
-        #)
-        
-        fp_in.close()
-	
-    fp.close()
-	
-if __name__ == "__main__":
-	main()
+
+if __name__ == "__main__" :
+    main()
+
