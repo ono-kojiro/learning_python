@@ -1,19 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include
-  	schemaLocation="verdict.xsd"/>
-
-  <xsd:include schemaLocation="record.xsd"/>
+  <xsd:include schemaLocation="verdict.xsd"/>
   <xsd:include schemaLocation="date.xsd"/>
-
-  <xsd:element name="records">
-    <xsd:complexType>
-	  <xsd:sequence>
-	    <xsd:element name="record" type="recordType" maxOccurs="unbounded"/>
-	  </xsd:sequence>
-    </xsd:complexType>
-  </xsd:element>
-
+  <xsd:include schemaLocation="item.xsd"/>
+  <xsd:include schemaLocation="record.xsd"/>
 </xsd:schema>
 
