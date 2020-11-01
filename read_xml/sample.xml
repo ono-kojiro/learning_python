@@ -5,11 +5,13 @@
 		<name>hello</name>
 		<value>world</value>
 		<verdict>passed</verdict>
+		<date>2020-11-08</date>
 	</record>
 	<record>
 		<name>hoge</name>
 		<value>foo</value>
 		<verdict>failed</verdict>
+		<!-- <date>2020-11-08</date> -->
 	</record>
 </records>
 

@@ -5,6 +5,7 @@
   	schemaLocation="verdict.xsd"/>
 
   <xsd:include schemaLocation="record.xsd"/>
+  <xsd:include schemaLocation="date.xsd"/>
 
   <xsd:element name="records">
     <xsd:complexType>

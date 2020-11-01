@@ -6,6 +6,7 @@
 	    <xsd:element name="name" type="xsd:string"/>
 	    <xsd:element name="value" type="xsd:string"/>
 		<xsd:element ref="verdict"/>
+		<xsd:element ref="date" minOccurs="0"/>
 	  </xsd:sequence>
     </xsd:complexType>
 </xsd:schema>
