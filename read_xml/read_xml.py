@@ -18,7 +18,8 @@ def read_schema(filepath):
 
 def print_events(parser):
     for act, elem in parser.read_events():
-        print('{0} : {1}'.format(act, elem.tag))
+        #print('{0} : {1}'.format(act, elem.tag))
+        pass
 
 def main() :
     ret = 0
@@ -102,12 +103,19 @@ def main() :
                 break
 
             line = re.sub(r'\r?\n?$', '', line)
+            line = re.sub(r'\t', '', line)
             parser.feed(line)
             print_events(parser)
 
         fp.close()
         root = parser.close()
-        print(etree.tostring(root))
+        print(
+            etree.tostring(
+                root,
+                pretty_print=True,
+                encoding='unicode'
+            )
+        )
         ret = schema.assertValid(root)
         print(ret)
     

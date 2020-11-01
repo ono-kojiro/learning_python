@@ -2,16 +2,25 @@
 
 <records>
 	<record>
+		<id>1</id>
 		<name>hello</name>
 		<value>world</value>
 		<verdict>passed</verdict>
 		<date>2020-11-08</date>
 	</record>
 	<record>
+		<id>2</id>
 		<name>hoge</name>
 		<value>foo</value>
 		<verdict>failed</verdict>
 		<!-- <date>2020-11-08</date> -->
+	</record>
+	<record>
+		<id>3</id>
+		<verdict>failed</verdict>
+		<name>hoge</name>
+		<value>foo</value>
+		<comment>This is comment</comment>
 	</record>
 </records>
 

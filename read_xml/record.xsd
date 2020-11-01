@@ -2,12 +2,17 @@
 
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
     <xsd:complexType name="recordType">
-	  <xsd:sequence>
+	  <xsd:all>
+	    <!-- mandatory -->
+	    <xsd:element name="id" type="xsd:string"/>
 	    <xsd:element name="name" type="xsd:string"/>
 	    <xsd:element name="value" type="xsd:string"/>
-		<xsd:element ref="verdict"/>
+
+		<!-- optional -->
+		<xsd:element ref="verdict" minOccurs="0"/>
 		<xsd:element ref="date" minOccurs="0"/>
-	  </xsd:sequence>
+		<xsd:element name="comment" minOccurs="0"/>
+	  </xsd:all>
     </xsd:complexType>
   
   <xsd:element name="records">
