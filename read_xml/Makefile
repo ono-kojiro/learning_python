@@ -6,4 +6,6 @@ all :
 		-s schema.xsd \
 		sample.xml
 
+clean :
+	rm -f output.txt
 
