@@ -11,6 +11,10 @@ import re
 import json
 from pprint import pprint
 
+from dicttoxml import dicttoxml
+#from bs4 import BeautifulSoup
+from xml.dom.minidom import parseString
+
 STATE_INIT = 0
 STATE_LABEL = 1
 STATE_RECORD = 2
@@ -145,15 +149,26 @@ def main():
     fp_in.close()
 
 
-  fp_out.write(
-    json.dumps(
-      records,
-      indent=2,
-      ensure_ascii=False
-    )
-  )
+  #fp_out.write(
+  #  json.dumps(
+  #    records,
+  #    indent=2,
+  #    ensure_ascii=False
+  #  )
+  #)
 
-  fp_out.write('\n')
+  # convert dict to xml
+  xml_bin = dicttoxml(records, attr_type=False, custom_root='items')
+  xml = xml_bin.decode('utf-8')
+
+  dom = parseString(xml)
+  xml = dom.toprettyxml(indent='  ')
+
+  fp_out.write(xml)
+  
+  #soup = BeautifulSoup(xml_utf8, "xml")
+  #fp_out.write(soup.prettify())
+
 
   fp_out.close()
 
