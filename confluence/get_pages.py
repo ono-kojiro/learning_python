@@ -18,12 +18,14 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 def usage():
     print("Usage : {0}".format(sys.argv[0]))
 
-def get_children(confluence, page_id, depth):
+def get_children(confluence, page_id, depth, count):
   page = confluence.get_page_by_id(page_id,
       expand='body.storage', status=None, version=None)
   
   indent = ''.ljust(depth)
-  print('{0}id {1}, title {2}'.format(indent, page['id'], page['title']))
+  print('{0}id {1}, title {2}'.format(indent, page['id'], page['title']),
+    file=sys.stderr
+  )
  
   value = page.get('body').get('storage').get('value')
 
@@ -31,19 +33,24 @@ def get_children(confluence, page_id, depth):
 
   pdf_b_str = confluence.export_page(page_id)
 
-  output = '{0}.pdf'.format(page['title'])
+  output = '{0:0=2}-{1}.pdf'.format(count, page['title'])
+  output = re.sub(r"[' \"]", '_', output)
+  
+  print('export {0}'.format(output), file=sys.stderr)
+
   fp = open(output, mode='wb')
   # errors='ignore')
   fp.write(pdf_b_str)
   fp.close()
+  count += 1
 
   child_pages = confluence.get_page_child_by_type(page_id,
     type='page', start=None, limit=None)
 
   for page in child_pages :
-    get_children(confluence, page['id'], depth + 1)
+    count = get_children(confluence, page['id'], depth + 1, count)
 
-  pass
+  return count
 
 def main():
     ret = 0
@@ -116,10 +123,10 @@ def main():
     #confluence.get_page_by_id(confluence, page_id,
     #page = confluence.get_page_by_id(page_id, expand=None, status=None, version=None)
 
-    #depth = 0
+    depth = 0
     #print('{0}id {1}, title {2}'.format(indent, page['id'], page['title']))
-    
-    get_children(confluence, page_id, 0)
+    count = 0
+    get_children(confluence, page_id, depth, count)
 
     #child_pages = confluence.get_page_child_by_type(page_id,
     #  type='page', start=None, limit=None)
