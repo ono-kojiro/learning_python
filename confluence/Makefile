@@ -4,7 +4,7 @@ URL = https://cwiki.apache.org/confluence/
 all : page
 
 page :
-	python3 get_page.py -u $(URL) -o page.json
+	python3 get_pages.py -u $(URL) -o pages.json
 
 spaces :
 	python3 get_spaces.py -u $(URL) -o output.json
