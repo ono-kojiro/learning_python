@@ -29,18 +29,27 @@ def get_children(confluence, page_id, depth, count):
  
   value = page.get('body').get('storage').get('value')
 
+  ext = '.doc'
+  #ext = '.pdf'
   #pprint(value)
 
-  pdf_b_str = confluence.export_page(page_id)
+  if ext == '.pdf' :
+    b_str = confluence.export_page(page_id)
+  elif ext == '.doc' :
+    b_str = confluence.get_page_as_word(page_id)
+  else :
+    print('invalid extention, {0}'.format(ext))
+    sys.exit(1)
 
-  output = '{0:0=2}-{1}.pdf'.format(count, page['title'])
+  
+  output = '{0:0=2}-{1}{2}'.format(count, page['title'], ext)
+
   output = re.sub(r"[' \"]", '_', output)
   
   print('export {0}'.format(output), file=sys.stderr)
 
   fp = open(output, mode='wb')
-  # errors='ignore')
-  fp.write(pdf_b_str)
+  fp.write(b_str)
   fp.close()
   count += 1
 

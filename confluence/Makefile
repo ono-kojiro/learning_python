@@ -14,7 +14,7 @@ spaces :
 	python3 get_spaces.py -u $(URL) -o output.json
 
 clean :
-	rm -f *.pdf
+	rm -f *.pdf *.docx
 
 test :
 	@echo $(PDFS)
