@@ -58,17 +58,27 @@ def main():
 		filename, ext = os.path.splitext(filepath)
 		
 		if ext == ".xls" :
-			book = xlrd.open_workbook(filepath)
+			book = xlrd.open_workbook(filepath, formatting_info=True)
 
 			pprint(book)
 			for sheet in book.sheets() :
+				pprint(sheet)
+				
 				fp.write("#   sheet : {0}\n".format(sheet.name))
 				pprint(sheet.colinfo_map)
 				pprint(sheet.rowinfo_map)
 				
 				for row in range(sheet.nrows) :
+					if row in sheet.rowinfo_map:
+						if sheet.rowinfo_map[row].hidden == 1:
+							continue
+					
 					fp.write(" ")
 					for col in range(sheet.ncols) :
+						if col in sheet.colinfo_map:
+							if sheet.colinfo_map[col].hidden == 1:
+								continue
+							
 						cell = sheet.cell(row, col)
 						val  = cell.value
 						if col != 0 :

@@ -1,4 +1,4 @@
-PYTHON = python3
+PYTHON = PYTHONIOENCODING=utf-8 python3
 
 XLSFILES = $(wildcard *.xls)
 XLSXFILES = $(wildcard *.xlsx)
