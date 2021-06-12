@@ -1,0 +1,5 @@
+host ubuntu 18.04    fio-3.1
+kvm  archlinux       fio-3.26
+virtualbox archlinux fio-3.26
+
+
