@@ -29,8 +29,8 @@ def get_children(confluence, page_id, depth, count):
  
   value = page.get('body').get('storage').get('value')
 
-  ext = '.doc'
-  #ext = '.pdf'
+  #ext = '.doc'
+  ext = '.pdf'
   #pprint(value)
 
   if ext == '.pdf' :
