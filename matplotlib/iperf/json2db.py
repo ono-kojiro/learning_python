@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 
 import sys
+import os
+import re
 
 import getopt
 import json
@@ -116,7 +118,7 @@ def main():
 	#else :
 	#	fp = open(output, mode='w', encoding='utf-8')
 	conn = sqlite3.connect(output)
-	table = 'fio_table'
+	table = 'iperf_table'
 	create_table(conn, table)
 
 	blksizes = {
@@ -145,9 +147,17 @@ def main():
 		bytes_per_second = bps / 8.0
 		byte_rate = format_bytes(bytes_per_second)
 
+		basename = os.path.basename(filepath)
+		m = re.search(r'(\w+)-(\w+).json', basename)
+		if m :
+			env = m.group(1)
+		else :
+			print('invalid basename, {0}'.format(basename))
+			sys.exit(1)
+
 		record = {
 			'name' : blksize,
-			'env'  : 'host',
+			'env'  : env,
 			'bps'  : int(bps),
 		}
 		insert_record(conn, table, record)

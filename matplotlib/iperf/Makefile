@@ -1,4 +1,7 @@
-JSONFILES = $(wildcard *.json)
+
+JSONFILES = $(wildcard host-host/*.json)
+JSONFILES += $(wildcard host-qemu/*.json)
+
 DATABASE = database.db
 
 all :
@@ -17,6 +20,9 @@ $(DATABASE) : $(JSONFILES) json2db.py Makefile
 
 stop :
 	-pkill iperf3
+
+dat :
+	python3 db2dat.py -o output.dat $(DATABASE)
 
 clean :
 	rm -f *.json
