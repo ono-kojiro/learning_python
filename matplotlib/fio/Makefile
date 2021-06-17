@@ -1,4 +1,4 @@
-JSONFILES = $(sort $(wildcard json/*.json))
+JSONFILES = $(sort $(wildcard *.json))
 DATABASE_DB  = database.db
 DATABASE_SQL = database.sql
 
