@@ -2,4 +2,15 @@ host ubuntu 18.04    fio-3.1
 kvm  archlinux       fio-3.26
 virtualbox archlinux fio-3.26
 
+to view eps on windows
+ - SumatraPDF v3.2 64-bit
+ - gs9533w64.exe
+
+
+boot SumatraPDF with
+
+set GS_ROOT=C:\opt\gs9.53.3
+set PATH=%GS_ROOT%\bin;%GS_ROOT%\lib;%PATH%
+set GS_LIB=%GS_ROOT%\Resource\Init;%GS_ROOT%\Resource;%GS_ROOT%\lib;%GS_ROOT%\kanji
+start path/to/SumatraPDF.exe
 
