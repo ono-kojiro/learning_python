@@ -3,7 +3,7 @@ DATABASE_DB  = database.db
 DATABASE_SQL = database.sql
 
 DATFILE = output.dat
-EPSFILE = output.eps
+PDFFILE = output.pdf
 
 all : db dat graph
 
@@ -18,7 +18,7 @@ dat :
 
 graph :
 	gnuplot \
-		-e "epsfile='$(EPSFILE)'" -e "datfile='$(DATFILE)'" \
+		-e "epsfile='$(PDFFILE)'" -e "datfile='$(DATFILE)'" \
 		dat2eps.plt
 
 test :
@@ -26,5 +26,5 @@ test :
 
 clean :
 	rm -f database.db database.sql output.dat
-	rm -f $(DATFILE) $(EPSFILE)
+	rm -f $(DATFILE) $(PDFFILE)
 

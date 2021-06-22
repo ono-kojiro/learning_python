@@ -1,6 +1,7 @@
 #set terminal png
 
-set terminal postscript eps enhanced color
+#set terminal postscript eps enhanced color
+set terminal pdf color font ',10'
 set output epsfile
 
 set key left top
