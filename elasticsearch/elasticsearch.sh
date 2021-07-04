@@ -4,11 +4,17 @@ top_dir="$( cd "$( dirname "$0" )" >/dev/null 2>&1 && pwd )"
 cd $top_dir
 
 # https://www.elastic.co/guide/jp/kibana/current/tutorial-load-dataset.html
+# https://www.elastic.co/guide/jp/kibana/current/tutorial-define-index.html
+
 # https://qiita.com/rjkuro/items/95f71ad522226dc381c8
 # https://www.elastic.co/jp/blog/strings-are-dead-long-live-strings
 
 # Elasticsearch as a NoSQL Database
 # https://www.elastic.co/jp/blog/found-elasticsearch-as-nosql
+
+# https://ameblo.jp/shinnaka54/entry-12407824098.html
+
+# https://qiita.com/ground0state/items/e118c1970fca70518f6e
 
 # RDB      :  elasticsearch
 # database => index
@@ -16,7 +22,27 @@ cd $top_dir
 # column   => field
 # record   => doc
 
-server="localhost:9200"
+es_host="localhost:9200"
+kibana_host="localhost:5601"
+
+help() {
+  echo "usage : $0 <subcommand>"
+  echo ""
+  echo "  subcommand"
+  echo "    help"
+  echo ""
+  echo "    fetch"
+  echo "    expand"
+  echo ""
+  echo "    mapping"
+  echo "    unmapping"
+  echo ""
+  echo "    import"
+  echo "    indices"
+  echo ""
+  echo "    clean"
+  echo "    mclean"
+}
 
 mclean() {
   rm -f shakespeare.json
@@ -30,9 +56,15 @@ clean() {
 }
 
 fetch() {
-  wget https://download.elastic.co/demos/kibana/gettingstarted/shakespeare.json
-  wget https://download.elastic.co/demos/kibana/gettingstarted/accounts.zip
-  wget https://download.elastic.co/demos/kibana/gettingstarted/logs.jsonl.gz
+  demo_url=https://download.elastic.co/demos/kibana/gettingstarted
+  filenames="shakespeare.json accounts.zip logs.jsonl.gz"
+  for filename in $filenames; do
+    if [ ! -e $filename ]; then
+      wget $demo_url/$filename
+    else
+      echo "skip $filename"
+    fi
+  done
 }
 
 
@@ -109,11 +141,16 @@ mapping_logstash() {
 
 unmapping() {
   unmapping_shakespeare
+  unmapping_bank
   unmapping_logstash
 }
 
 unmapping_shakespeare() {
   curl -XDELETE 'localhost:9200/shakespeare?pretty'
+}
+
+unmapping_bank() {
+  curl -XDELETE 'localhost:9200/bank?pretty'
 }
 
 unmapping_logstash() {
@@ -125,7 +162,7 @@ unmapping_logstash() {
 }
 
 indices() {
-  curl "$server/_cat/indices?v"
+  curl "$es_host/_cat/indices?v"
 }
 
 import() {
@@ -144,6 +181,85 @@ import() {
     -XPOST 'localhost:9200/_bulk?pretty' \
     --data-binary @logs.jsonl
 }
+
+create_index_pattern() {
+  curl \
+      -H 'Content-Type: application/json' \
+      -XPOST "$es_host/index_patterns/index_pattern" \
+    -d '
+{
+  "index_pattern": {
+    "title": "shakes*"
+  }
+}
+';
+
+  curl \
+      -H 'Content-Type: application/json' \
+      -XPOST "$es_host/index_patterns/index_pattern" \
+    -d '
+{
+  "ban*": {
+    "title": "hello"
+  }
+}
+';
+
+}
+
+create() {
+  curl -X PUT "$es_host/sample_index"
+}
+
+alias() {
+  curl "$es_host/_aliases?pretty"
+}
+
+settings() {
+  curl "$es_host/sample_index/_settings?pretty"
+}
+
+insert() {
+  type=mytype
+  doc=1
+  curl \
+    -H 'Content-Type: application/json' \
+    -X POST "$es_host/sample_index/$type/$doc" \
+    -d '
+{
+  "title" : "sample no.1",
+  "description" : "This is a sample data",
+  "tag" : [ "elasticsearch", "search-engine"],
+  "no"   : 3,
+  "ratio" : 0.53,
+  "enabled" : true
+}
+';
+
+}
+
+confirm_mapping() {
+  type=mytype
+  doc=1
+  curl \
+    "$es_host/sample_index/_mapping/$type?pretty"
+
+}
+
+confirm_data() {
+  type=mytype
+  doc=1
+  curl \
+    "$es_host/sample_index/$type/$doc?pretty"
+
+}
+
+
+delete() {
+  curl -X DELETE "$es_host/sample_index"
+}
+
+
 
 #curl -XDELETE 'localhost:9200/logstash-2015.05.18?pretty'
 
