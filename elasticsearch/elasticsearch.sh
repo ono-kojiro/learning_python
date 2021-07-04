@@ -3,11 +3,15 @@
 top_dir="$( cd "$( dirname "$0" )" >/dev/null 2>&1 && pwd )"
 cd $top_dir
 
-# $ sudo vi /etc/elasticsearch
+# $ sudo vi /etc/elasticsearch/elasticsearch.yml
 # node.name: node-1
 # network.host: 192.168.0.98
 # discovery.seed_hosts: ["192.168.0.98"]
 # cluster.initial_master_nodes: ["node-1"]
+
+# $ sudo vi /etc/kibana/kibana.yml
+# server.host: "0.0.0.0"
+# elasticsearch.hosts: ["http://192.168.0.98:9200"]
 
 
 # https://www.elastic.co/guide/jp/kibana/current/tutorial-load-dataset.html
@@ -167,8 +171,15 @@ unmapping_logstash() {
 }
 
 indices() {
-  curl "http://$es_host/_cat/indices?v"
+  cmd="curl http://$es_host/_cat/indices?v"
+  echo $cmd
+  $cmd
 }
+
+tables() {
+  indices
+}
+
 
 import() {
   curl \
