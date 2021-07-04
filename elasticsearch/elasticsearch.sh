@@ -3,6 +3,13 @@
 top_dir="$( cd "$( dirname "$0" )" >/dev/null 2>&1 && pwd )"
 cd $top_dir
 
+# $ sudo vi /etc/elasticsearch
+# node.name: node-1
+# network.host: 192.168.0.98
+# discovery.seed_hosts: ["192.168.0.98"]
+# cluster.initial_master_nodes: ["node-1"]
+
+
 # https://www.elastic.co/guide/jp/kibana/current/tutorial-load-dataset.html
 # https://www.elastic.co/guide/jp/kibana/current/tutorial-define-index.html
 
@@ -22,8 +29,8 @@ cd $top_dir
 # column   => field
 # record   => doc
 
-es_host="localhost:9200"
-kibana_host="localhost:5601"
+es_host="192.168.0.98:9200"
+kibana_host="192.168.0.98:5601"
 
 help() {
   echo "usage : $0 <subcommand>"
@@ -80,6 +87,12 @@ expand() {
   fi
 }
 
+connect() {
+  cmd="curl http://$es_host"
+  echo $cmd
+  $cmd
+}
+
 mapping() {
   mapping_shakespeare
   mapping_logstash
@@ -89,19 +102,17 @@ mapping_shakespeare() {
 
   curl \
     -H 'Content-Type: application/json' \
-    -XPUT http://localhost:9200/shakespeare \
+    -XPUT "$es_host/shakespeare?pretty" \
     -d '
 {
- "mappings" : {
-  "_default_" : {
-   "properties" : {
-    "speaker" : {"type": "keyword", "index" : true },
-    "play_name" : {"type": "keyword", "index" : true },
-    "line_id" : { "type" : "integer" },
-    "speech_number" : { "type" : "integer" }
-   }
+  "mappings" : {
+    "properties" : {
+      "speaker" : {"type": "keyword", "index" : true },
+      "play_name" : {"type": "keyword", "index" : true },
+      "line_id" : { "type" : "integer" },
+      "speech_number" : { "type" : "integer" }
+    }
   }
- }
 }
 ';
 
@@ -113,17 +124,15 @@ mapping_logstash() {
   for dt in $dates; do
     curl \
       -H 'Content-Type: application/json' \
-      -XPUT http://localhost:9200/logstash-${dt} \
+      -XPUT "$es_host/logstash-${dt}?pretty" \
       -d '
 {
   "mappings": {
-    "log": {
-      "properties": {
-        "geo": {
-          "properties": {
-            "coordinates": {
-              "type": "geo_point"
-            }
+    "properties": {
+      "geo": {
+        "properties": {
+          "coordinates": {
+            "type": "geo_point"
           }
         }
       }
@@ -142,39 +151,39 @@ unmapping() {
 }
 
 unmapping_shakespeare() {
-  curl -XDELETE 'localhost:9200/shakespeare?pretty'
+  curl -XDELETE "$es_host/shakespeare?pretty"
 }
 
 unmapping_bank() {
-  curl -XDELETE 'localhost:9200/bank?pretty'
+  curl -XDELETE "$es_host/bank?pretty"
 }
 
 unmapping_logstash() {
   dates="2015.05.18 2015.05.19 2015.05.20"
 
   for dt in $dates; do
-    curl -XDELETE "localhost:9200/logstash-${dt}?pretty"
+    curl -XDELETE "$es_host/logstash-${dt}?pretty"
   done
 }
 
 indices() {
-  curl "$es_host/_cat/indices?v"
+  curl "http://$es_host/_cat/indices?v"
 }
 
 import() {
   curl \
     -H 'Content-Type: application/x-ndjson' \
-    -XPOST 'localhost:9200/bank/account/_bulk?pretty' \
+    -XPOST "$es_host/bank/account/_bulk?pretty" \
     --data-binary @accounts.json
 
   curl \
     -H 'Content-Type: application/x-ndjson' \
-    -XPOST 'localhost:9200/shakespeare/_bulk?pretty' \
+    -XPOST "$es_host/shakespeare/_bulk?pretty" \
     --data-binary @shakespeare.json
 
   curl \
     -H 'Content-Type: application/x-ndjson' \
-    -XPOST 'localhost:9200/_bulk?pretty' \
+    -XPOST "$es_host/_bulk?pretty" \
     --data-binary @logs.jsonl
 }
 
@@ -231,6 +240,23 @@ insert() {
   "enabled" : true
 }
 ';
+  
+  type=mytype
+  doc=2
+  curl \
+    -H 'Content-Type: application/json' \
+    -X POST "$es_host/sample_index/$type/$doc" \
+    -d '
+{
+  "title" : "sample no.1",
+  "description" : "This is a sample data",
+  "tags" : [ "hoge", "foo", "bar" ],
+  "no"   : 4,
+  "ratio" : 0.931,
+  "enabled" : false
+}
+';
+
 
 }
 
