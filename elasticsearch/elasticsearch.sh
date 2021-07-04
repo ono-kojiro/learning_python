@@ -28,20 +28,16 @@ kibana_host="localhost:5601"
 help() {
   echo "usage : $0 <subcommand>"
   echo ""
-  echo "  subcommand"
-  echo "    help"
+  echo "  demo"
+  echo "    fetch/expand"
+  echo "    mapping/unmapping"
+  echo "    import/indices"
   echo ""
-  echo "    fetch"
-  echo "    expand"
-  echo ""
-  echo "    mapping"
-  echo "    unmapping"
-  echo ""
-  echo "    import"
-  echo "    indices"
-  echo ""
-  echo "    clean"
+  echo "    clean/mclean"
   echo "    mclean"
+  echo ""
+  echo "  sample_index"
+  echo "    create/destroy"
 }
 
 mclean() {
@@ -229,7 +225,7 @@ insert() {
 {
   "title" : "sample no.1",
   "description" : "This is a sample data",
-  "tag" : [ "elasticsearch", "search-engine"],
+  "tags" : [ "elasticsearch", "search-engine"],
   "no"   : 3,
   "ratio" : 0.53,
   "enabled" : true
@@ -254,8 +250,15 @@ confirm_data() {
 
 }
 
+search() {
+  type=mytype
+  doc=1
+  curl \
+    "$es_host/sample_index/$type/_search?q=tags:elasticsearch&pretty=true"
 
-delete() {
+}
+
+destroy() {
   curl -X DELETE "$es_host/sample_index"
 }
 
