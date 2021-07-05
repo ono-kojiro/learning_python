@@ -295,6 +295,33 @@ search() {
 
 }
 
+query() {
+  curl \
+    -H 'Content-Type: application/json' \
+    -X POST "$es_host/bank/_search?pretty" \
+    -d '
+{
+  "query": {
+    "bool" : {
+      "must" : [
+        {
+          "range" : {
+            "account_number" : { "lt" : 100 }
+          }
+        },
+        {
+          "range" : {
+            "balance" : { "gt" : 47500 }
+          }
+        }
+      ]
+    }
+  }
+}
+';
+
+}
+
 destroy() {
   curl -X DELETE "$es_host/sample_index"
 }
