@@ -36,6 +36,11 @@ cd $top_dir
 es_host="192.168.0.98:9200"
 kibana_host="192.168.0.98:5601"
 
+es_user="elastic"
+es_pass="lEWSHXXZyB3zu3ew2cVk"
+
+curl="curl -k -u $es_user:$es_pass"
+
 help() {
   echo "usage : $0 <subcommand>"
   echo ""
@@ -92,7 +97,7 @@ expand() {
 }
 
 connect() {
-  cmd="curl http://$es_host"
+  cmd="$curl http://$es_host"
   echo $cmd
   $cmd
 }
@@ -104,7 +109,7 @@ mapping() {
 
 mapping_shakespeare() {
 
-  curl \
+  $curl \
     -H 'Content-Type: application/json' \
     -XPUT "$es_host/shakespeare?pretty" \
     -d '
@@ -126,7 +131,7 @@ mapping_logstash() {
   dates="2015.05.18 2015.05.19 2015.05.20"
 
   for dt in $dates; do
-    curl \
+    $curl \
       -H 'Content-Type: application/json' \
       -XPUT "$es_host/logstash-${dt}?pretty" \
       -d '
@@ -155,23 +160,29 @@ unmapping() {
 }
 
 unmapping_shakespeare() {
-  curl -XDELETE "$es_host/shakespeare?pretty"
+  $curl -XDELETE "$es_host/shakespeare?pretty"
 }
 
 unmapping_bank() {
-  curl -XDELETE "$es_host/bank?pretty"
+  $curl -XDELETE "$es_host/bank?pretty"
 }
 
 unmapping_logstash() {
   dates="2015.05.18 2015.05.19 2015.05.20"
 
   for dt in $dates; do
-    curl -XDELETE "$es_host/logstash-${dt}?pretty"
+    $curl -XDELETE "$es_host/logstash-${dt}?pretty"
   done
 }
 
 indices() {
-  cmd="curl http://$es_host/_cat/indices?v"
+  cmd="$curl https://$es_host/_cat/indices?v"
+  echo $cmd
+  $cmd
+}
+
+nodes() {
+  cmd="$curl https://$es_host/_cat/nodes?v"
   echo $cmd
   $cmd
 }
@@ -182,24 +193,24 @@ tables() {
 
 
 import() {
-  curl \
+  $curl \
     -H 'Content-Type: application/x-ndjson' \
     -XPOST "$es_host/bank/account/_bulk?pretty" \
     --data-binary @accounts.json
 
-  curl \
+  $curl \
     -H 'Content-Type: application/x-ndjson' \
     -XPOST "$es_host/shakespeare/_bulk?pretty" \
     --data-binary @shakespeare.json
 
-  curl \
+  $curl \
     -H 'Content-Type: application/x-ndjson' \
     -XPOST "$es_host/_bulk?pretty" \
     --data-binary @logs.jsonl
 }
 
 create_index_pattern() {
-  curl \
+  $curl \
       -H 'Content-Type: application/json' \
       -XPOST "$es_host/index_patterns/index_pattern" \
     -d '
@@ -210,7 +221,7 @@ create_index_pattern() {
 }
 ';
 
-  curl \
+  $curl \
       -H 'Content-Type: application/json' \
       -XPOST "$es_host/index_patterns/index_pattern" \
     -d '
@@ -224,21 +235,21 @@ create_index_pattern() {
 }
 
 create() {
-  curl -X PUT "$es_host/sample_index"
+  $curl -X PUT "$es_host/sample_index"
 }
 
 alias() {
-  curl "$es_host/_aliases?pretty"
+  $curl "$es_host/_aliases?pretty"
 }
 
 settings() {
-  curl "$es_host/sample_index/_settings?pretty"
+  $curl "$es_host/sample_index/_settings?pretty"
 }
 
 insert() {
   type=mytype
   doc=1
-  curl \
+  $curl \
     -H 'Content-Type: application/json' \
     -X POST "$es_host/sample_index/$type/$doc" \
     -d '
@@ -254,7 +265,7 @@ insert() {
   
   type=mytype
   doc=2
-  curl \
+  $curl \
     -H 'Content-Type: application/json' \
     -X POST "$es_host/sample_index/$type/$doc" \
     -d '
@@ -274,7 +285,7 @@ insert() {
 confirm_mapping() {
   type=mytype
   doc=1
-  curl \
+  $curl \
     "$es_host/sample_index/_mapping/$type?pretty"
 
 }
@@ -282,7 +293,7 @@ confirm_mapping() {
 confirm_data() {
   type=mytype
   doc=1
-  curl \
+  $curl \
     "$es_host/sample_index/$type/$doc?pretty"
 
 }
@@ -290,13 +301,13 @@ confirm_data() {
 search() {
   type=mytype
   doc=1
-  curl \
+  $curl \
     "$es_host/sample_index/$type/_search?q=tags:elasticsearch&pretty=true"
 
 }
 
 query() {
-  curl \
+  $curl \
     -H 'Content-Type: application/json' \
     -X POST "$es_host/bank/_search?pretty" \
     -d '
@@ -323,7 +334,7 @@ query() {
 }
 
 destroy() {
-  curl -X DELETE "$es_host/sample_index"
+  $curl -X DELETE "$es_host/sample_index"
 }
 
 
