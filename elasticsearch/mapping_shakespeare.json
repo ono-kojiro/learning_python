@@ -1,0 +1,13 @@
+{
+  "mappings" : {
+    "_default_" : {
+      "properties" : {
+        "speaker" : {"type": "keyword", "index" : true },
+        "play_name" : {"type": "keyword", "index" : true },
+        "line_id" : { "type" : "integer" },
+        "speech_number" : { "type" : "integer" }
+      }
+    }
+  }
+}
+
