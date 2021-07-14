@@ -21,5 +21,25 @@ curl \
     }
   }
 }
-'
+' | tee api_key.json
+
+id=`jq -r '.id' api_key.json`
+api_key=`jq -r '.api_key' api_key.json`
+
+echo ""
+
+echo "id : $id"
+echo "api_key : $api_key"
+
+str="$id:$api_key"
+echo "input is $str"
+
+api_key=`echo -n "$id:$api_key" | base64`
+
+echo "base64 : $api_key"
+
+curl \
+        -H "Authorization: ApiKey $api_key" \
+        https://192.168.0.98:9200/
+
 
