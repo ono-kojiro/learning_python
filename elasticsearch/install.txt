@@ -1,0 +1,87 @@
+
+$ sudo apt -y install openjdk-11-jre
+
+$ sudo vi /etc/apt/sources.list.d/elastic-7.x.list
+deb https://artifacts.elastic.co/packages/7.x/apt stable main
+
+$ sudo apt -y update
+
+$ sudo apt -y install elasticsearch
+
+$ sudo systemctl start elasticsearch
+
+$ curl http://localhost:9200/
+
+===================
+
+$ sudo vi /etc/elasticsearch/elasticsearch.yml
+network.host: 192.168.0.98
+discovery.seed_hosts: ["192.168.0.98"]
+
+$ sudo systemctl restart elasticsearch
+
+===================
+on other client (like windows...)
+
+$ curl http://192.168.0.98:9200/
+
+===================
+
+$ sudo mkdir /etc/elasticsearch/certs
+$ sudo cp /etc/ssl/elasticsearch/elasticsearch.key /etc/elasticsearch/certs/
+$ sudo cp /etc/ssl/elasticsearch/elasticsearch.crt /etc/elasticsearch/certs/
+
+$ sudo chmod 640 /etc/elasticsearch/elasticsearch.key
+
+$ sudo vi /etc/elasticsearch/elasticsearch.yml
+
+xpack.security.enabled: true
+
+xpack.security.http.ssl.enabled: true
+xpack.security.http.ssl.key: certs/elasticsearch.key
+xpack.security.http.ssl.certificate: certs/elasticsearch.crt
+xpack.security.http.ssl.certificate_authorities: certs/mylocalca.crt
+
+xpack.security.transport.ssl.enabled: true
+xpack.security.transport.ssl.key: certs/elasticsearch.key
+xpack.security.transport.ssl.certificate: certs/elasticsearch.crt
+xpack.security.transport.ssl.certificate_authorities: certs/mylocalca.crt
+
+$ sudo systemctl restart elasticsearch
+
+$ sudo /usr/share/elasticsearch/bin/elasticsearch-setup-passwords auto -u https://192.168.0.98:9200
+
+$ curl -u elastic:password https://192.168.0.98:9200/
+
+============================
+
+$ sudo apt -y install kibana
+
+$ sudo vi /etc/kibana/kibana.yml
+server.host: "192.168.0.98"
+elasticsearch.hosts: ["https://192.168.0.98:9200"]
+elasticsearch.username: "elastic"
+elasticsearch.password: "password"
+elasticsearch.ssl.verificationMode: none
+
+$ sudo systemctl start kibana
+
+
+Access to http://192.168.0.98:5601/ 
+using username 'elastic' and password which is changed by
+elasticsearch-setup-passwords command.
+
+====================
+
+$ sudo cp /etc/ssl/elasticsearch/elasticsearch.key /etc/kibana/
+$ sudo cp /etc/ssl/elasticsearch/elasticsearch.crt /etc/kibana/
+$ sudo chmod 740 /etc/kibana/elasticsearch.key
+
+$ sudo vi /etc/kibana/kibana.yml
+
+server.ssl.enabled: true
+server.ssl.certificate: /etc/kibana/elasticsearch.crt
+server.ssl.key: /etc/kibana/elasticsearch.key
+
+
+
