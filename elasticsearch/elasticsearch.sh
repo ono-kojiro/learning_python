@@ -13,7 +13,6 @@ cd $top_dir
 # server.host: "0.0.0.0"
 # elasticsearch.hosts: ["http://192.168.0.98:9200"]
 
-
 # https://www.elastic.co/guide/jp/kibana/current/tutorial-load-dataset.html
 # https://www.elastic.co/guide/jp/kibana/current/tutorial-define-index.html
 
@@ -33,11 +32,13 @@ cd $top_dir
 # column   => field
 # record   => doc
 
-es_host="192.168.0.98:9200"
+es_host="https://192.168.0.98:9200"
 kibana_host="192.168.0.98:5601"
 
 es_user="elastic"
-es_pass="lEWSHXXZyB3zu3ew2cVk"
+es_pass=`cat password.txt | grep "PASSWORD elastic" | gawk '{ print $4 }'`
+
+api_key=`cat api_key.txt`
 
 curl="curl -k -u $es_user:$es_pass"
 
@@ -97,10 +98,17 @@ expand() {
 }
 
 connect() {
-  cmd="$curl http://$es_host"
+  cmd="$curl https://$es_host"
   echo $cmd
   $cmd
 }
+
+cat_shards() {
+  cmd="$curl https://$es_host/_cat/shards"
+  echo $cmd
+  $cmd
+}
+
 
 mapping() {
   mapping_shakespeare
@@ -176,13 +184,13 @@ unmapping_logstash() {
 }
 
 indices() {
-  cmd="$curl https://$es_host/_cat/indices?v"
+  cmd="$curl $es_host/_cat/indices?v"
   echo $cmd
   $cmd
 }
 
 nodes() {
-  cmd="$curl https://$es_host/_cat/nodes?v"
+  cmd="$curl $es_host/_cat/nodes?v"
   echo $cmd
   $cmd
 }

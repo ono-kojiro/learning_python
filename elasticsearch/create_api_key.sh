@@ -1,7 +1,7 @@
 #!/bin/sh
 
 username=elastic
-password=XXXXXXXXXXXXXXXXXXXX
+password=`cat password.txt | grep "PASSWORD elastic" | gawk '{ print $4 }'`
 	
 server="$username:$password@192.168.0.98:9200"
 
@@ -10,10 +10,10 @@ curl \
 	-X POST https://$server/_security/api_key \
 	-d '
 {
-  "name": "my-api-key",
+  "name": "myname",
   "expiration": "1d", 
   "metadata": {
-    "application": "my-application",
+    "application": "myapplication",
     "environment": {
        "level": 1,
        "trusted": true,
