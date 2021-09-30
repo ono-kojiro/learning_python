@@ -83,8 +83,10 @@ def main():
 	
 	create_table(conn, table)
 
-	for input in args:
-		fp_in = open(input, mode='r', encoding='utf-8')
+	for filepath in args:
+		print('read {0}'.format(filepath))
+
+		fp_in = open(filepath, mode='r', encoding='utf-8')
 		data = json.load(fp_in)
 		fp_in.close()
 
@@ -99,7 +101,12 @@ def main():
 
 		for job in data['jobs'] :
 			name = job['jobname']
-			bw = int(job[rw]['bw'])
+			if re.search(r'read', rw) :
+				bw = int(job['read']['bw'])
+				#bw = int(job['read']['bw_mean'])
+			else :
+				bw = int(job['write']['bw'])
+				#bw = int(job['write']['bw_mean'])
 
 			m = re.search(r'(\w+)-(\w+)-([\w\d]+)', name)
 			if m :
