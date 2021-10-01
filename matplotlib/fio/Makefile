@@ -5,21 +5,22 @@ DATABASE_SQL = database.sql
 DATFILE = output.dat
 PDFFILE = output.pdf
 
-all : db dat graph
+all : db dat pdf
 
 db : $(DATABASE_DB)
 
 $(DATABASE_DB) : $(JSONFILES) json2db.py
-	python3 json2db.py -o $(DATABASE_DB) $(JSONFILES)
-	sqlite3 $(DATABASE_DB) ".dump" > $(DATABASE_SQL)
+	rm -f $@
+	python3 json2db.py -o $@ $(JSONFILES)
+	sqlite3 $@ ".dump" > $(DATABASE_SQL)
 
 dat :
 	python3 db2dat.py -o output.dat $(DATABASE_DB)
 
-graph :
+pdf :
 	gnuplot \
-		-e "epsfile='$(PDFFILE)'" -e "datfile='$(DATFILE)'" \
-		dat2eps.plt
+		-e "pdffile='$(PDFFILE)'" -e "datfile='$(DATFILE)'" \
+		dat2pdf.plt
 
 test :
 	sh measure.sh
