@@ -10,21 +10,38 @@ import re
 def usage():
 	print("Usage : {0}".format(sys.argv[0]))
 
+def normalize_bs(bs_str) :
+	m = re.search(r'(\d+)(B|KiB|MiB)', bs_str)
+	if m :
+		val = m.group(1)
+		unit = m.group(2)
+		if unit == 'KiB' :
+			bs = int(int(val) * 1000) # for simplify
+		elif unit == 'MiB' :
+			bs = int(int(val) * 1000 * 1000) # for simplify
+		else :
+			bs = int(val)
+	else :
+		print('can not normalize blocksize, "{0}"'.format(bs_str))
+		sys.exit(1)
+
+	return bs
+
 def normalize_bw(bw_str) :
-	m = re.search(r'(\d+(\.\d+)?)\s*( |K|M|G)B/s', bw_str)
+	m = re.search(r'(\d+(\.\d+)?)\s*( |Ki|Mi|Gi)?B/s', bw_str)
 	if m :
 		val  = m.group(1)
 		unit = m.group(3)
-		if unit == 'K' :
+		if unit == 'Ki' :
 			bw = int(float(val) * 1000)
-		elif unit == 'M' :
+		elif unit == 'Mi' :
 			bw = int(float(val) * 1000 * 1000)
-		elif unit == 'G' :
+		elif unit == 'Gi' :
 			bw = int(float(val) * 1000 * 1000 * 1000)
 		else :
 			bw = int(val)
 	else :
-		print('can not normalize bandwidth, "{0}"'.format(bw))
+		print('can not normalize bandwidth, "{0}"'.format(bw_str))
 		sys.exit(1)
 
 	return bw
@@ -33,7 +50,7 @@ def split_params(line) :
 	results = {
 		'bw' : 0,
 	}
-	m = re.search(r'(bw|aggrb)=(.+?B/s),', line)
+	m = re.search(r'(bw|aggrb)=(.+?B/s)', line, re.IGNORECASE)
 	if m :
 		results['bw'] = m.group(2)
 
@@ -73,19 +90,43 @@ def main():
 	
 
 	data = {
-		'jobs' : []
+		"global options" : {
+			"rw" : ""	
+		},
+		"jobs" : []
 	}
 
-	num_jobs = 0
 
 	for filepath in args:
 		fp_in = open(filepath, mode='r', encoding='utf-8')
+	
+		rw = ''
 		while 1:
 			line = fp_in.readline()
 			if not line :
 				break
 
 			line = re.sub(r'\r?\n?$', '', line)
+
+			m = re.search(r' rw=(.+),', line)
+			if m :
+				rw = m.group(1)
+				data['global options']['rw'] = rw
+
+			m = re.search(r' bs=\(R\) (\d+\w+)-(\d+\w+), \(W\) (\d+\w+)-(\d+\w+),', line)
+			if m :
+				bs_r = m.group(1)
+				bs_w = m.group(3)
+
+				if re.search(r'read', rw) :
+					bs = normalize_bs(bs_r)
+				elif re.search(r'write', rw) :
+					bs = normalize_bs(bs_w)
+				else :
+					print('invalid rw, "{0}"'.format(rw))
+					sys.exit(1)
+				data['global options']['bs'] = bs
+			
 
 			#m = re.search(r'^\s+(read|write)\s*:\s*(.+)', line, re.IGNORECASE)
 			m = re.search(r'^\s+(read|write)\s*:\s*(.+)', line)
@@ -96,6 +137,8 @@ def main():
 
 				results = split_params(params)
 				#print(results)
+				bw = results['bw']
+				print('normalize "{0}"'.format(bw))
 				bw = normalize_bw(results['bw'])
 				#print('bw = {0}'.format(bw))
 

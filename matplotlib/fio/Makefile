@@ -1,11 +1,12 @@
-JSONFILES = $(sort $(wildcard *.json))
+LOGFILES  = $(sort $(wildcard out/*.log))
+JSONFILES = $(addprefix out/, $(notdir $(LOGFILES:.log=.json)))
 DATABASE_DB  = database.db
 DATABASE_SQL = database.sql
 
 DATFILE = output.dat
 PDFFILE = output.pdf
 
-all : db dat pdf
+all : json db dat pdf
 
 db : $(DATABASE_DB)
 
@@ -22,10 +23,16 @@ pdf :
 		-e "pdffile='$(PDFFILE)'" -e "datfile='$(DATFILE)'" \
 		dat2pdf.plt
 
+json : $(JSONFILES)
+
+out/%.json : out/%.log
+	python3 log2json.py -o $@ $<
+
 test :
 	sh measure.sh
 
 clean :
 	rm -f database.db database.sql output.dat
 	rm -f $(DATFILE) $(PDFFILE)
+	rm -f out/*.json
 

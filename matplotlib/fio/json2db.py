@@ -91,10 +91,20 @@ def main():
 		fp_in.close()
 
 		rw = data['global options']['rw']
-		bs = data['global options']['bs']
-		m = re.search(r'(\d+)k', bs)
+		bs = str(data['global options']['bs'])
+		print('bs is {0}'.format(bs))
+		m = re.search(r'(\d+)(k)?', bs)
 		if m :
-			bs = int(m.group(1)) * 1000
+			val = m.group(1)
+			unit = m.group(2)
+			if unit == 'k' :
+				bs = int(m.group(1)) * 1000
+			elif not unit :
+				bs = int(m.group(1))
+			else :
+				printf('invalid unit for "{0}"'.format(bs))
+				sys.exit(1)
+
 		else :
 			print('invalid block size, {0}'.format(bs))
 			sys.exit(1)
