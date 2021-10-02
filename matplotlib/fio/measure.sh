@@ -10,7 +10,6 @@ rws="read write randread randwrite"
 
 formats="normal json"
 
-mkdir -p out
 server=192.168.0.98
 	
 env="host"
@@ -19,13 +18,18 @@ size=1G
 ramp_time=2s
 runtime=5s
 
+log_dir=./out
+
+output_dir=/tmp/fio-test
+
+mkdir -p $output_dir
+mkdir -p $log_dir
+
 for bs in $blocksizes; do
   for rw in $rws ; do
 
 	title=$env-$rw-$bs
-	tmppath=./fio_data-${rw}-${bs}.bin
-
-	mkdir -p out
+	tmppath=$output_dir/fio_data-${rw}-${bs}.bin
 
 	cmd="/usr/local/bin/fio"
 	cmd="$cmd --name=$title"
@@ -51,11 +55,12 @@ for bs in $blocksizes; do
 			ext="txt"
 		fi
 
-		output="out/${title}-${format}.${ext}"
+		output="$log_dir/${title}-${format}.${ext}"
 		echo $output
 		echo $cmd --output-format=$format --output $output | \
 			ssh $server sh
 		ssh $server cat $output > $output
+		ssh $server rm -f $tmppath
     done
   done
 done

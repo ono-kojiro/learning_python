@@ -19,6 +19,7 @@ def create_table(conn, table):
 	sql += 'id INTEGER PRIMARY KEY, '
 	sql += 'name TEXT, '
 	sql += 'env TEXT, '
+	sql += 'fmt TEXT, '
 	sql += 'rw TEXT, '
 	sql += 'bs INTEGER, '
 	sql += 'bw INTEGER '
@@ -28,16 +29,45 @@ def create_table(conn, table):
 
 def insert_record(conn, table, record):
 	c = conn.cursor()
-	sql = 'INSERT INTO {0} VALUES ( NULL, ?, ?, ?, ?, ? );'.format(table)
+	sql = 'INSERT INTO {0} VALUES ( NULL, ?, ?, ?, ?, ?, ? );'.format(table)
 	list = [ 
 		record['name'],
 		record['env'],
+		record['fmt'],
 		record['rw'],
 		record['bs'],
 		record['bw']
 	]
 
 	c.execute(sql, list)
+
+def normalize_blocksize(bs_str) :
+	m = re.search(r'(\d+)(K|M|G|Ki|Mi|Gi)?', bs_str)
+	if m :
+		val = m.group(1)
+		unit = m.group(2)
+		if unit == 'K' :
+			bs = int(m.group(1)) * 1000
+		elif unit == 'Ki' :
+			bs = int(m.group(1)) * 1024
+		elif unit == 'M' :
+			bs = int(m.group(1)) * 1000 * 1000
+		elif unit == 'Mi' :
+			bs = int(m.group(1)) * 1024 * 1024
+		elif unit == 'G' :
+			bs = int(m.group(1)) * 1000 * 1000 * 1000
+		elif unit == 'Gi' :
+			bs = int(m.group(1)) * 1024 * 1024 * 1024
+		elif not unit :
+			bs = int(m.group(1))
+		else :
+			printf('invalid unit for "{0}"'.format(bs_str))
+			sys.exit(1)
+	else :
+		print('invalid block size, {0}'.format(bs_str))
+		sys.exit(1)
+	
+	return bs
 
 def main():
 	ret = 0
@@ -83,33 +113,25 @@ def main():
 		data = json.load(fp_in)
 		fp_in.close()
 
-		rw = data['global options']['rw']
-		bs = str(data['global options']['bs'])
-		print('bs is {0}'.format(bs))
-		m = re.search(r'(\d+)(k)?', bs)
-		if m :
-			val = m.group(1)
-			unit = m.group(2)
-			if unit == 'k' :
-				bs = int(m.group(1)) * 1000
-			elif not unit :
-				bs = int(m.group(1))
-			else :
-				printf('invalid unit for "{0}"'.format(bs))
-				sys.exit(1)
-
+		
+		if 'format' in data and data['format'] == 'normal' :
+			fmt = 'normal'
 		else :
-			print('invalid block size, {0}'.format(bs))
-			sys.exit(1)
+			fmt = 'json'
 
 		for job in data['jobs'] :
+			rw = job['job options']['rw']
+			bs = str(job['job options']['bs'])
+			
+			print('bs is {0}'.format(bs))
+
+			bs = normalize_blocksize(bs)
+
 			name = job['jobname']
 			if re.search(r'read', rw) :
 				bw = int(job['read']['bw'])
-				#bw = int(job['read']['bw_mean'])
 			else :
 				bw = int(job['write']['bw'])
-				#bw = int(job['write']['bw_mean'])
 
 			m = re.search(r'(\w+)-(\w+)-([\w\d]+)', name)
 			if m :
@@ -121,6 +143,7 @@ def main():
 			record = {
 				'name' : name,
 				'env'  : env,
+				'fmt' : fmt,
 				'rw'   : rw,
 				'bs'   : bs,
 				'bw'   : bw

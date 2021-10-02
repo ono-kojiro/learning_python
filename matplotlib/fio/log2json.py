@@ -113,17 +113,20 @@ def main():
 	
 
 	data = {
-		"global options" : {
-			"rw" : ""	
-		},
+		"format" : "normal",
 		"jobs" : []
 	}
 
 
 	for filepath in args:
 		fp_in = open(filepath, mode='r', encoding='utf-8')
-	
+
+		jobname = ''
 		rw = ''
+		bs = ''
+
+		rw_category = ''
+
 		while 1:
 			line = fp_in.readline()
 			if not line :
@@ -134,32 +137,30 @@ def main():
 			m = re.search(r' rw=(.+?),', line)
 			if m :
 				rw = m.group(1)
-				data['global options']['rw'] = rw
-
-			m = re.search(r' bs=\(R\) (\d+\w+)-(\d+\w+), \(W\) (\d+\w+)-(\d+\w+),', line)
-			if m :
-				bs_r = m.group(1)
-				bs_w = m.group(3)
-
 				if re.search(r'read', rw) :
-					bs = normalize_bs(bs_r)
-				elif re.search(r'write', rw) :
-					bs = normalize_bs(bs_w)
+					rw_category = 'read'
 				else :
-					print('invalid rw, "{0}"'.format(rw))
-					sys.exit(1)
-				data['global options']['bs'] = bs
-		
+					rw_category = 'write'
+
 			ret = search_blocksize(line)
 			if ret != '' :
 				bs = ret
+				m = re.search(r'(.+?): ', line)
+				if m :
+					jobname = m.group(1)
+				else :
+					print('invalid jobname, {0}'.format(line))
+					sys.exit(1)
 
 			#m = re.search(r'^\s+(read|write)\s*:\s*(.+)', line, re.IGNORECASE)
 			m = re.search(r'^\s+(read|write)\s*:\s*(.+)', line)
 			if m :
-				#print('{0}'.format(line))
-				rw = m.group(1)
+				tmp = m.group(1)
 				params = m.group(2)
+
+				if tmp != rw_category :
+					print('rw is {0} but {1} result found'.format(rw, tmp))
+					sys.exit(1)
 
 				results = split_params(params)
 				#print(results)
@@ -169,7 +170,12 @@ def main():
 				#print('bw = {0}'.format(bw))
 
 				item = {
-					rw : {
+					"jobname" : jobname,
+					"job options" : {
+						"rw" : rw,
+						"bs" : bs,
+					},
+					rw_category : {
 						'bw' : bw
 					}
 				}
@@ -181,7 +187,7 @@ def main():
 	fp_out.write(
 		json.dumps(
 			data,
-#			indent=2,
+			indent=2,
 			sort_keys = True,
 		)
 	)
