@@ -11,14 +11,22 @@ def usage():
 	print("Usage : {0}".format(sys.argv[0]))
 
 def normalize_bs(bs_str) :
-	m = re.search(r'(\d+)(B|KiB|MiB)', bs_str)
+	m = re.search(r'(\d+)(K|M|G|Ki|Mi|Gi)(B)?', bs_str)
 	if m :
 		val = m.group(1)
 		unit = m.group(2)
-		if unit == 'KiB' :
+		if unit == 'K' :
 			bs = int(int(val) * 1000) # for simplify
-		elif unit == 'MiB' :
+		elif unit == 'Ki' :
+			bs = int(int(val) * 1024)
+		elif unit == 'M' :
 			bs = int(int(val) * 1000 * 1000) # for simplify
+		elif unit == 'Mi' :
+			bs = int(int(val) * 1024 * 1024)
+		elif unit == 'G' :
+			bs = int(int(val) * 1000 * 1000 * 1000) # for simplify
+		elif unit == 'Gi' :
+			bs = int(int(val) * 1024 * 1024 * 1024)
 		else :
 			bs = int(val)
 	else :
@@ -28,16 +36,22 @@ def normalize_bs(bs_str) :
 	return bs
 
 def normalize_bw(bw_str) :
-	m = re.search(r'(\d+(\.\d+)?)\s*( |Ki|Mi|Gi)?B/s', bw_str)
+	m = re.search(r'(\d+(\.\d+)?)\s*( |K|M|G|Ki|Mi|Gi)?B/s', bw_str)
 	if m :
 		val  = m.group(1)
 		unit = m.group(3)
-		if unit == 'Ki' :
+		if unit == 'K' :
 			bw = int(float(val) * 1000)
-		elif unit == 'Mi' :
+		elif unit == 'Ki' :
+			bw = int(float(val) * 1024)
+		elif unit == 'M' :
 			bw = int(float(val) * 1000 * 1000)
-		elif unit == 'Gi' :
+		elif unit == 'Mi' :
+			bw = int(float(val) * 1024 * 1024)
+		elif unit == 'G' :
 			bw = int(float(val) * 1000 * 1000 * 1000)
+		elif unit == 'Gi' :
+			bw = int(float(val) * 1024 * 1024 * 1024)
 		else :
 			bw = int(val)
 	else :
@@ -55,7 +69,16 @@ def split_params(line) :
 		results['bw'] = m.group(2)
 
 	return results
-		
+
+def search_blocksize(line) :
+    bs = ''
+    m = re.search(r' bs=(\d+\w+)', line)
+    if m :
+        bs = m.group(1)
+        bs = normalize_bs(bs)
+
+    return bs
+
 def main():
 	ret = 0
 
@@ -108,7 +131,7 @@ def main():
 
 			line = re.sub(r'\r?\n?$', '', line)
 
-			m = re.search(r' rw=(.+),', line)
+			m = re.search(r' rw=(.+?),', line)
 			if m :
 				rw = m.group(1)
 				data['global options']['rw'] = rw
@@ -126,19 +149,22 @@ def main():
 					print('invalid rw, "{0}"'.format(rw))
 					sys.exit(1)
 				data['global options']['bs'] = bs
-			
+		
+			ret = search_blocksize(line)
+			if ret != '' :
+				bs = ret
 
 			#m = re.search(r'^\s+(read|write)\s*:\s*(.+)', line, re.IGNORECASE)
 			m = re.search(r'^\s+(read|write)\s*:\s*(.+)', line)
 			if m :
-				print('{0}'.format(line))
+				#print('{0}'.format(line))
 				rw = m.group(1)
 				params = m.group(2)
 
 				results = split_params(params)
 				#print(results)
 				bw = results['bw']
-				print('normalize "{0}"'.format(bw))
+				#print('normalize "{0}"'.format(bw))
 				bw = normalize_bw(results['bw'])
 				#print('bw = {0}'.format(bw))
 

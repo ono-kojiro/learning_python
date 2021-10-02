@@ -1,16 +1,9 @@
 #!/usr/bin/python3
 
 import sys
-
 import getopt
 import json
-
 import re
-
-import pandas as pd
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-
 import sqlite3
 
 def usage():

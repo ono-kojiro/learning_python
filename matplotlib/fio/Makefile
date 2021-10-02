@@ -1,5 +1,7 @@
-LOGFILES  = $(sort $(wildcard out/*.log))
-JSONFILES = $(addprefix out/, $(notdir $(LOGFILES:.log=.json)))
+NORMAL_TXT= $(sort $(wildcard out/*.txt))
+NORMAL_JSON= $(addprefix out/, $(notdir $(NORMAL_TXT:.txt=.json)))
+JSONFILES = $(NORMAL_JSON) $(sort $(wildcard out/*-json.json))
+
 DATABASE_DB  = database.db
 DATABASE_SQL = database.sql
 
@@ -23,9 +25,9 @@ pdf :
 		-e "pdffile='$(PDFFILE)'" -e "datfile='$(DATFILE)'" \
 		dat2pdf.plt
 
-json : $(JSONFILES)
+json : $(NORMAL_JSON)
 
-out/%.json : out/%.log
+out/%.json : out/%.txt
 	python3 log2json.py -o $@ $<
 
 test :
@@ -34,5 +36,5 @@ test :
 clean :
 	rm -f database.db database.sql output.dat
 	rm -f $(DATFILE) $(PDFFILE)
-	rm -f out/*.json
+	rm -f $(NORMAL_JSON)
 
