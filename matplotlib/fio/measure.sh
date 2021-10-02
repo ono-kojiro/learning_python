@@ -54,6 +54,7 @@ for bs in $blocksizes; do
 		echo $output
 		echo $cmd --output-format=$format --output $output | \
 			ssh $server sh
+		ssh $server cat $output > $output
     done
   done
 done
