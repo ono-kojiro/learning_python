@@ -13,9 +13,9 @@ server=192.168.0.98
 	
 env="host"
 ioengine=sync
-size=1G
-ramp_time=2s
-runtime=10
+size=4G
+warmup_time=10
+runtime=20
 
 log_dir=./out
 
@@ -27,7 +27,7 @@ mkdir -p $log_dir
 for bs in $blocksizes; do
   for rw in $rws ; do
 
-	title=$env-$rw-$bs
+	title=$env-$rw-${bs}i
 	tmppath=$output_dir/diskspd_data-${rw}-${bs}.bin
 
 	write_percentage=0
@@ -49,7 +49,7 @@ for bs in $blocksizes; do
 	cmd="$cmd --duration=$runtime"
 	cmd="$cmd --caching-options=d"
 	cmd="$cmd --write=$write_percentage"
-	cmd="$cmd --warmup-time=5"
+	cmd="$cmd --warmup-time=$warmup_time"
 	cmd="$cmd --io-engine=k"
 	cmd="$cmd $tmppath"
 
