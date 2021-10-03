@@ -1,0 +1,66 @@
+
+Command Line: diskspd --block-size=32K --create-files=4G --duration=20 --caching-options=d --write=0 --warmup-time=10 --io-engine=k /tmp/diskspd-test/diskspd_data-read-32K.bin
+
+System info:
+	processor count: 8
+	caching options: fua=0
+
+Input parameters:
+
+	job:   1
+	________
+	duration: 20s
+	warm up time: 10s
+	random seed: 0
+	total threads: 1
+	path: '/tmp/diskspd-test/diskspd_data-read-32K.bin'
+		size: 4294967296B
+		using O_DIRECT
+		performing mix test (read/write ratio: 100/0)
+		block size: 32768
+		using sequential I/O (stride: 32768)
+		number of outstanding I/O operations: 2)
+		thread stride size: 0
+		threads per file: 1
+		block device: nvme0n1
+		device scheduler: none
+
+Results for job 1:
+test time:         20s
+*****************************************************
+
+ CPU  |  Usage  |   User  |  Kernel | IO Wait |   Idle 
+-------------------------------------------------------
+    0 |  40.12% |  20.26% |  19.86% |   0.06% |  59.82% 
+    1 |   0.05% |   0.00% |   0.05% |   0.00% |  99.95% 
+    2 |   0.40% |   0.40% |   0.00% |   0.00% |  99.60% 
+    3 |   0.10% |   0.10% |   0.00% |   0.00% |  99.90% 
+    4 |   0.05% |   0.05% |   0.00% |   0.00% |  99.95% 
+    5 |   0.15% |   0.10% |   0.05% |   0.00% |  99.85% 
+    6 |   0.10% |   0.05% |   0.05% |   0.00% |  99.90% 
+    7 |   0.05% |   0.00% |   0.05% |   0.00% |  99.95% 
+-------------------------------------------------------
+ avg:	  5.13% |   2.62% |   2.51% |   0.01% |  94.87%
+
+Total IO
+thread |           bytes |         I/Os |       MB/s |  I/O per s | file
+-------------------------------------------------------------------------------
+     0 |     12241010688 |       373566 |     583.70 |   18678.30 | /tmp/diskspd-test/diskspd_data-read-32K.bin (4294967296B)
+-------------------------------------------------------------------------------
+total:       12241010688 |       373566 |     583.70 |   18678.30 
+
+Read IO
+thread |           bytes |         I/Os |       MB/s |  I/O per s | file
+-------------------------------------------------------------------------------
+     0 |     12241010688 |       373566 |     583.70 |   18678.30 | /tmp/diskspd-test/diskspd_data-read-32K.bin (4294967296B)
+-------------------------------------------------------------------------------
+total:       12241010688 |       373566 |     583.70 |   18678.30 
+
+Write IO
+thread |           bytes |         I/Os |       MB/s |  I/O per s | file
+-------------------------------------------------------------------------------
+     0 |               0 |            0 |       0.00 |       0.00 | /tmp/diskspd-test/diskspd_data-read-32K.bin (4294967296B)
+-------------------------------------------------------------------------------
+total:                 0 |            0 |       0.00 |       0.00 
+
+

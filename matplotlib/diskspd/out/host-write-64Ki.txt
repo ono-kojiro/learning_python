@@ -1,0 +1,66 @@
+
+Command Line: diskspd --block-size=64K --create-files=4G --duration=20 --caching-options=d --write=100 --warmup-time=10 --io-engine=k /tmp/diskspd-test/diskspd_data-write-64K.bin
+
+System info:
+	processor count: 8
+	caching options: fua=0
+
+Input parameters:
+
+	job:   1
+	________
+	duration: 20s
+	warm up time: 10s
+	random seed: 0
+	total threads: 1
+	path: '/tmp/diskspd-test/diskspd_data-write-64K.bin'
+		size: 4294967296B
+		using O_DIRECT
+		performing mix test (read/write ratio: 0/100)
+		block size: 65536
+		using sequential I/O (stride: 65536)
+		number of outstanding I/O operations: 2)
+		thread stride size: 0
+		threads per file: 1
+		block device: nvme0n1
+		device scheduler: none
+
+Results for job 1:
+test time:         20s
+*****************************************************
+
+ CPU  |  Usage  |   User  |  Kernel | IO Wait |   Idle 
+-------------------------------------------------------
+    0 |  11.02% |   2.62% |   8.40% |   0.00% |  88.98% 
+    1 |   0.35% |   0.25% |   0.10% |   0.00% |  99.65% 
+    2 |   0.25% |   0.05% |   0.20% |   0.00% |  99.75% 
+    3 |   0.10% |   0.10% |   0.00% |   0.00% |  99.90% 
+    4 |   0.25% |   0.20% |   0.05% |   0.00% |  99.75% 
+    5 |   0.30% |   0.20% |   0.10% |   0.00% |  99.70% 
+    6 |   0.30% |   0.25% |   0.05% |   0.00% |  99.70% 
+    7 |   0.10% |   0.05% |   0.05% |   0.00% |  99.90% 
+-------------------------------------------------------
+ avg:	  1.58% |   0.46% |   1.12% |   0.00% |  98.42%
+
+Total IO
+thread |           bytes |         I/Os |       MB/s |  I/O per s | file
+-------------------------------------------------------------------------------
+     0 |      2363490304 |        36064 |     112.70 |    1803.20 | /tmp/diskspd-test/diskspd_data-write-64K.bin (4294967296B)
+-------------------------------------------------------------------------------
+total:        2363490304 |        36064 |     112.70 |    1803.20 
+
+Read IO
+thread |           bytes |         I/Os |       MB/s |  I/O per s | file
+-------------------------------------------------------------------------------
+     0 |               0 |            0 |       0.00 |       0.00 | /tmp/diskspd-test/diskspd_data-write-64K.bin (4294967296B)
+-------------------------------------------------------------------------------
+total:                 0 |            0 |       0.00 |       0.00 
+
+Write IO
+thread |           bytes |         I/Os |       MB/s |  I/O per s | file
+-------------------------------------------------------------------------------
+     0 |      2363490304 |        36064 |     112.70 |    1803.20 | /tmp/diskspd-test/diskspd_data-write-64K.bin (4294967296B)
+-------------------------------------------------------------------------------
+total:        2363490304 |        36064 |     112.70 |    1803.20 
+
+
