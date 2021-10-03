@@ -4,9 +4,10 @@ blocksizes=
 blocksizes="$blocksizes 4K 8K"
 blocksizes="$blocksizes 16K 32K"
 blocksizes="$blocksizes 64K 128K 256K 512K"
-blocksizes="$blocksizes 1M 2M 4M 8M 16M 32M"
+#blocksizes="$blocksizes 1M 2M 4M 8M 16M 32M"
 #blocksizes="$blocksizes 64M 128M 256M 512M"
-rws="read write randread randwrite"
+#rws="read write randread randwrite"
+rws="read write"
 
 formats="normal json"
 
@@ -31,7 +32,8 @@ for bs in $blocksizes; do
 	title=$env-$rw-$bs
 	tmppath=$output_dir/fio_data-${rw}-${bs}.bin
 
-	cmd="/usr/local/bin/fio"
+	cmd="/usr/local/bin/fio-3.28"
+	#cmd="/usr/bin/fio"
 	cmd="$cmd --name=$title"
 	#cmd="$cmd --bandwidth-log"
 	cmd="$cmd --filename=$tmppath"

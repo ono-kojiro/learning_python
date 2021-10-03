@@ -11,24 +11,24 @@ def usage():
 	print("Usage : {0}".format(sys.argv[0]))
 
 def normalize_bs(bs_str) :
-	m = re.search(r'(\d+)(K|M|G|Ki|Mi|Gi)(B)?', bs_str)
+	m = re.search(r'(\d+(\.\d+)?)(K|M|G|Ki|Mi|Gi)?B', bs_str)
 	if m :
 		val = m.group(1)
-		unit = m.group(2)
+		unit = m.group(3)
 		if unit == 'K' :
-			bs = int(int(val) * 1000) # for simplify
+			bs = int(float(val) * 1000) # for simplify
 		elif unit == 'Ki' :
-			bs = int(int(val) * 1024)
+			bs = int(float(val) * 1024)
 		elif unit == 'M' :
-			bs = int(int(val) * 1000 * 1000) # for simplify
+			bs = int(float(val) * 1000 * 1000) # for simplify
 		elif unit == 'Mi' :
-			bs = int(int(val) * 1024 * 1024)
+			bs = int(float(val) * 1024 * 1024)
 		elif unit == 'G' :
-			bs = int(int(val) * 1000 * 1000 * 1000) # for simplify
+			bs = int(float(val) * 1000 * 1000 * 1000) # for simplify
 		elif unit == 'Gi' :
-			bs = int(int(val) * 1024 * 1024 * 1024)
+			bs = int(float(val) * 1024 * 1024 * 1024)
 		else :
-			bs = int(val)
+			bs = int(float(val))
 	else :
 		print('can not normalize blocksize, "{0}"'.format(bs_str))
 		sys.exit(1)
@@ -76,7 +76,16 @@ def search_blocksize(line) :
     if m :
         bs = m.group(1)
         bs = normalize_bs(bs)
-
+ 
+    m = re.search(r'rw=(\w+), bs=\(R\) (\d+(\.\d+)?\w+)-(\d+(\.\d+)?\w+), \(W\) (\d+(\.\d+)?\w+)-(\d+(\.\d+)?\w+),', line)
+    if m :
+        rw = m.group(1)
+        bs_r = m.group(2)
+        bs_w = m.group(6)
+        if re.search(r'read', rw) :
+            bs = normalize_bs(bs_r)
+        else :
+            bs = normalize_bs(bs_w)
     return bs
 
 def main():
