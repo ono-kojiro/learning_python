@@ -6,6 +6,13 @@ import time
 import getopt
 
 import jenkins
+import json
+
+def read_json(filepath) :
+    fp_in = open(filepath, mode='r', encoding='utf-8')
+    data = json.load(fp_in)
+    fp_in.close()
+    return data
 
 def read_token(filepath):
     token = ''
@@ -20,11 +27,12 @@ def main():
     try:
         opts, args = getopt.getopt(
             sys.argv[1:],
-            "hvo:",
+            "hvo:u:",
             [
                 "help",
                 "version",
-                "output="
+                "output=",
+                "userinfo=",
             ]
         )
     except getopt.GetoptError as err:
@@ -32,6 +40,7 @@ def main():
         sys.exit(2)
     
     output = ''
+    userinfo_json = ''
 	
     for o, a in opts:
         if o == "-v":
@@ -42,6 +51,8 @@ def main():
             sys.exit(0)
         elif o in ("-o", "--output"):
             output = a
+        elif o in ("-u", "--userinfo"):
+            userinfo_json = a
         else:
             assert False, "unknown option"
 	
@@ -52,26 +63,32 @@ def main():
     if ret != 0:
         sys.exit(1)
 
+    userinfo = read_json(userinfo_json)
 
-    url = 'http://localhost:8080'
-    username = read_token('.username')
-    password = read_token('.password')
+    url = 'https://localhost:8080'
+    username = userinfo['username']
+    password = userinfo['token']
+
+    print(username)
+    print(password)
 
     server = jenkins.Jenkins(url,
         username=username,
         password=password
     )
 
+    print("connection passed")
+
     user = server.get_whoami()
-    version = server.get_version()
     print('user : {0}'.format(user['fullName']))
-    print('version : {0}'.format(version))
+    #version = server.get_version()
+    #print('version : {0}'.format(version))
 
     jobs = server.get_jobs()
     for job in jobs :
         print('  job : {0}'.format(job['name']))
 
-    job_name = 'cellos_cmake'
+    job_name = 'build_gnu_hello'
 
     job_info = server.get_job_info(job_name)
     prev_id = job_info['lastBuild']['number']
