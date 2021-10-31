@@ -1,0 +1,68 @@
+diff --git a/grabserial b/grabserial
+index d73da16..9ed7302 100755
+--- a/grabserial
++++ b/grabserial
+@@ -362,6 +362,7 @@ def grab(arglist, outputfd=sys.stdout):
+                 "systime",
+                 "timeformat=",
+                 "match=",
++                "mode=",
+                 "endtime=",
+                 "output=",
+                 "append",
+@@ -401,6 +402,7 @@ def grab(arglist, outputfd=sys.stdout):
+     show_time = 0
+     show_systime = 0
+     basepat = ""
++    mode = 0xFF
+     inlinepats = []
+     quitpat = ''
+     basetime = 0
+@@ -501,6 +503,8 @@ Use 'grabserial -h' for usage help."""
+             systime_format = arg
+         if opt in ["-m", "--match"]:
+             basepat = arg
++        if opt in ["--mode"]:
++            mode = int(arg, 16)
+         if opt in ["-i", "--inlinepat", "--instantpat"]:
+             # --instantpat is supported for backwards compatibility
+             inlinepats.append(arg)
+@@ -699,6 +703,11 @@ Use 'grabserial -h' for usage help."""
+ 
+     stop_reason = "grabserial stopped for an unknown reason"
+ 
++    STATE_INIT = 0
++    STATE_CHANGE_MODE = 1
++    state = STATE_INIT
++    current_mode = 0xFF
++
+     # read from the serial port until something stops the program
+     while 1:
+         try:
+@@ -734,6 +743,26 @@ Use 'grabserial -h' for usage help."""
+                 # set up for next rotation
+                 rotate_time += rotate_interval
+ 
++            if len(x) != 0 :
++                c = ord(x)
++                if state == STATE_INIT :
++                    if c == 0xFF :
++                        state = STATE_CHANGE_MODE
++                        x = b""
++                    else :
++                        if current_mode == mode :
++                            pass
++                        else :
++                            x = b""
++                elif state == STATE_CHANGE_MODE :
++                    if c == 0xFE :
++                        pass
++                    else :
++                        current_mode = c
++                        pass
++                    state = STATE_INIT
++                    x = b""
++
+             # if we didn't read anything, loop
+             if len(x) == 0:
+                 continue
