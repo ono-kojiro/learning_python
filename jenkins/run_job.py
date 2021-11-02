@@ -8,6 +8,8 @@ import getopt
 import jenkins
 import json
 
+from pprint import pprint
+
 def read_json(filepath) :
     fp_in = open(filepath, mode='r', encoding='utf-8')
     data = json.load(fp_in)
@@ -27,7 +29,7 @@ def main():
     try:
         opts, args = getopt.getopt(
             sys.argv[1:],
-            "hvo:u:",
+            "hvo:u:t:",
             [
                 "help",
                 "version",
@@ -41,6 +43,7 @@ def main():
     
     output = ''
     userinfo_json = ''
+    testcase = 'Undef'
 	
     for o, a in opts:
         if o == "-v":
@@ -53,6 +56,8 @@ def main():
             output = a
         elif o in ("-u", "--userinfo"):
             userinfo_json = a
+        elif o in ("-t", "--testcase"):
+            testcase = a
         else:
             assert False, "unknown option"
 	
@@ -63,14 +68,16 @@ def main():
     if ret != 0:
         sys.exit(1)
 
+    print('testcase is {0}'.format(testcase))
+
     userinfo = read_json(userinfo_json)
 
     url = 'https://localhost:8080'
     username = userinfo['username']
     password = userinfo['token']
 
-    print(username)
-    print(password)
+    #print(username)
+    #print(password)
 
     server = jenkins.Jenkins(url,
         username=username,
@@ -101,12 +108,12 @@ def main():
     print('build job {0}, {1}'.format(job_name, targets))
     sys.stdout.flush()
 
-    server.build_job(job_name, { 'TARGETS' : targets })
+    server.build_job(job_name, { 'TARGETS' : targets, 'TESTCASE' : testcase })
     sys.stdout.write('waiting')
     sys.stdout.flush()
     while 1:
         job_info = server.get_job_info(job_name)
-        curr_id = job_info['lastBuild']['number']
+        curr_id = job_info['lastCompletedBuild']['number']
         if prev_id != curr_id :
             sys.stdout.write('\n')
             sys.stdout.flush()
