@@ -1,69 +1,86 @@
 #!/bin/sh
 
 blocksizes=
-blocksizes="$blocksizes 4K 8K"
+blocksizes="$blocksizes 4K"
+blocksizes="$blocksizes 8K"
 blocksizes="$blocksizes 16K 32K"
 blocksizes="$blocksizes 64K 128K 256K 512K"
-#blocksizes="$blocksizes 1M 2M 4M 8M 16M 32M"
+blocksizes="$blocksizes 1M 2M 4M 8M"
+#blocksizes="$blocksizes 16M 32M"
 #blocksizes="$blocksizes 64M 128M 256M 512M"
-#rws="read write randread randwrite"
-rws="read write"
 
-formats="normal json"
+#rws="read"
+rws="read write randread randwrite"
 
-server=192.168.0.98
-	
-env="host"
-ioengine=sync
-size=1G
-ramp_time=2s
-runtime=5s
+format="json"
 
-log_dir=./out
+#envs="native qemu_yocto kvm_ubuntu"
+envs="native kvm_ubuntu"
+format="json"
+tm_str=`LANG=C date +%Y%m%d-%H%M%S`
+log_dir=/tmp/fio-log
 
-output_dir=/tmp/fio-test
+for rw in $rws ; do
+  for bs in $blocksizes ; do
+    for env in $envs ; do
+      title=$rw-$bs-$env
+      logfile="$log_dir/${title}-${format}.json"
 
-mkdir -p $output_dir
-mkdir -p $log_dir
+      cat - << 'EOS' | ssh -y $env sh -s -- \
+        $rw $bs $env $format $log_dir $title $logfile
+{
+  rw=$1
+  bs=$2
+  env=$3
+  format=$4
+  log_dir=$5
+  title=$6
+  logfile=$7
 
-for bs in $blocksizes; do
-  for rw in $rws ; do
+  ioengine=sync
+  size=1G
+  ramp_time=5s
+  runtime=15s
 
-	title=$env-$rw-$bs
-	tmppath=$output_dir/fio_data-${rw}-${bs}.bin
+  output_dir=/tmp/fio-data
+  tmppath=$output_dir/fio_data-${rw}-${bs}.bin
 
-	cmd="/usr/local/bin/fio-3.28"
-	#cmd="/usr/bin/fio"
-	cmd="$cmd --name=$title"
-	#cmd="$cmd --bandwidth-log"
-	cmd="$cmd --filename=$tmppath"
-	cmd="$cmd --ioengine=$ioengine"
-	cmd="$cmd --iodepth=1"
-	cmd="$cmd --ramp_time=$ramp_time"
-	cmd="$cmd --runtime=$runtime"
-	cmd="$cmd --direct=1"
-	cmd="$cmd --rw=$rw"
-	cmd="$cmd --bs=$bs"
-	cmd="$cmd --size=$size"
-	cmd="$cmd --numjobs=1"
-	cmd="$cmd --invalidate=1"
-	#cmd="$cmd --status-interval=1s"
-	#cmd="$cmd --eta=auto"
+  mkdir -p $output_dir
+  mkdir -p $log_dir
 
-	for format in $formats ; do
-		if [ "$format" = "json" ]; then
-			ext="json"
-		else
-			ext="txt"
-		fi
+  fio_version=`fio --version`
+  echo "$env : $fio_version"
 
-		output="$log_dir/${title}-${format}.${ext}"
-		echo $output
-		echo $cmd --output-format=$format --output $output | \
-			ssh $server sh
-		ssh $server cat $output > $output
-		ssh $server rm -f $tmppath
+  cmd="/usr/bin/fio"
+
+  cmd="$cmd --name=$title"
+  cmd="$cmd --filename=$tmppath"
+  cmd="$cmd --ioengine=$ioengine"
+  cmd="$cmd --iodepth=1"
+  cmd="$cmd --ramp_time=$ramp_time"
+  cmd="$cmd --runtime=$runtime"
+  cmd="$cmd --direct=1"
+  cmd="$cmd --rw=$rw"
+  cmd="$cmd --bs=$bs"
+  cmd="$cmd --size=$size"
+  cmd="$cmd --numjobs=1"
+  cmd="$cmd --invalidate=1"
+  cmd="$cmd --output-format=$format"
+  cmd="$cmd --output $logfile"
+
+  echo $cmd
+  $cmd
+
+  rm -f $tmppath
+}
+
+EOS
+      mkdir -p ./log/$tm_str/
+      scp $env:$logfile ./log/$tm_str/
     done
+
+
   done
 done
+
 
