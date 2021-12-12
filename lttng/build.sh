@@ -28,7 +28,7 @@ execute_fio()
 {
   dry_run=$1
 
-  rws="read write"
+  rws="write read"
   #rws="write"
   blocksizes="4k 8k 16k 32k 64k 128k 256k 512k"
   #blocksizes="16k"
@@ -46,11 +46,11 @@ execute_fio()
   log_dir=/home/root/tmp/fio-log
   mkdir -p $log_dir
   
-  for rw in $rws ; do
-    for bs in $blocksizes ; do
+  for bs in $blocksizes ; do
+    for rw in $rws ; do
       title=$rw-$bs-$env
       filename=$data_dir/fio_data.bin
-      logfile="$log_dir/${title}-${format}.json"
+      logfile=$log_dir/${title}-${format}.json
 
       cmd="/usr/bin/fio"
       cmd="$cmd --name=$title"
