@@ -21,7 +21,11 @@ def read_json(filepath) :
 	return data
 
 def read_shell(filepath) :
-	fp = open(filepath, mode='r', encoding='utf-8')
+	if filepath != '-' :
+		fp = open(filepath, mode='r', encoding='utf-8')
+	else :
+		fp = sys.stdin
+
 	lines = ''
 	while 1 :
 		line = fp.readline()
@@ -30,7 +34,9 @@ def read_shell(filepath) :
 		lines = lines + line
 	lines = shlex.quote(lines)
 
-	fp.close()
+	if filepath != '-' :
+		fp.close()
+
 	return lines
 
 def wait_prompt(p) :
@@ -43,9 +49,9 @@ def wait_prompt(p) :
 		)
 
 	except pexpect.EOF :
-		print('EOF found')
+		print('EOF found', flush=True)
 	except pexpect.TIMEOUT :
-		print('TIMEOUT occured')
+		print('TIMEOUT occured', flush=True)
 
 
 def check_exit_code(p) :
@@ -67,9 +73,9 @@ def check_exit_code(p) :
 			elif index == 1 :
 				ret = int(p.after)
 		except pexpect.EOF :
-			print('EOF found')
+			print('EOF found', flush=True)
 		except pexpect.TIMEOUT :
-			print('TIMEOUT occured')
+			print('TIMEOUT occured', flush=True)
 
 	return ret
 
@@ -130,13 +136,15 @@ def main():
 
 	for filepath in args :
 		lines = read_shell(filepath)
+		
 		cmd = "bash -s -c " + lines
+
 		p.sendline(cmd)
 		wait_prompt(p)
 
 		ret = check_exit_code(p)
-		print('')
-		print('INFO : ret is {0}'.format(ret))
+		print('', flush=True)
+		print('INFO : ret is {0}'.format(ret), flush=True)
 
 	if output is not None :
 		fp.close()
