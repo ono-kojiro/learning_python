@@ -25,12 +25,14 @@ def main():
 	try:
 		opts, args = getopt.getopt(
 			sys.argv[1:],
-			"hvo:c:",
+			"hvo:c:b:d:",
 			[
 				"help",
 				"version",
 				"output=",
 				"config=",
+				"baudrate=",
+				"device=",
 			]
 		)
 	except getopt.GetoptError as err:
@@ -38,7 +40,9 @@ def main():
 		sys.exit(2)
 	
 	output = None
-	configfile = None
+	configfile = 'config.json'
+	baudrate = None
+	device   = None
 	
 	for opt, arg in opts:
 		if opt == "-v":
@@ -51,9 +55,21 @@ def main():
 			output = arg
 		elif opt in ("-c", "--config"):
 			configfile = arg
+		elif opt in ("-b", "--baudrate"):
+			baudrate = int(arg)
+		elif opt in ("-d", "--device"):
+			device = arg
 	
 	if configfile is None :
 		print('no config option')
+		ret += 1
+	
+	if baudrate is None :
+		print('no baudrate option')
+		ret += 1
+	
+	if device is None :
+		print('no device option')
 		ret += 1
 	
 	if ret != 0:
@@ -67,47 +83,52 @@ def main():
 	config = read_json(configfile)
 	password = config['password']
 
-	baudrate = 115200
-	device   = '/dev/ttyS0'
-
-	fp.write('Hello World\n')
-	p = pexpect.spawnu('picocom -b {0} {1}'.format(baudrate, device))
+	try :
+		p = pexpect.spawnu(
+			'picocom -b {0} {1}'.format(baudrate, device),
+			echo=False
+		)
 	
-	p.expect('Terminal ready')
-	print(p.before)
-	print(p.after)
+		p.logfile = sys.stderr
 
-	p.sendline('\n')
-	while True :
-		try :
+		p.expect(
+			[
+				'Terminal ready',
+			]
+		)
+	
+		p.sendline('')
+	
+		while True :
 			index = p.expect(
 				[
-					'debian login:',
-					'Password:',
-					r'root@debian:.*# ',
+					'\ndebian login:',     # index 0
+					'\nPassword:',         # index 1
+					'\n(root@debian:.*)?# ', # index 2
 				],
 				timeout=5
 			)
 	
-			print(p.before)
-			print(p.after)
-
 			if index == 0:
-				print('INFO : login prompt found')
-				p.sendline('root\n')
+				p.logfile = None
+				p.sendline('root')
+				p.logfile = sys.stdout
 			elif index == 1:
-				print('INFO : password prompt found')
-				p.sendline('{0}\n'.format(password))
+				p.logfile = None
+				p.sendline('{0}'.format(password))
+				p.logfile = sys.stdout
 			elif index == 2:
-				print('INFO : bash prompt found')
 				break
 
-		except pexpect.EOF :
-			print('EOF found')
-			break
-		except pexpect.TIMEOUT :
-			print('TIMEOUT occured')
-			break
+	except pexpect.EOF as e:
+		print('EOF')
+		sys.exit(1)
+	except pexpect.TIMEOUT as e:
+		print('TIMEOUT')
+		sys.exit(1)
+	except pexpect.ExceptionPexpect as e:
+		print('ExceptionPexpect')
+		sys.exit(1)
 
 	if output is not None :
 		fp.close()

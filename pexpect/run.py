@@ -32,7 +32,6 @@ def read_shell(filepath) :
 		if not line :
 			break
 		lines = lines + line
-	lines = shlex.quote(lines)
 
 	if filepath != '-' :
 		fp.close()
@@ -40,18 +39,24 @@ def read_shell(filepath) :
 	return lines
 
 def wait_prompt(p) :
+	ret = 0
+
 	try :
 		index = p.expect(
 			[
-				r'root@debian:.*# ',
+				r'\n(.*)# ',
 			],
 			timeout=5
 		)
 
 	except pexpect.EOF :
 		print('EOF found', flush=True)
+		ret = 1
 	except pexpect.TIMEOUT :
 		print('TIMEOUT occured', flush=True)
+		ret = 1
+	
+	return ret
 
 
 def check_exit_code(p) :
@@ -62,8 +67,8 @@ def check_exit_code(p) :
 		try :
 			index = p.expect(
 				[
-					r'root@debian:.*# ',
-					'\d+',
+					r'\n(.*)# ',
+					r'\n(\d+)',
 				],
 				timeout=5
 			)
@@ -74,8 +79,11 @@ def check_exit_code(p) :
 				ret = int(p.after)
 		except pexpect.EOF :
 			print('EOF found', flush=True)
+			break
+
 		except pexpect.TIMEOUT :
 			print('TIMEOUT occured', flush=True)
+			break
 
 	return ret
 
@@ -85,12 +93,14 @@ def main():
 	try:
 		opts, args = getopt.getopt(
 			sys.argv[1:],
-			"hvo:c:",
+			"hvo:c:b:d:",
 			[
 				"help",
 				"version",
 				"output=",
 				"config=",
+				"baudrate=",
+				"device=",
 			]
 		)
 	except getopt.GetoptError as err:
@@ -99,6 +109,8 @@ def main():
 	
 	output = None
 	configfile = None
+	baudrate = None
+	device   = None
 	
 	for opt, arg in opts:
 		if opt == "-v":
@@ -111,9 +123,21 @@ def main():
 			output = arg
 		elif opt in ("-c", "--config"):
 			configfile = arg
+		elif opt in ("-b", "--baudrate"):
+			baudrate = int(arg)
+		elif opt in ("-d", "--device"):
+			device = arg
 	
 	if configfile is None :
 		configfile = './config.json'
+	
+	if baudrate is None :
+		print('no baudrate option')
+		ret += 1
+	
+	if device is None :
+		print('no device option')
+		ret += 1
 	
 	if ret != 0:
 		sys.exit(1)
@@ -126,25 +150,36 @@ def main():
 	config = read_json(configfile)
 	password = config['password']
 
-	baudrate = 115200
-	device   = '/dev/ttyS0'
+	p = pexpect.spawnu(
+		'picocom -b {0} {1}'.format(baudrate, device),
+		echo=False
+	)
 
-	p = pexpect.spawnu('picocom -b {0} {1}'.format(baudrate, device))
-	p.logfile = sys.stdout
+	p.setecho(False)
+	p.logfile = None
 
 	p.expect('Terminal ready')
+	p.logfile = None
+	p.logfile_send = sys.stdout
+	p.logfile_read = None
 
 	for filepath in args :
 		lines = read_shell(filepath)
-		
-		cmd = "bash -s -c " + lines
+	
+		lines = shlex.quote(lines)
+		cmd = "sh -c " + lines
 
+		p.logfile = None
+		p.logfile_send = sys.stdout
+		p.logfile_read = sys.stdout
 		p.sendline(cmd)
-		wait_prompt(p)
+		#p.logfile = sys.stdout
+		ret = wait_prompt(p)
 
 		ret = check_exit_code(p)
-		print('', flush=True)
-		print('INFO : ret is {0}'.format(ret), flush=True)
+		if ret != 0 :
+			print('\nERROR : exit code is NOT zero, {0}'.format(ret))
+			break
 
 	if output is not None :
 		fp.close()

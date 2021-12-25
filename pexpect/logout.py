@@ -18,11 +18,13 @@ def main():
 	try:
 		opts, args = getopt.getopt(
 			sys.argv[1:],
-			"hvo:",
+			"hvo:b:d:",
 			[
 				"help",
 				"version",
-				"output="
+				"output=",
+				"baudrate=",
+				"device=",
 			]
 		)
 	except getopt.GetoptError as err:
@@ -30,6 +32,8 @@ def main():
 		sys.exit(2)
 	
 	output = None
+	baudrate = None
+	device   = None
 	
 	for opt, arg in opts:
 		if opt == "-v":
@@ -40,7 +44,18 @@ def main():
 			sys.exit(0)
 		elif opt in ("-o", "--output"):
 			output = arg
+		elif opt in ("-b", "--baudrate"):
+			baudrate = int(arg)
+		elif opt in ("-d", "--device"):
+			device = arg
 	
+	if baudrate is None :
+		print('no baudrate option')
+		ret += 1
+	
+	if device is None :
+		print('no device option')
+		ret += 1
 	
 	if ret != 0:
 		sys.exit(1)
@@ -50,17 +65,12 @@ def main():
 	else :
 		fp = sys.stdout
 
-	baudrate = 115200
-	device   = '/dev/ttyS0'
-
-	fp.write('Hello World\n')
 	p = pexpect.spawnu('picocom -b {0} {1}'.format(baudrate, device))
-	
-	p.expect('Terminal ready')
-	print(p.before)
-	print(p.after)
+	p.logfile = sys.stdout
 
-	p.sendline('\n')
+	p.expect('Terminal ready')
+
+	p.sendline('')
 	while True :
 		try :
 			index = p.expect(
@@ -72,24 +82,18 @@ def main():
 				timeout=5
 			)
 	
-			print(p.before)
-			print(p.after)
-
 			if index == 0:
-				print('INFO : login prompt found')
 				break
 			elif index == 1:
-				print('INFO : password prompt found')
-				p.sendline('root\n')
+				p.sendline('root')
 			elif index == 2:
-				print('INFO : bash prompt found')
-				p.sendline('exit\n')
+				p.sendline('exit')
 
-		except pexpect.EOF :
-			print('EOF found')
+		except pexpect.EOF as e:
+			print('ERROR : {0}'.format(e.message))
 			break
 		except pexpect.TIMEOUT :
-			print('TIMEOUT occured')
+			print('ERROR : {0}'.format(e.message))
 			break
 
 	if output is not None :
