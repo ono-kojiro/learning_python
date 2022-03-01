@@ -1,4 +1,4 @@
-LOGDIR=log/20220301-210116
+LOGDIR=log/20220301-213224
 
 JSONFILES = $(wildcard $(LOGDIR)/*.json)
 

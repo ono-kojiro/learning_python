@@ -1,17 +1,19 @@
 #!/bin/sh
 
 blocksizes=
-blocksizes="$blocksizes 2K"
-blocksizes="$blocksizes 4K"
-blocksizes="$blocksizes 8K"
+#blocksizes="$blocksizes 2K"
+#blocksizes="$blocksizes 4K"
+#blocksizes="$blocksizes 8K"
 blocksizes="$blocksizes 16K 32K"
 blocksizes="$blocksizes 64K 128K 256K 512K"
-#blocksizes="$blocksizes 1M 2M 4M 8M"
-#blocksizes="$blocksizes 16M 32M"
+blocksizes="$blocksizes 1M 2M 4M 8M"
+blocksizes="$blocksizes 16M 32M"
+blocksizes="$blocksizes 64M"
 #blocksizes="$blocksizes 64M 128M 256M 512M"
 
 #rws="read"
-rws="read write randread randwrite"
+rws="read write"
+#rws="read write randread randwrite"
 
 format="json"
 
@@ -22,8 +24,11 @@ envs="native"
 
 tm_str=`LANG=C date +%Y%m%d-%H%M%S`
 format="json"
-  
+runtime="10s"
+size="20G"
+
 logdir=/tmp/fio-log
+numjobs=16
 
 for rw in $rws ; do
   for bs in $blocksizes ; do
@@ -33,20 +38,22 @@ for rw in $rws ; do
       logfile="${logdir}/${title}-${format}.json"
 
       cat - << 'EOS' | ssh -y -t $env sh -s -- \
-        $rw $bs $env $logdir $logfile $title $format
+        $rw $bs $env $logdir $logfile $title $format $runtime $size \
+        $numjobs
 {
-  rw=$1
-  bs=$2
-  env=$3
-  logdir=$4
-  logfile=$5
-  title=$6
-  format=$7
-  
+  rw=$1; shift
+  bs=$1; shift
+  env=$1; shift
+  logdir=$1; shift
+  logfile=$1; shift
+  title=$1; shift
+  format=$1; shift
+  runtime=$1; shift
+  size=$1; shift
+  numjobs=$1; shift
+
   ioengine=sync
-  size=1G
   ramp_time=5s
-  runtime=15s
 
   outdir=/tmp/fio-dat
 
@@ -68,7 +75,8 @@ for rw in $rws ; do
   cmd="$cmd --rw=$rw"
   cmd="$cmd --bs=$bs"
   cmd="$cmd --size=$size"
-  cmd="$cmd --numjobs=1"
+  cmd="$cmd --numjobs=$numjobs"
+  cmd="$cmd --runtime=$runtime"
   cmd="$cmd --invalidate=1"
   cmd="$cmd --output-format=$format"
   cmd="$cmd --output=$logfile"

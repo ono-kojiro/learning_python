@@ -4,6 +4,7 @@ import sys
 
 import getopt
 import json
+import re
 
 import sqlite3
 
@@ -124,12 +125,22 @@ def main():
         tmp = rws[rw]
 
         bw = job[tmp]['bw']
-
-        if not bs in bss :
-          print('error : no bs found, {0}'.format(bs))
+          
+        m = re.search(r'(\d+)(K|M)$', bs) 
+        if m :
+          val = int(m.group(1))
+          unit = m.group(2)
+          if unit == 'K' :
+            bs = val * 1024
+          elif unit == 'M' :
+            bs = val * 1024 * 1024
+          else :
+            print('error : invalid bs, {0}'.format(bs))
+            sys.exit(1)
+         
+        else :
+          print('error : invalid bs, {0}'.format(bs))
           sys.exit(1)
-
-        bs = bss[bs]
 
         print('{0}, {1}'.format(name, bw))
         record = {
