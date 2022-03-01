@@ -1,158 +1,147 @@
 #!/usr/bin/python3
 
 import sys
+
 import getopt
 import json
-import re
+
 import sqlite3
 
+import codecs
+
+from pprint import pprint
+
 def usage():
-	print("Usage : {0}".format(sys.argv[0]))
+    print("Usage : {0}".format(sys.argv[0]))
+
+def read_json(filepath) :
+    with open(filepath, mode='r', encoding='utf-8') as fp :
+        data = json.loads(fp.read())
+        return data
 
 def create_table(conn, table):
-	c = conn.cursor()
+    c = conn.cursor()
 
-	sql = 'DROP TABLE IF EXISTS {0};'.format(table)
-	c.execute(sql)
+    sql = 'DROP TABLE IF EXISTS {0};'.format(table)
+    c.execute(sql)
 
-	sql = 'CREATE TABLE {0} ('.format(table)
-	sql += 'id INTEGER PRIMARY KEY, '
-	sql += 'name TEXT, '
-	sql += 'env TEXT, '
-	sql += 'fmt TEXT, '
-	sql += 'rw TEXT, '
-	sql += 'bs INTEGER, '
-	sql += 'bw INTEGER '
-	sql += ');'
+    sql = 'CREATE TABLE {0} ('.format(table)
+    sql += 'id INTEGER PRIMARY KEY, '
+    sql += 'name TEXT, '
+    sql += 'rw INTEGER, '
+    sql += 'bs INTEGER, '
+    sql += 'bw INTEGER '
+    sql += ');'
 
-	c.execute(sql)
+    c.execute(sql)
 
 def insert_record(conn, table, record):
-	c = conn.cursor()
-	sql = 'INSERT INTO {0} VALUES ( NULL, ?, ?, ?, ?, ?, ? );'.format(table)
-	list = [ 
-		record['name'],
-		record['env'],
-		record['fmt'],
-		record['rw'],
-		record['bs'],
-		record['bw']
-	]
+    c = conn.cursor()
+    sql = 'INSERT INTO {0} VALUES ( NULL, ?, ?, ?, ? );'.format(table)
+    list = [ 
+        record['name'],
+        record['rw'],
+        record['bs'],
+        record['bw']
+    ]
 
-	c.execute(sql, list)
-
-def normalize_blocksize(bs_str) :
-	m = re.search(r'(\d+)(K|M|G|Ki|Mi|Gi)?', bs_str)
-	if m :
-		val = m.group(1)
-		unit = m.group(2)
-		if unit == 'K' :
-			bs = int(m.group(1)) * 1000
-		elif unit == 'Ki' :
-			bs = int(m.group(1)) * 1024
-		elif unit == 'M' :
-			bs = int(m.group(1)) * 1000 * 1000
-		elif unit == 'Mi' :
-			bs = int(m.group(1)) * 1024 * 1024
-		elif unit == 'G' :
-			bs = int(m.group(1)) * 1000 * 1000 * 1000
-		elif unit == 'Gi' :
-			bs = int(m.group(1)) * 1024 * 1024 * 1024
-		elif not unit :
-			bs = int(m.group(1))
-		else :
-			printf('invalid unit for "{0}"'.format(bs_str))
-			sys.exit(1)
-	else :
-		print('invalid block size, {0}'.format(bs_str))
-		sys.exit(1)
-	
-	return bs
+    c.execute(sql, list)
 
 def main():
-	ret = 0
-
-	try:
-		opts, args = getopt.getopt(
-			sys.argv[1:], "hvo:", ["help", "version", "output="])
-	except getopt.GetoptError as err:
-		print(str(err))
-		sys.exit(2)
+    try:
+        opts, args = getopt.getopt(
+            sys.argv[1:],
+            "hvo:",
+            [
+                "help",
+                "version",
+                "output="
+            ]
+        )
+    except getopt.GetoptError as err:
+        print(str(err))
+        sys.exit(2)
+    
+    output = None
 	
-	output = None
+    for o, a in opts:
+        if o == "-v":
+            usage()
+            sys.exit(0)
+        elif o in ("-h", "--help"):
+            usage()
+            sys.exit(0)
+        elif o in ("-o", "--output"):
+            output = a
+        else:
+            assert False, "unknown option"
 	
-	for o, a in opts:
-		if o == "-v":
-			usage()
-			sys.exit(0)
-		elif o in ("-h", "--help"):
-			usage()
-			sys.exit(0)
-		elif o in ("-o", "--output"):
-			output = a
-		else:
-			assert False, "unknown option"
+    ret = 0
+
+    if output == None :
+        print("no output option")
+        ret += 1
 	
-	if output == None :
-		print("no output option")
-		ret += 1
-	
-	if ret != 0:
-		sys.exit(1)
-	
-	table = 'fio_table'
-	#fp = open(output, mode='w', encoding='utf-8')
-	conn = sqlite3.connect(output)
-	
-	create_table(conn, table)
+    if ret != 0:
+        sys.exit(1)
 
-	for filepath in args:
-		print('read {0}'.format(filepath))
+    conn = sqlite3.connect(output)
 
-		fp_in = open(filepath, mode='r', encoding='utf-8')
-		data = json.load(fp_in)
-		fp_in.close()
+    table = 'fio_table'
 
-		
-		if 'format' in data and data['format'] == 'normal' :
-			fmt = 'normal'
-		else :
-			fmt = 'json'
+    create_table(conn, table)
 
-		for job in data['jobs'] :
-			rw = job['job options']['rw']
-			bs = str(job['job options']['bs'])
-			
-			print('bs is {0}'.format(bs))
+    rws = {
+      'read' : 'read',
+      'randread' : 'read',
+      'write' : 'write',
+      'randwrite' : 'write',
+    }
 
-			bs = normalize_blocksize(bs)
+    bss = {
+      '1K' : 1024 * 1,
+      '2K' : 1024 * 2,
+      '4K' : 1024 * 4,
+      '8K' : 1024 * 8,
+      '16K' : 1024 * 16,
+      '32K' : 1024 * 32,
+      '64K' : 1024 * 64,
+      '128K' : 1024 * 128,
+      '256K' : 1024 * 256,
+      '512K' : 1024 * 512,
+    }
 
-			name = job['jobname']
-			if re.search(r'read', rw) :
-				bw = int(job['read']['bw'])
-			else :
-				bw = int(job['write']['bw'])
+    for filepath in args:
+        data = read_json(filepath)
+        job = data['jobs'][0]
 
-			m = re.search(r'(\w+)-(\w+)-([\w\d]+)', name)
-			if m :
-				env = m.group(1)
-			else :
-				print('invalid name, {0}'.format(name))
-				sys.exit(1)
-		
-			record = {
-				'name' : name,
-				'env'  : env,
-				'fmt' : fmt,
-				'rw'   : rw,
-				'bs'   : bs,
-				'bw'   : bw
-			}
+        job_options = job['job options']
 
-			insert_record(conn, table, record)	
+        name = job_options['name']
+        rw = job_options['rw']
+        bs = job_options['bs']
 
-	conn.commit()
-	conn.close()
-	
+        tmp = rws[rw]
+
+        bw = job[tmp]['bw']
+
+        if not bs in bss :
+          print('error : no bs found, {0}'.format(bs))
+          sys.exit(1)
+
+        bs = bss[bs]
+
+        print('{0}, {1}'.format(name, bw))
+        record = {
+            'name' : name,
+            'rw'   : rw,
+            'bs'   : bs,
+            'bw'   : bw,
+        }
+        insert_record(conn, table, record)
+
+    conn.commit()
+    conn.close()
+
 if __name__ == "__main__":
-	main()
+    main()

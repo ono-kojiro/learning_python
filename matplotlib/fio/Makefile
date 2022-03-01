@@ -1,6 +1,6 @@
-NORMAL_TXT= $(sort $(wildcard out/*.txt))
-NORMAL_JSON= $(addprefix out/, $(notdir $(NORMAL_TXT:.txt=.json)))
-JSONFILES = $(NORMAL_JSON) $(sort $(wildcard out/*-json.json))
+LOGDIR=log/20220301-210116
+
+JSONFILES = $(wildcard $(LOGDIR)/*.json)
 
 DATABASE_DB  = database.db
 DATABASE_SQL = database.sql
@@ -8,7 +8,7 @@ DATABASE_SQL = database.sql
 DATFILE = output.dat
 PDFFILE = output.pdf
 
-all : json db dat pdf
+all : db dat pdf
 
 db : $(DATABASE_DB)
 

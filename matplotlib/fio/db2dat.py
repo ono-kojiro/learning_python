@@ -49,7 +49,14 @@ def main():
 
 	try:
 		opts, args = getopt.getopt(
-			sys.argv[1:], "hvo:", ["help", "version", "output="])
+			sys.argv[1:],
+            "hvo:",
+            [
+              "help",
+              "version",
+              "output="
+            ]
+        )
 	except getopt.GetoptError as err:
 		print(str(err))
 		sys.exit(2)
@@ -76,14 +83,14 @@ def main():
 		sys.exit(1)
 	
 	fp = open(output, mode='w', encoding='utf-8')
-	fp.write('# name, env, fmt, rw, bs, bw\n')
+	fp.write('# name, rw, bs, bw\n')
 	for database in args:
 		table = 'fio_table'
 		conn = sqlite3.connect(database)
 		conn.row_factory = sqlite3.Row
 
-		sql = 'SELECT name, env, fmt, rw, bs, bw FROM {0}'.format(table)
-		sql += ' ORDER BY env ASC, fmt ASC, rw ASC, bs ASC;'
+		sql = 'SELECT name, rw, bs, bw FROM {0}'.format(table)
+		sql += ' ORDER BY rw ASC, bs ASC;'
 
 		c = conn.cursor()
 		rows = c.execute(sql)
@@ -92,16 +99,14 @@ def main():
 
 		for row in rows :
 			name = row['name']
-			env  = row['env']
-			fmt  = row['fmt']
 			rw   = row['rw']
 			bs   = int(row['bs'])
 			bw   = int(row['bw'])
 
 			if last_rw != '' and last_rw != rw :
 				fp.write('\n')
-			fp.write('{0:20}\t{1}\t{2}\t{3:10}\t{4:10}\t{5:10}\n'.format(
-				name, env, fmt, rw, bs, bw))
+			fp.write('{0:20}\t{1:10}\t{2:10}\t{3:10}\n'.format(
+				name, rw, bs, bw))
 
 			last_rw = rw
 
