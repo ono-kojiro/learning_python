@@ -160,6 +160,12 @@ pdf()
   cp -f ${output_dir}/_build/latex/${filename}.pdf .
 }
 
+pdf2()
+{
+  dvipdfmx -S -P 0x0000 -o ${filename}-enc.pdf \
+    ./output/_build/latex/${filename}.dvi
+}
+
 clean()
 {
   cd $output_dir
