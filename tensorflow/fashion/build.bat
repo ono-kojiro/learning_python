@@ -6,35 +6,49 @@ SET PATH=%SYSTEMROOT%\System32
 CALL PortableGit-2.36.1-64-bit.bat
 CALL python-3.10.4-embed-amd64.bat
 
+CALL C:\opt\cuda-v11.7.bat
+CALL C:\opt\cudnn-windows-x86_64-8.4.0.27_cuda11.6.bat
+
+echo INFO : first ERRORLEVEL is !ERRORLEVEL!
+
 IF "x%1" == "x" (
 	CALL :ALL
 	REM disable echo because subroutine might enable echo
 	@ECHO OFF
-	IF NOT !ERRORLEVEL! == 0 (
+	IF !ERRORLEVEL! NEQ 0 (
 		ECHO ERROR : ALL returned !ERRORLEVEL!
 		EXIT /B !ERRORLEVEL!
 	)
-) else (
+) ELSE (
 	FOR %%i IN (%*) DO (
+		ECHO check %%i ...
+		
 		CALL :_CHECK_LABEL %%i
+		ECHO CALL :_CHECK_LABEL returned !ERRORLEVEL!
 		IF !ERRORLEVEL! == 0 (
+			ECHO call :%%i ...
 			CALL :%%i
 			REM disable echo because subroutine might enable echo
 			@ECHO OFF
 
-			IF NOT !ERRORLEVEL! == 0 (
+			IF !ERRORLEVEL! NEQ 0 (
 				ECHO ERROR : %%i returned !ERRORLEVEL!
 				EXIT /B !ERRORLEVEL!
 			)
 		) ELSE (
-			ECHO ERROR : no such label, "%%i"
-			EXIT /B 1
+			CALL :_DEFAULT "%%1"
+			IF !ERRORLEVEL! NEQ 0 (
+				ECHO ERROR : _DEFAULT %%i returned !ERRORLEVEL!
+				EXIT /B !ERRORLEVEL!
+			)
 		)
+		
+		ECHO current errorlevel is !ERRORLEVEL!
+		ECHO check finished
 		
 	)
 )
 
-ENDLOCAL & SET ERRORLEVEL=%ERRORLEVEL%
 @ECHO ON
 @EXIT /B !ERRORLEVEL!
 
@@ -95,8 +109,8 @@ REM === Extract
 REM ===============================
 :EXTRACT
 python extract_image.py ^
-  -o test_image9.png ^
-  -n 9 ^
+  -o test_image10.png ^
+  -n 10 ^
   fashion-mnist/data/fashion/t10k-images-idx3-ubyte.gz
 
 GOTO :EOF
@@ -106,7 +120,7 @@ REM === Predict
 REM ===============================
 :PREDICT
 SET TF_CPP_MIN_LOG_LEVEL=2
-python predict.py test_image9.png
+python predict.py test_image10.png
 GOTO :EOF
 
 REM ===============================
@@ -118,11 +132,20 @@ CSCRIPT //NOLOGO "%~f0?.wsf" //job:Clean
 @GOTO :EOF
 
 REM ===============================
+REM === _DEFAULT
+REM ===============================
+:_DEFAULT
+python predict.py %1
+EXIT /B !ERRORLEVEL!
+
+REM ===============================
 REM === _CHECK_LABEL
 REM ===============================
 :_CHECK_LABEL
-FINDSTR /I /R /C:"^[ ]*:%1\>" "%~f0" >NUL 2>NUL
-@GOTO :EOF
+ECHO check label "%1" in %~f0 ...
+FINDSTR /I /R /C:"^[ ]*:%1\>" "%~f0"
+ECHO findstr returned !ERRORLEVEL!
+EXIT /B !ERRORLEVEL!
 
 ----- Begin wsf script --->
 <package>
