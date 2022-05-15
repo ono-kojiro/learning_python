@@ -1,0 +1,7 @@
+checkpoints/
+fashion-mnist/
+models/
+*.png
+
+
+

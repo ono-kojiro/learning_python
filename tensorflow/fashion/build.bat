@@ -42,8 +42,11 @@ REM ===============================
 REM === All
 REM ===============================
 :ALL
-ECHO This is all.
-CSCRIPT //NOLOGO "%~f0?.wsf" //job:Main
+CALL :PREPARE
+CALL :TRAIN
+CALL :EVALUATE
+CALL :EXTRACT
+CALL :PREDICT
 GOTO :EOF
 
 REM ===============================
