@@ -6,6 +6,28 @@ SET PATH=%SYSTEMROOT%\System32
 CALL C:\opt\PortableGit-2.36.1-64-bit.bat
 CALL C:\opt\python-3.10.4-embed-amd64.bat
 
+REM SET TITLE=bocchan
+REM SET TITLE=hashire_merosu
+REM SET TITLE=chumonno_oi_ryoriten
+REM SET TITLE=karamazofuno_kyodai_01
+SET TITLE=gingatetsudono_yoru
+
+IF "!TITLE!" == "bocchan" (
+  SET URL=https://www.aozora.gr.jp/cards/000148/files/752_ruby_2438.zip
+) ELSE IF "!TITLE!" == "hashire_merosu" (
+  SET URL=https://www.aozora.gr.jp/cards/000035/files/1567_ruby_4948.zip
+) ELSE IF "!TITLE!" == "chumonno_oi_ryoriten" (
+  SET URL=https://www.aozora.gr.jp/cards/000081/files/43754_ruby_17594.zip
+) ELSE IF "!TITLE!" == "karamazofuno_kyodai_01" (
+  SET URL=https://www.aozora.gr.jp/cards/000363/files/42286_ruby_36920.zip
+) ELSE IF "!TITLE!" == "gingatetsudono_yoru" (
+SET URL=https://www.aozora.gr.jp/cards/000081/files/456_ruby_145.zip
+) ELSE (
+  ECHO ERROR : invalid title, !TITLE!
+  EXIT /B 1
+)
+
+
 IF "x%1" == "x" (
 	CALL :ALL
 	REM disable echo because subroutine might enable echo
@@ -77,8 +99,7 @@ REM ===============================
 REM === Fetch
 REM ===============================
 :FETCH
-REM python fetch.py https://www.aozora.gr.jp/cards/000148/files/752_ruby_2438.zip
-python fetch.py https://www.aozora.gr.jp/cards/000035/files/1567_ruby_4948.zip
+python fetch.py !URL!
 GOTO :EOF
 
 
@@ -86,16 +107,14 @@ REM ===============================
 REM === Prepare
 REM ===============================
 :PREPARE
-REM python remove_ruby.py -e cp932 -o out/bocchan_mod.txt out/bocchan.txt
-python remove_ruby.py -e cp932 -o out/hashire_merosu_mod.txt out/hashire_merosu.txt
+python remove_ruby.py -e cp932 -o out/!TITLE!_mod.txt out/!TITLE!.txt
 GOTO :EOF
 
 REM ===============================
 REM === Test
 REM ===============================
 :TEST
-REM python summarize.py out/bocchan_mod.txt
-python summarize.py out/hashire_merosu_mod.txt
+python summarize.py out/!TITLE!_mod.txt
 GOTO :EOF
 
 REM ===============================
