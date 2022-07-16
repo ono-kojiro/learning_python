@@ -1,7 +1,9 @@
 all : dist
 
-source :
+sdist :
 	python3 setup.py sdist --formats=xztar
+
+develop :
 	python3 setup.py develop --user
 
 dist :
