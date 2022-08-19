@@ -1,0 +1,18 @@
+{
+  "mappings": {
+    "properties": {
+      "name": { "type": "text" },
+      "age": { "type": "integer" },
+      "belong": { 
+        "type": "text",
+        "fields": {
+          "raw": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      }
+    }
+  }
+}
+
