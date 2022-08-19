@@ -1,7 +1,8 @@
 .SUFFIX:
 
 USERNAME = "elastic"
-PASSWORD = "8x*qe+eOKaMK-o+DakO*"
+
+-include password.mk
 
 all : mapping post
 
