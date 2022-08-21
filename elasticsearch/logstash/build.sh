@@ -91,9 +91,16 @@ delete()
 {
   # enable following line in /etc/elasticsearch/elasticsearch.yml
   # if you want to use wildcards
-  #action.destructive_requires_name: false
-  curl -k --netrc-file $netrc \
-    -XDELETE "$es_host/logstash-*?expand_wildcards=all" 
+  # action.destructive_requires_name: false
+  #curl -k --netrc-file $netrc \
+  #  -XDELETE "$es_host/logstash-*?expand_wildcards=all" 
+  
+  dates="2015.05.18 2015.05.19 2015.05.20"
+
+  for dt in $dates; do
+    curl -k --netrc-file $netrc \
+      -XDELETE "$es_host/logstash-${dt}?pretty"
+  done
 }
 
 indices()
