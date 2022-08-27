@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 set -e
 
@@ -108,8 +108,14 @@ if [ $ret -ne 0 ]; then
 fi
 
 if [ -z "$password" ]; then
-  read -p "Password: " -s password
+  echo -n "Password: "
+  #read -p "Password: " -s password
+  stty_orig=$(stty -g)
+  stty -echo
+  read password
+  stty $stty_orig
 fi
+
 
 tty -s && echo
 
