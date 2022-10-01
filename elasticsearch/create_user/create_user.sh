@@ -24,7 +24,7 @@ fi
 
 help() {
   cat - << EOS
-usage : $0 -u <username> -p <password>
+usage : $0 -u <username> [-p <password>]
 EOS
 }
 
@@ -105,8 +105,6 @@ password=""
 fullname=""
 email=""
 
-echo "debug 1"
-
 while [ $# -ne 0 ]; do
   case "$1" in
     -h )
@@ -134,13 +132,18 @@ if [ -z "$username" ]; then
   ret=`expr $ret + 1`
 fi
 
+#if [ -z "$password" ]; then
+#  echo "no password option"
+#  ret=`expr $ret + 1`
+#fi
+
 if [ $ret -ne 0 ]; then
+  usage
   exit $ret
 fi
 
 if [ -z "$password" ]; then
   echo -n "Password: "
-  #read -p "Password: " -s password
   stty_orig=$(stty -g)
   stty -echo
   read password
@@ -149,17 +152,19 @@ fi
 
 tty -s && echo
 
-create
+if [ $# -eq 0 ]; then
+  create
+  exit
+fi
 
+for arg in $args ; do
+  num=`LANG=C type $arg | grep 'function' | wc -l`
 
-#for arg in $args ; do
-#  num=`LANG=C type $arg | grep 'function' | wc -l`
-#
-#  if [ $num -ne 0 ]; then
-#    $arg
-#  else
-#    echo "no such function, $arg"
-#    exit 1
-#  fi
-#done
+  if [ $num -ne 0 ]; then
+    $arg
+  else
+    echo "no such function, $arg"
+    exit 1
+  fi
+done
 

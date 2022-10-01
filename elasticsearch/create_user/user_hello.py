@@ -58,7 +58,7 @@ def main() :
     url = "https://192.168.0.98:9200"
   
   if netrcfile is None :
-    netrcfile = "../.netrc"
+    netrcfile = "./.netrc"
 
   if ret != 0 :
     sys.exit(ret)
@@ -82,7 +82,7 @@ def main() :
   es = Elasticsearch(
     url,
     basic_auth=(username, password),
-    verify_certs=False,
+    verify_certs=True,
   )
 
   data_dict = ast.literal_eval(str(es.info()))

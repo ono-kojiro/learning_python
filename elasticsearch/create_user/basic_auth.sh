@@ -5,7 +5,7 @@ set -e
 top_dir="$( cd "$( dirname "$0" )" >/dev/null 2>&1 && pwd )"
 cd $top_dir
 
-es_host="https://192.168.0.98:9200/"
+. config.bashrc
 
 help() {
   cat - << EOS
@@ -30,7 +30,7 @@ create()
 {
   curl -k --netrc-file $admin_netrc \
     -H 'Content-Type: application/json' \
-    -XPOST "$es_host/_security/user/$username?pretty" --data @- << EOS
+    -XPOST "$es_url/_security/user/$username?pretty" --data @- << EOS
 {
   "password" : "$password",
   "enabled" : true,
@@ -49,14 +49,14 @@ delete()
 {
   curl -k --netrc-file $admin_netrc \
     -H 'Content-Type: application/json' \
-    -XDELETE "$es_host/_security/user/$username?pretty"
+    -XDELETE "$es_url/_security/user/$username?pretty"
 }
 
 password()
 {
   curl -k --netrc-file $admin_netrc \
     -H 'Content-Type: application/json' \
-    -XPOST "$es_host/_security/user/$username/_password?pretty" --data @- << EOS
+    -XPOST "$es_url/_security/user/$username/_password?pretty" --data @- << EOS
 {
   "password" : "$password"
 }
@@ -64,16 +64,14 @@ EOS
 }
 
 version() {
-  echo "DEBUG : username is $username"
-  echo "DEBUG : password is $password"
-  curl -k -u $username:$password $es_host
+  curl -k -u $username:$password $es_url
 }
 
 ret=0
 
 args=""
 
-username=""
+username="$USER"
 password=""
 
 while [ $# -ne 0 ]; do
