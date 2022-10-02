@@ -59,7 +59,7 @@ def main() :
     url = "https://192.168.0.98:9200"
   
   if netrcfile is None :
-    netrcfile = "../.netrc"
+    netrcfile = "./.netrc"
 
   if ret != 0 :
     sys.exit(ret)
@@ -98,7 +98,7 @@ def main() :
 
   sc = SecurityClient(es)
   res = sc.create_api_key(
-    name = 'my-api-key'
+    name = 'my-api-key for {0}'.format(username)
   )
 
   dump_response(res)
