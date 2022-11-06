@@ -26,9 +26,6 @@ check : pytest
 pytest :
 	pytest-3
 
-ut :
-	python3 setup.py test
-
 tox :
 	tox
 
