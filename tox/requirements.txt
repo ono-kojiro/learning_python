@@ -2,4 +2,5 @@ tappy
 tox
 pytest
 black
+flake8
 
