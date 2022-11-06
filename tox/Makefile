@@ -21,12 +21,7 @@ uninstall :
 
 test : check
 
-check : pytest
-
-pytest :
-	pytest-3
-
-tox :
+check :
 	tox
 
 clean :
