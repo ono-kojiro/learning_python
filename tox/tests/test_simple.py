@@ -2,7 +2,7 @@
 
 import mymodule
 
-def test_simple():
-	ret = mymodule.hello()
-	assert ret == 3
 
+def test_simple():
+    ret = mymodule.hello()
+    assert ret == 3
