@@ -6,3 +6,6 @@ tap :
 default :
 	python3 simple.py -v
 
+clean :
+	rm -rf __pycache__/
+
