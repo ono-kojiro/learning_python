@@ -10,4 +10,3 @@ install tox
 
 leave venv
   $ deactivate
-

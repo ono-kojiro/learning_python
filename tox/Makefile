@@ -22,6 +22,9 @@ uninstall :
 test : check
 
 check :
+	pytest
+
+tox :
 	tox
 
 clean :
@@ -29,4 +32,3 @@ clean :
 
 .PHONY : \
     all clean dist install uninstall
-
