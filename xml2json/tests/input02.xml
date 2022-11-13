@@ -1,0 +1,12 @@
+<testsuites>
+  <testsuite name="testsuite01" errors="0" failures="1" skipped="0" tests="3" time="0.01">
+    <testcase name="testcase01"/>
+    <testcase name="testcase02">
+      <failure message="failed">
+This is failure message.
+      </failure>
+    </testcase>
+    <testcase name="testcase03"/>
+  </testsuite>
+</testsuites>
+
