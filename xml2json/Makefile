@@ -11,6 +11,9 @@ test :
 
 check : test
 
+data :
+	cd data && sh build.sh
+
 uninstall :
 	pip3 uninstall xml2jsonl
 
