@@ -5,8 +5,9 @@ install :
 	pip3 install dist/xml2jsonl-0.0.1-py3-none-any.whl
 
 test :
-	pytest-3 --junit-xml=tmp.xml
+	python3 -m pytest --junit-xml=tmp.xml
 	cat tmp.xml | xmllint --format - > junit_report.xml
+	cat junit_report.xml
 
 check : test
 
