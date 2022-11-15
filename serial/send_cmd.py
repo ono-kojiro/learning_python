@@ -60,27 +60,28 @@ def main():
     if ret != 0:
         sys.exit(1)
 
-    #if len(args) == 0 :
-    #    usage()
-    #    sys.exit(1)
-    
+    cmd = ''
+    for arg in args :
+        cmd = cmd + ' ' + arg
+    cmd = cmd + '\n'
+    cmd = re.sub(r'^ ', '', cmd)
+
     #if output is not None :
     #    fp = open(output, mode='w', encoding='utf-8')
     #else :
     #    fp = sys.stdout
 
     ser = serial.Serial(port, baudrate, timeout=1);
-    print(ser.name)
-    sio = io.TextIOWrapper(io.BufferedRWPair(ser, ser))
+    
+    ser.write(cmd.encode())
 
     while True :
-        line = sio.readline()
-        print(line)
+        line = ser.readline()
 
-    sio.write("root\n")
-    sio.flush()
-    while True :
-        line = sio.readline()
+        if not line :
+            break
+        line = line.decode()
+        line = re.sub(r'\r?\n?$', '', line)
         print(line)
 
     ser.close()
