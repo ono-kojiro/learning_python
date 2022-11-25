@@ -1,0 +1,7 @@
+tappy
+tox
+pytest
+black
+flake8
+spdx-tools
+

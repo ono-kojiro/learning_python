@@ -14,7 +14,7 @@
 		<xsd:element name="comment" minOccurs="0"/>
 	  </xsd:all>
     </xsd:complexType>
-  
+
   <xsd:element name="records">
     <xsd:complexType>
 	  <xsd:sequence>
@@ -23,4 +23,3 @@
     </xsd:complexType>
   </xsd:element>
 </xsd:schema>
-

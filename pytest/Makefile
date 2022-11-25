@@ -1,0 +1,3 @@
+all :
+	pytest-3
+

@@ -1,0 +1,8 @@
+## kibana config
+/etc/kibana/kibana.yml
+
+server.host: "192.168.0.98"
+server.basePath: "/kibana"
+server.rewriteBasePath: true
+server.publicBaseUrl: "https://192.168.0.98:5601/kibana"
+

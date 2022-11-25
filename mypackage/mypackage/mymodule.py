@@ -1,4 +1,4 @@
-__all__ = [ "myfunc" ]
+#__all__ = [ "myfunc" ]
 
 def myfunc():
     print('This is myfunc')
