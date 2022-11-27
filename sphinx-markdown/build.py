@@ -26,7 +26,16 @@ def help(options, userdata) :
   msg = r'''
   cmds
     help
+    mclean
+
+    all
+
     create
+    add_number
+    change_theme
+    enable_markdown
+    change_docclass
+    add_pages
 '''
 
   print(msg)
@@ -39,6 +48,8 @@ def all(options, userdata) :
     enable_markdown(options, userdata)
     change_docclass(options, userdata)
     add_pages(options, userdata)
+    html(options, userdata)
+    latexpdf(options, userdata)
 
 def create(options, userdata) :
   cmd = "sphinx-quickstart " + \
@@ -75,7 +86,8 @@ def change_theme(options, userdata) :
 
     with open(filepath, mode="wt", encoding="utf-8") as fp:
         for line in lines.splitlines() :
-            line = re.sub(r"html_theme = 'alabaster'", "html_theme = 'sphinxdoc'", line)
+            #line = re.sub(r"html_theme = 'alabaster'", "html_theme = 'sphinxdoc'", line)
+            line = re.sub(r"html_theme = 'alabaster'", "html_theme = 'sphinx_rtd_theme'", line)
             fp.write(line + "\n")
 
 def enable_markdown(options, userdata) :
@@ -84,10 +96,12 @@ def enable_markdown(options, userdata) :
         lines = fp.read()
 
     with open(filepath, mode="wt", encoding="utf-8") as fp:
+        fp.write('import sphinx_rtd_theme\n')
+        fp.write('\n')
         for line in lines.splitlines() :
             line = re.sub(
                 "extensions = \[\]",
-                "extensions = [ 'myst_parser' ]",
+                "extensions = [ 'myst_parser', 'sphinx_rtd_theme' ]",
                 line)
 
             fp.write(line + "\n")
@@ -186,7 +200,7 @@ def html(options, userdata) :
 
   os.chdir(wd)
 
-def pdf(options, userdata) :
+def latexpdf(options, userdata) :
   os.makedirs(output_dir + '/_build/latex', exist_ok=True)
   shutil.copy("mypackage.sty", output_dir + '/_build/latex/mypackage.sty')
 
@@ -198,6 +212,9 @@ def pdf(options, userdata) :
   subprocess.call(shlex.split(cmd))
 
   os.chdir(wd)
+  src = output_dir + '/_build/latex/{0}.pdf'.format(filename)
+  dst = '{0}.pdf'.format(filename)
+  shutil.copy(src, dst)
 
 def latex(options, userdata) :
   os.makedirs(output_dir + '/_build/latex', exist_ok=True)
@@ -264,6 +281,10 @@ def main():
     this_function_name = sys._getframe().f_code.co_name
 
     userdata = {}
+
+    if len(args) == 0 :
+        help(options, userdata)
+        sys.exit(1)
 
     for name in args :
         if name == this_function_name :

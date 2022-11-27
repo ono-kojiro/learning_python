@@ -1,6 +1,7 @@
 ###### Requirements without Version Specifiers ######`
 sphinx
 myst-parser
+sphinx_rtd_theme
 
 ###### Requirements with Version Specifiers ######`
 
