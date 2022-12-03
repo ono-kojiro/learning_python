@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+  <testsuite name="mytestsuite">
+    <testcase name="test01"/>
+    <testcase name="test02"/>
+    <testcase name="test03"/>
+  </testsuite>
+</testsuites>
+
