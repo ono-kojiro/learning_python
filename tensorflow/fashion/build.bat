@@ -22,7 +22,7 @@ IF "x%1" == "x" (
 ) ELSE (
 	FOR %%i IN (%*) DO (
 		ECHO check %%i ...
-		
+
 		CALL :_CHECK_LABEL %%i
 		ECHO CALL :_CHECK_LABEL returned !ERRORLEVEL!
 		IF !ERRORLEVEL! == 0 (
@@ -42,10 +42,10 @@ IF "x%1" == "x" (
 				EXIT /B !ERRORLEVEL!
 			)
 		)
-		
+
 		ECHO current errorlevel is !ERRORLEVEL!
 		ECHO check finished
-		
+
 	)
 )
 

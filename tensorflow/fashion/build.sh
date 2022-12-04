@@ -103,7 +103,7 @@ while [ "$#" -ne 0 ]; do
 	  break
       ;;
   esac
-  
+
   shift
 done
 
@@ -122,4 +122,3 @@ else
   echo "ERROR : no such command, $cmd"
   exit 1
 fi
-

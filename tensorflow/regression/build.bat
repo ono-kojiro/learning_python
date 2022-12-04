@@ -35,7 +35,7 @@ IF "x%1" == "x" (
 			ECHO ERROR : no such label, "%%i"
 			EXIT /B 1
 		)
-		
+
 	)
 )
 
