@@ -1,0 +1,20 @@
+{
+  "testcases" : [
+    {
+      "id" : "test01",
+      "name" : "simple test",
+      "time" : 1.2
+    },
+    {
+      "id" : "test02",
+      "name" : "basic test",
+      "time" : 2.3
+    },
+    {
+      "id" : "test03",
+      "name" : "advanced test",
+      "time" : 3.4
+    }
+  ]
+}
+
