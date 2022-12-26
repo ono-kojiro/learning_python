@@ -1,6 +1,5 @@
 #!/usr/bin/env sh
 
-set -e
 top_dir="$(cd "$(dirname "$0")" > /dev/null 2>&1 && pwd)"
 cd $top_dir
 
@@ -138,7 +137,6 @@ add_figures()
   if [ -e "python.png" ]; then
     cp -f python.png $output_dir/images/
   fi
-
 }
 
 add_pages()
