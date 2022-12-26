@@ -32,6 +32,7 @@ def help(options, userdata) :
 
     create
     add_number
+    add_figures
     change_theme
     enable_markdown
     change_docclass
@@ -44,6 +45,7 @@ def all(options, userdata) :
     mclean(options, userdata)
     create(options, userdata)
     add_number(options, userdata)
+    add_figures(options, userdata)
     change_theme(options, userdata)
     enable_markdown(options, userdata)
     change_docclass(options, userdata)
@@ -78,6 +80,24 @@ def add_number(options, userdata) :
             # add numbered after maxdepth
             if re.search(r':maxdepth: 6', line) :
                 fp.write('   :numbered:\n')
+
+def add_figures(options, userdata) :
+    url = "https://sphinx-users.jp/_images/python.png"
+    
+    os.makedirs(output_dir + '/figures', exist_ok=False)
+    os.makedirs(output_dir + '/images', exist_ok=False)
+    
+    src = "/usr/share/gitweb/static/git-logo.png"
+    dst = output_dir + "/figures/"
+    shutil.copy(src, dst)
+
+    cmd = "wget https://sphinx-users.jp/_images/python.png"
+    print(cmd)
+    subprocess.call(shlex.split(cmd))
+    
+    src = "python.png"
+    dst = output_dir + "/images/"
+    shutil.copy(src, dst)
 
 def change_theme(options, userdata) :
     filepath = output_dir + '/conf.py'
@@ -194,7 +214,8 @@ def html(options, userdata) :
   wd = os.getcwd()
   os.chdir(output_dir)
 
-  cmd = "make.bat html"
+  #cmd = "make.bat html"
+  cmd = "make html"
   print(cmd)
   subprocess.call(shlex.split(cmd))
 
@@ -207,7 +228,7 @@ def latexpdf(options, userdata) :
   wd = os.getcwd()
   os.chdir(output_dir)
 
-  cmd = "make.bat latexpdf"
+  cmd = "make latexpdf"
   print(cmd)
   subprocess.call(shlex.split(cmd))
 
