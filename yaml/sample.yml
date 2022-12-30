@@ -1,0 +1,12 @@
+---
+aaa:
+  bbb:
+    - ccc:
+        ddd: 1
+        eee: 2
+        fff: 3
+    - ggg:
+        hhh: 4
+        iii: 5
+        jjj: 6
+
