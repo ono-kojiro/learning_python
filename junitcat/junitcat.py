@@ -163,6 +163,7 @@ def main():
         fp.write(etree.tostring(new_root, pretty_print=True).decode())
 
     if output is not None:
+        print("output: {0}".format(output))
         fp.close()
 
 if __name__ == "__main__":
