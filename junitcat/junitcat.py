@@ -108,7 +108,7 @@ def main():
         print("DEBUG : debut on")
 
     if xsdfile is None :
-        xsdfile = './junit-10.xsd'
+        xsdfile = '/usr/share/xunit-plugin/resources/types/model/xsd/junit-10.xsd'
         #print('no xsd option')
         #ret += 1
     
