@@ -59,7 +59,7 @@ def validate_junit_xml(xsdfile, filepath) :
         res = subprocess.run(
             shlex.split(cmd),
             check=True,
-            stderr=subprocess.STDOUT
+            stderr=fd
         )
         ret = res.returncode
     except subprocess.CalledProcessError as e:
@@ -145,8 +145,7 @@ def main():
 
     testsuites = []
         
-    if debug :
-        print("DEBUG : found {0} junit xmlfiles".format(len(junit_xmls)))
+    print("found {0} junit xmlfiles".format(len(junit_xmls)))
 
     for filepath in junit_xmls :
         tree = etree.parse(filepath)
