@@ -1,25 +1,12 @@
 #!/bin/sh
 
-set -e
-
 top_dir="$( cd "$( dirname "$0" )" >/dev/null 2>&1 && pwd )"
 cd $top_dir
 
-es_host="https://192.168.0.98:9200"
-kibana_host="https://192.168.0.98:5601"
-
-netrc="${top_dir}/../.netrc"
+es_host="192.168.0.98:9200"
+kibana_host="192.168.0.98:5601"
 
 ret=0
-
-if [ ! -e "$netrc" ]; then
-  echo "ERROR : no netrc, $netrc"
-  ret=`expr $ret + 1`
-fi
-
-if [ $ret -ne 0 ]; then
-  exit $ret
-fi
 
 help() {
   cat - << EOS
@@ -40,30 +27,30 @@ clean()
 # REST APIs
 # https://www.elastic.co/guide/en/elasticsearch/reference/current/rest-apis.html
 
+fetch()
+{
+  curl -O -L \
+    https://download.elastic.co/demos/kibana/gettingstarted/accounts.zip
+}
+
 post()
 {
-  curl -k --netrc-file $netrc \
+  curl -n \
     -H 'Content-Type: application/json' \
-    -XPOST "$es_host/bank/_bulk?pretty" \
+    -XPOST "https://${es_host}/bank/_bulk?pretty" \
     --data-binary "@accounts.json"
 }
 
+doc()
+{
+  #curl -n -XGET "https://${es_host}/bank/_doc/995"
+  curl -n -XGET "https://${es_host}/bank/_search?pretty=true&q=*:*"
+}
+
+
 delete()
 {
-  curl -k --netrc-file $netrc \
-    -XDELETE "$es_host/bank?pretty" 
-}
-
-data_views()
-{
-  curl -k --netrc-file $netrc \
-    -XGET "$kibana_host/api/data_views"
-}
-
-spaces()
-{
-  curl -k --netrc-file $netrc \
-    -XGET "$kibana_host/api/spaces/space"
+  curl -n -XDELETE "https://${es_host}/bank?pretty"
 }
 
 all()
@@ -104,4 +91,3 @@ for arg in $args ; do
     exit 1
   fi
 done
-
