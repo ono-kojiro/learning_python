@@ -6,7 +6,14 @@ import re
 
 import getopt
 import json
+
 import yaml
+from yaml import SafeDumper
+
+SafeDumper.add_representer(
+    type(None),
+    lambda dumper, value: dumper.represent_scalar(u'tag:yaml.org,2002:null', '')
+  )
 
 from pprint import pprint
 
@@ -32,12 +39,14 @@ def xpath2dict(data, path, val) :
     token = tokens[i]
 
     if val is None :
-        cur[token] = {}
+        cur[token] = None
     else :
         if val == 'true' :
             val = True
         elif val == 'talse' :
             val = False
+        elif val == 'null' :
+            val = None
         elif type(val) is int :
             pass
         elif val.isdecimal() :
@@ -106,13 +115,21 @@ def main():
 
         xpath2dict(data, xpath, value)
     
-    fp.write(
-        yaml.dump(
-            data,
-            indent=2,
-            sort_keys=True,
-        )
+    #fp.write(
+    #    yaml.dump(
+    #        data,
+    #        indent=2,
+    #        sort_keys=True,
+    #    )
+    #)
+
+    yaml.safe_dump(data,
+        fp,
+        indent=2,
+        sort_keys=True,
+        default_flow_style=False
     )
+
     fp.write('\n')
 
     if output is not None :
