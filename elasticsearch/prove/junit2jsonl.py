@@ -139,10 +139,13 @@ def main():
             )
             fp.write("\n");
 
+            #data = xmltodict.parse(
+            #    ET.tostring(ts),
+            #    attr_prefix='',   # remove '@'
+            #    cdata_key=''      # remove '#text'
+            #    )
             data = xmltodict.parse(
-                ET.tostring(ts),
-                attr_prefix='',   # remove '@'
-                cdata_key=''      # remove '#text'
+                ET.tostring(ts)
                 )
             fp.write(
                 json.dumps(
