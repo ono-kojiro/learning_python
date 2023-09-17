@@ -1,0 +1,25 @@
+Only in myproject/: .settings.py.un~
+diff -crp myproject-orig/settings.py myproject/settings.py
+*** myproject-orig/settings.py	2023-09-17 16:46:57.434320806 +0900
+--- myproject/settings.py	2023-09-17 19:35:47.479526226 +0900
+*************** AUTH_PASSWORD_VALIDATORS = [
+*** 103,111 ****
+  # Internationalization
+  # https://docs.djangoproject.com/en/4.2/topics/i18n/
+  
+! LANGUAGE_CODE = 'en-us'
+  
+! TIME_ZONE = 'UTC'
+  
+  USE_I18N = True
+  
+--- 103,111 ----
+  # Internationalization
+  # https://docs.djangoproject.com/en/4.2/topics/i18n/
+  
+! LANGUAGE_CODE = 'ja-jp'
+  
+! TIME_ZONE = 'Asia/Tokyo'
+  
+  USE_I18N = True
+  

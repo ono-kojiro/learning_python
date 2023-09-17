@@ -1,0 +1,31 @@
+Binary files myproject-orig/.settings.py.un~ and myproject/.settings.py.un~ differ
+Binary files myproject-orig/.urls.py.un~ and myproject/.urls.py.un~ differ
+Binary files myproject-orig/__pycache__/settings.cpython-311.pyc and myproject/__pycache__/settings.cpython-311.pyc differ
+Binary files myproject-orig/__pycache__/urls.cpython-311.pyc and myproject/__pycache__/urls.cpython-311.pyc differ
+diff -crpN myproject-orig/settings.py myproject/settings.py
+*** myproject-orig/settings.py	2023-09-17 20:21:36.127904230 +0900
+--- myproject/settings.py	2023-09-17 20:24:42.715463541 +0900
+*************** INSTALLED_APPS = [
+*** 37,42 ****
+--- 37,43 ----
+      'django.contrib.sessions',
+      'django.contrib.messages',
+      'django.contrib.staticfiles',
++     'myapp.apps.MyappConfig',
+  ]
+  
+  MIDDLEWARE = [
+diff -crpN myproject-orig/urls.py myproject/urls.py
+*** myproject-orig/urls.py	2023-09-17 20:21:00.497862074 +0900
+--- myproject/urls.py	2023-09-17 20:23:02.419097732 +0900
+*************** Including another URLconf
+*** 17,22 ****
+--- 17,24 ----
+  from django.contrib import admin
+  from django.urls import path
+  
++ from django.urls import path, include
+  urlpatterns = [
+      path('admin/', admin.site.urls),
++     path('', include('myapp.urls')),
+  ]
