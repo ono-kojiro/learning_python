@@ -1,0 +1,16 @@
+diff -crp myproject-orig/settings.py myproject/settings.py
+*** myproject-orig/settings.py	2023-09-17 20:36:20.121490774 +0900
+--- myproject/settings.py	2023-09-17 20:37:26.473098422 +0900
+*************** AUTH_PASSWORD_VALIDATORS = [
+*** 100,105 ****
+--- 100,109 ----
+      },
+  ]
+  
++ AUTHENTICATION_BACKENDS = [
++   'django_auth_ldap.backend.LDAPBackend',
++   'django.contrib.auth.backends.ModelBackend',
++ ]
+  
+  # Internationalization
+  # https://docs.djangoproject.com/en/4.2/topics/i18n/

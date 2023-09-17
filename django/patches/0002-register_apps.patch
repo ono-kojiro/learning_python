@@ -1,0 +1,15 @@
+Only in myproject/: .settings.py.un~
+diff -crp myproject-orig/settings.py myproject/settings.py
+*** myproject-orig/settings.py	2023-09-17 20:48:38.671746179 +0900
+--- myproject/settings.py	2023-09-17 20:50:18.328776291 +0900
+*************** INSTALLED_APPS = [
+*** 37,42 ****
+--- 37,44 ----
+      'django.contrib.sessions',
+      'django.contrib.messages',
+      'django.contrib.staticfiles',
++     'myapp.apps.MyappConfig',
++     'accounts.apps.AccountsConfig',
+  ]
+  
+  MIDDLEWARE = [

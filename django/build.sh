@@ -47,6 +47,7 @@ startapp()
 {
   cd $project
   python manage.py startapp $app
+  python manage.py startapp accounts
   cd $top_dir
 }
 

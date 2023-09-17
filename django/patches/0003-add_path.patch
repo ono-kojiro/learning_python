@@ -1,0 +1,14 @@
+diff -crpN myproject-orig/urls.py myproject/urls.py
+*** myproject-orig/urls.py	2023-09-17 20:21:00.497862074 +0900
+--- myproject/urls.py	2023-09-17 20:23:02.419097732 +0900
+*************** Including another URLconf
+*** 17,22 ****
+--- 17,24 ----
+  from django.contrib import admin
+  from django.urls import path
+  
++ from django.urls import path, include
+  urlpatterns = [
+      path('admin/', admin.site.urls),
++     path('', include('myapp.urls')),
+  ]
