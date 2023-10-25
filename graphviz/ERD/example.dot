@@ -1,0 +1,56 @@
+digraph G {
+  node [shape=none, margin=0]
+
+  router [label=<
+    <table border="0" cellborder="1" cellspacing="0" cellpadding="4">
+    <tr><td bgcolor="lightblue"><b>Switch</b></td></tr>
+    <tr><td align="left">Port1 IP: 192.168.0.1</td></tr>
+    </table>
+  >];
+
+  switch [label=<
+    <table border="0" cellborder="1" cellspacing="0" cellpadding="4">
+    <tr><td bgcolor="lightblue"><b>Switch</b></td></tr>
+    <tr><td align="left">Port1 IP: 192.168.10.239</td></tr>
+    <tr><td align="left">Port2 IP: NA</td></tr>
+    <tr><td align="left">Port3 IP: NA</td></tr>
+    <tr><td align="left">Port4 IP: NA</td></tr>
+    <tr><td align="left">Port5 IP: NA</td></tr>
+    <tr><td align="left">Port6 IP: NA</td></tr>
+    <tr><td align="left">Port7 IP: NA</td></tr>
+    <tr><td align="left">Port8 IP: NA</td></tr>
+    </table>
+  >];
+  
+  desktop [label=<
+    <table border="0" cellborder="1" cellspacing="0" cellpadding="4">
+    <tr><td bgcolor="lightblue"><b>Desktop PC</b></td></tr>
+    <tr><td align="left">WiFi IP: 192.168.0.98</td></tr>
+    <tr><td align="left">Port1 IP: 192.168.10.1</td></tr>
+    <tr><td align="left">Port2 IP: NA</td></tr>
+    </table>
+  >];
+  
+  laptop [label=<
+    <table border="0" cellborder="1" cellspacing="0" cellpadding="4">
+    <tr><td bgcolor="lightblue"><b>Laptop PC</b></td></tr>
+    <tr><td align="left">WiFi IP: 192.168.0.xx</td></tr>
+    <tr><td align="left">Port1 IP: 192.168.10.178</td></tr>
+    </table>
+  >];
+  
+  raspberrypi [label=<
+    <table border="0" cellborder="1" cellspacing="0" cellpadding="4">
+    <tr><td bgcolor="lightblue"><b>raspberrypi</b></td></tr>
+    <tr><td align="left">WiFi IP: 192.168.0.xx</td></tr>
+    <tr><td align="left">Port1 IP: 192.168.10.234</td></tr>
+    </table>
+  >];
+    
+  { rank=same; switch; raspberrypi; laptop; }
+
+  router -> desktop;
+  desktop -> switch;
+  switch -> laptop;
+  switch -> raspberrypi;
+}
