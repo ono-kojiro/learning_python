@@ -33,13 +33,24 @@ def detect_node(records, switches):
     nodes = {}
 
     for name in records:
-        if name in switches:
-            continue
+        #if name in switches:
+        #    continue
         
         node = records[name]
         nodes[name] = node
 
     return nodes
+
+def print_node(fp, node):
+    name = node['name']
+    addr = node['addr']
+    fp.write('  {0} '.format(name))
+    fp.write('[ shape="box", style="filled", color="gray", label=<\n')
+    fp.write('    <table border="0" cellborder="1" cellspacing="0" cellpadding="4">\n')
+    fp.write('    <tr><td bgcolor="lightblue"><b>{0}</b></td></tr>\n'.format(name))
+    fp.write('    <tr><td align="left">IP: {0}</td></tr>'.format(addr))
+    fp.write('    </table>\n')
+    fp.write('  >];\n')
 
 def print_digraph(fp, switches, nodes):
     fp.write('digraph G {\n')
@@ -56,9 +67,16 @@ def print_digraph(fp, switches, nodes):
 
     for ndname in nodes :
         node = nodes[ndname]
-        fp.write('  {0} '.format(ndname))
-        fp.write('[ shape="box", style="filled", color="gray" ];\n')
+        print_node(fp, node)
     fp.write('\n')
+
+    for ndname in nodes :
+        node = nodes[ndname]
+        if 'switch' in node :
+            swname = node['switch']
+            fp.write('  {0} -> {1};\n'.format(ndname, swname))
+    fp.write('\n')
+
         
     fp.write('}\n')
     
@@ -169,6 +187,10 @@ def main():
     switches = detect_switch(records)
     nodes = detect_node(records, switches)
     print_digraph(fp, switches, nodes)
+
+    #dump_nodes(sys.stderr, nodes)
+    #dump_switches(sys.stderr, switches)
+    dump_records(sys.stderr, records)
 
     if output != None:
         fp.close()
