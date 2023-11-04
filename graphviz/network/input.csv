@@ -1,0 +1,11 @@
+id,name,addr,switch,port
+0,aaa,192.168.0.10,switch1,port1
+1,bbb,192.168.0.11,switch1,port2
+2,ccc,192.168.0.12,switch1,port3
+3,ddd,192.168.10.13,switch2,port4
+4,eee,192.168.10.14,switch2,port5
+5,fff,192.168.10.15,switch2,port6
+6,switch1,192.168.0.254,switch2,port8
+7,switch2,192.168.10.254,switch1,port8
+
+
