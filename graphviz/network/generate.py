@@ -44,11 +44,18 @@ def detect_node(records, switches):
 def print_node(fp, node):
     name = node['name']
     addr = node['addr']
+    port = node['port']
+
     fp.write('  {0} '.format(name))
-    fp.write('[ shape="box", style="filled", color="gray", label=<\n')
+    fp.write('[ shape="box",\n')
+    fp.write('  style="filled",\n')
+    fp.write('  color="black",\n')
+    fp.write('  fillcolor="lightgray",\n')
+    fp.write('  label=<\n')
     fp.write('    <table border="0" cellborder="1" cellspacing="0" cellpadding="4">\n')
     fp.write('    <tr><td bgcolor="lightblue"><b>{0}</b></td></tr>\n'.format(name))
     fp.write('    <tr><td align="left">IP: {0}</td></tr>'.format(addr))
+    fp.write('    <tr><td align="left">Port: {0}</td></tr>'.format(port))
     fp.write('    </table>\n')
     fp.write('  >];\n')
 
@@ -58,11 +65,14 @@ def print_digraph(fp, switches, nodes):
     fp.write('  ranksep=3;\n')
     fp.write('  ratio=auto;\n')
     fp.write('\n')
+    fp.write('  node [shape=record];\n')
+    #fp.write('  edge [dir=both];\n')
+    fp.write('\n')
 
     for swname in switches:
         switch = switches[swname]
         fp.write('  {0} '.format(swname))
-        fp.write('[ shape="box", style="filled", color="gray" ];\n')
+        fp.write('[ shape="box", style="filled", color="white" ];\n')
     fp.write('\n')
 
     for ndname in nodes :
