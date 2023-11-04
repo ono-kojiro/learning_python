@@ -48,9 +48,49 @@ def print_digraph(fp, switches, nodes):
     fp.write('  ratio=auto;\n')
     fp.write('\n')
 
-    for switch in switches:
-        pass
+    for swname in switches:
+        switch = switches[swname]
+        fp.write('  {0} '.format(swname))
+        fp.write('[ shape="box", style="filled", color="gray" ];\n')
+    fp.write('\n')
+
+    for ndname in nodes :
+        node = nodes[ndname]
+        fp.write('  {0} '.format(ndname))
+        fp.write('[ shape="box", style="filled", color="gray" ];\n')
+    fp.write('\n')
+        
     fp.write('}\n')
+    
+def dump_records(fp, records):
+    fp.write(
+        json.dumps(
+            records,
+            indent=4,
+            ensure_ascii=False,
+        )
+    )
+    fp.write('\n')
+
+def dump_nodes(fp, nodes):
+    fp.write(
+        json.dumps(
+            nodes,
+            indent=4,
+            ensure_ascii=False,
+        )
+    )
+    fp.write('\n')
+
+def dump_switches(fp, switches):
+    fp.write(
+        json.dumps(
+            switches,
+            indent=4,
+            ensure_ascii=False,
+        )
+    )
+    fp.write('\n')
 
 def main():
     ret = 0
@@ -127,34 +167,8 @@ def main():
         fp_in.close()
 
     switches = detect_switch(records)
-
-    fp.write(
-        json.dumps(
-            records,
-            indent=4,
-            ensure_ascii=False,
-        )
-    )
-    fp.write('\n')
-   
     nodes = detect_node(records, switches)
-    fp.write(
-        json.dumps(
-            nodes,
-            indent=4,
-            ensure_ascii=False,
-        )
-    )
-    fp.write('\n')
-    
-    fp.write(
-        json.dumps(
-            switches,
-            indent=4,
-            ensure_ascii=False,
-        )
-    )
-    fp.write('\n')
+    print_digraph(fp, switches, nodes)
 
     if output != None:
         fp.close()
