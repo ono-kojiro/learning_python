@@ -9,7 +9,7 @@ dot : $(DOTFILES)
 png : $(PNGFILES)
 
 %.dot : %.csv
-	python3 generate.py -o $@ $<
+	python3 csv2dot.py -o $@ $<
 
 %.png : %.dot
 	sfdp -Tpng -o $@ $<
