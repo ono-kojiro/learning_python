@@ -2,7 +2,10 @@ CSVFILES = example.csv
 DOTFILES = $(CSVFILES:.csv=.dot)
 PNGFILES = $(DOTFILES:.dot=.png)
 
-all: dot png
+all: gen dot png
+
+gen :
+	python3 gencsv.py -o example.csv
 
 dot : $(DOTFILES)
 

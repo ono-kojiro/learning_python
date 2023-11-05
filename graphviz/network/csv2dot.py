@@ -200,7 +200,7 @@ def main():
 
     #dump_nodes(sys.stderr, nodes)
     #dump_switches(sys.stderr, switches)
-    dump_records(sys.stderr, records)
+    #dump_records(sys.stderr, records)
 
     if output != None:
         fp.close()
