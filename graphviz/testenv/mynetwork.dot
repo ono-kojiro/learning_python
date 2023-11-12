@@ -1,0 +1,96 @@
+graph mynetwork
+{
+    graph [nodesep=0.5,ranksep=0.50];
+    splines=curved; // good
+    //splines=true; // not good
+
+    //layout=fdp;
+
+    // https://stackoverflow.com/questions/44274518/how-can-i-control-within-level-node-order-in-graphvizs-dot
+
+    /*
+    rank1 [style=invisible];
+    rank2 [style=invisible];
+    
+    rank1 -- rank2 [color=black];
+    */
+
+  aterm [shape=record, label="{ATERM|{<port1>port1|<port2>port2|<port3>port3|<port4>port4}}"];
+
+  extender [shape=record, label="{Extender|{<port1>port1|<port2>port2}}"];
+  //extender [shape=record, label="{<port1>port1|Extender|<port2>port2}"];
+
+  wsr [shape=record, label="{Buffalo WSR 5400|{<port1>port1|<port2>port2|<port3>port3|<port4>port4|<ap>AP}}"];
+
+  whr [shape=record, label="{Buffalo WHR 1166|{<port1>port1|<port2>port2|<port3>port3|<port4>port4|<ap>AP}}"];
+
+  subgraph cluster_desktop {
+    label="Optiplex 7040 SFF";
+    //node [shape=record];
+
+    bridge0 [shape=record, label="{Brige0|{<eth0>eth0|<br0>br0}}"];
+    bridge1 [shape=record, label="{Brige1|{<br1>br1|<eth1>eth1}}"];
+ 
+    opnsense [shape=record, label="{OPNsense|{<vtnet0>vtnet0|<vtnet1>vtnet1}}"];
+
+    { rank = same; bridge0; bridge1; opnsense; }
+    bridge0 -- opnsense -- bridge1 [style=invisible];
+ 
+    subgraph cluster_kvm{ 
+      label="KVM";
+      freebsd;
+      netbsd;
+    }
+    
+
+    subgraph cluster_VirtualBox {
+      label="VirtualBox";
+      vm1; vm2; vm3; vm4;
+    }
+
+    bridge0:br0 -- opnsense:vtnet0;
+    //bridge1:br1 -- opnsense:vtnet1;
+    opnsense:vtnet1 -- bridge1:br1;
+    
+  }
+  
+  //subgraph cluster_gs308e {
+  //  label="NETGEAR 308E";
+  //  node [shape=record];
+    //gs308e [shape=record, label="{GS308E|{<port1>port1|<port2>port2|<port3>port3|<port4>port4|<port5>port5|<port6>port6|<port7>port7|<port8>port8}}"];
+    gs308e [shape=record, label="{GS308E|{<port1>port1|<port2>port2|<port3>port3|<port4>port4}|{<port5>port5|<port6>port6|<port7>port7|<port8>port8}}"];
+  //}
+
+  subgraph cluster_laptop {
+    label="Laptop";
+    node [shape=record];
+    node [label="eth0"] lt_eth0;
+  }
+
+  subgraph cluster_rpi {
+    label="Raspberry PI 4";
+    node [shape=record];
+    node [label="eth0"] rpi_eth0;
+  }
+  
+  aterm:port2 -- extender:port1;
+
+  extender:port2 -- wsr:port1;
+
+  wsr:port2 -- whr:port1;
+
+  whr:port2 -- bridge0:eth0;
+
+  bridge1:eth1 -- gs308e:port1;
+
+  gs308e:port6 -- lt_eth0;
+
+  bridge0:br0 -- { vm1 vm2 vm3 vm4 };
+  
+  wsr:ap -- { sp1 sp2 sp3 sp4 sp5 };
+
+  bridge0:br0 -- { freebsd netbsd };
+
+  whr:port3 -- { rpi_eth0 };
+}
+
