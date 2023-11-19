@@ -3,6 +3,8 @@ from node import node
 from subgraph import subgraph
 from graph import graph
 
+from switch import switch
+
 def main() :
     g = graph('mygraph')
     sg1 = subgraph('mysubgraph1')
@@ -28,6 +30,8 @@ def main() :
     sg3.add_node(node('mynode30'))
     sg3.add_node(node('mynode31'))
     
+    sw1 = switch('myswitch1')
+    sg3.add_node(sw1)
 
     # node
     nd1 = sg1.get_node('mynode11')
