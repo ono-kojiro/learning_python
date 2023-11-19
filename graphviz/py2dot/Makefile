@@ -39,15 +39,6 @@ icons :
 	python3 jpeg2png.py -o icons/doc_jpg   orig/doc_jpg
 	python3 jpeg2png.py -o icons/3015_jpeg orig/3015_jpeg
 
-rename :
-	python3 rename.py
-
-icon :
-	$(MAKE) -C icons
-
-image :
-	$(MAKE) -C images
-
 png : $(PNGFILES)
 
 %.png : %.dot

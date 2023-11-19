@@ -4,6 +4,8 @@ from subgraph import subgraph
 from graph import graph
 
 from switch import switch
+from pc import pc
+from image import image
 
 def main() :
     g = graph('mygraph')
@@ -41,6 +43,18 @@ def main() :
     nd2 = sg2.get_node('mynode21')
     nd3 = sg3.get_node('mynode30')
     nd2.connect(nd3)
+
+    pc1 = pc('mypc')
+    sg3.add_node(pc1)
+
+    image1 = image('myimage', 'icons/doc_jpg/small_hub.png')
+    sg3.add_node(image1)
+
+    nd2.connect(pc1)
+    nd2.connect(image1)
+    
+    ws1    = image('myws', 'icons/doc_jpg/workstation.png')
+    sg2.add_node(ws1)
 
     g.print(0)
 

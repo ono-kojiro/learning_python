@@ -10,8 +10,8 @@ class node():
 
   def print(self, indent):
     idt = ' ' * indent
-    print('{0}node ['.format(idt))
+    print('{0}{1} ['.format(idt, self.name))
     print('{0}  label="{1}"'.format(idt, self.name))
-    print('{0}] {1};'.format(idt, self.name))
+    print('{0}];'.format(idt))
     print('{0}'.format(idt))
 
