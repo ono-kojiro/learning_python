@@ -4,10 +4,26 @@ import sys
 import re
 
 import getopt
+import yaml
+
+from pprint import pprint
 
 def usage():
     print("Usage : {0}".format(sys.argv[0]))
 
+def str2dict(data, oid, typ, val) :
+    tokens = re.split(r'::|\]\[|\[|\]', oid)
+
+    for token in tokens :
+        if token == '' :
+           continue
+
+        if not token in data:
+            data[token] = {}
+        data = data[token]
+    data['typ'] = typ
+    data['val'] = val
+    
 def main():
     ret = 0
 
@@ -47,6 +63,8 @@ def main():
     if ret != 0:
         sys.exit(1)
    
+    data = {}
+
     count = 0
     for filepath in args:
         print('open {0}'.format(filepath))
@@ -62,16 +80,23 @@ def main():
             oid = None
             val = None
             typ = None
-            m = re.search(r'^([\w\-]+::[\w\-]+)(.*) = (.+: )?(.+)?', line)
+            m = re.search(r'^(.+) = ((.+): )?(.+)?', line)
             if m :
                 oid = m.group(1)
-                name = m.group(2)
                 typ = m.group(3)
                 val = m.group(4)
             else :
-                print('line: {0}'.format(count))
-                print('invalid line, {0}'.format(line))
-                sys.exit(1)
+                print('WARNING: line {0}'.format(count))
+                print('WARNING: invalid line, {0}'.format(line))
+                continue
+                #sys.exit(1)
+
+            if re.search(r'\[[^\[]+\]$', oid) :
+                #print('array')
+                pass
+            else :
+                #print('scalar')
+                pass
 
             if val is None :
                 val = ""
@@ -79,12 +104,20 @@ def main():
             m = re.search(r'^"(.+)"$', val)
             if m :
                 val = m.group(1)
-            print("{0}, {1}, {2}, {3}".format(oid, name, typ, val))
+            #print("{0}, {1}, {2}".format(oid, typ, val))
+            str2dict(data, oid, typ, val)
 
         fp_in.close()
-        
+    
+    yaml.dump(data,
+        fp,
+        allow_unicode=True,
+        default_flow_style=False,
+        sort_keys=True,
+    )
+
     if output is not None:
-        fp_out.close()
+        fp.close()
 
 if __name__ == "__main__":
     main()

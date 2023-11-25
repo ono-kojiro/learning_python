@@ -33,7 +33,7 @@ walk :
 	snmpwalk  -v 2c -c public -OX $(SNMP_AGENT) . > snmp-$(SNMP_AGENT).log
 
 test :
-	python3 oid2dict.py snmp-$(SNMP_AGENT).log
+	python3 oid2dict.py -o snmp-$(SNMP_AGENT).yml snmp-$(SNMP_AGENT).log
 
 translate:
 	snmptranslate 1.3.6.1.4.1
