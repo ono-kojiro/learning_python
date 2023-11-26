@@ -7,6 +7,7 @@ import getopt
 import yaml
 
 from pprint import pprint
+import json
 
 def usage():
     print("Usage : {0}".format(sys.argv[0]))
@@ -108,12 +109,22 @@ def main():
             str2dict(data, oid, typ, val)
 
         fp_in.close()
+
     
-    yaml.dump(data,
-        fp,
-        allow_unicode=True,
-        default_flow_style=False,
-        sort_keys=True,
+    #yaml.dump(data,
+    #    fp,
+    #    allow_unicode=True,
+    #    default_flow_style=False,
+    #    sort_keys=True,
+    #)
+
+    fp.write(
+        json.dumps(
+            data,
+            indent=4,
+            ensure_ascii=False,
+            sort_keys=True,
+        )
     )
 
     if output is not None:

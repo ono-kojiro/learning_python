@@ -10,7 +10,7 @@ SNMP_AGENT = 192.168.10.1
 MIBDIRS = $(HOME)/.snmp/mibs
 MIBS    = ALL
 
-all : test
+all : walk parse summary
 
 sync :
 	rsync -avz opnsense:/usr/local/share/snmp/mibs $(HOME)/.snmp/
@@ -32,8 +32,11 @@ disk :
 walk :
 	snmpwalk  -v 2c -c public -OX $(SNMP_AGENT) . > snmp-$(SNMP_AGENT).log
 
-test :
-	python3 oid2dict.py -o snmp-$(SNMP_AGENT).yml snmp-$(SNMP_AGENT).log
+parse :
+	python3 oid2dict.py -o snmp-$(SNMP_AGENT).json snmp-$(SNMP_AGENT).log
+
+summary :
+	python3 summarize.py snmp-$(SNMP_AGENT).json
 
 translate:
 	snmptranslate 1.3.6.1.4.1
