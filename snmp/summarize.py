@@ -11,6 +11,10 @@ from yaml.loader import SafeLoader
 
 from pprint import pprint
 
+from graph import graph
+from subgraph import subgraph
+from switch import switch
+from pc import pc
 
 def usage():
     print("Usage : {0}".format(sys.argv[0]))
@@ -87,25 +91,42 @@ def main():
     if 'IF-MIB' in data :
         if 'ifNumber.0' in data['IF-MIB'] :
             ifnumber = data['IF-MIB']['ifNumber.0']
-   
-    print('ifnumber: {0}'.format(ifnumber))
+  
+    mygraph = graph('mygraph')
+    mysubgraph = subgraph('mysubgraph')
+    
+    mygraph.add_subgraph(mysubgraph)
+    ifs = {}
 
+    print('ifnumber: {0}'.format(ifnumber))
+    ports = []
     items = get_items(data, [ 'IF-MIB', 'ifName' ])
     if items:
         for ifid in items :
             typ = items[ifid]['typ']
             val = items[ifid]['val']
 
-            print('{0}, {1}'.format(ifid, val))
+            print('  {0}, {1}'.format(ifid, val))
+            ports.append(val)
+            ifs[ifid] = val
     else :
         print('ERROR: IF-MIB::ifName not found')
+    
+    myswitch = switch('myswitch')
+    myswitch.set_ports(ports)
+    mysubgraph.add_node(myswitch)
+    
+    print('')
 
     items = get_items(data, [ 'RFC1213-MIB', 'ipNetToMediaIfIndex' ])
     if items :
         for ifid in items :
             for addr in items[ifid] :
-                print('{0}, {1}'.format(ifid, addr))
-
+                ifname = ifs[ifid]
+                print('  {0}, {1}, {2}'.format(ifid, ifname, addr))
+                mypc = pc(addr)
+                mysubgraph.add_node(mypc)
+                mypc.connect("myswitch:{0}".format(ifname))
 
     #yaml.dump(data,
     #    fp,
@@ -113,6 +134,8 @@ def main():
     #    default_flow_style=False,
     #    sort_keys=True,
     #)
+
+    mygraph.print(fp)
 
     if output is not None:
         fp.close()
