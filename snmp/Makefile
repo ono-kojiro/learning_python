@@ -4,16 +4,19 @@
 #     mibdirs $HOME/.snmp/mibs
 #     mibs    all
 #
+.SUFFIXES:
+.SUFFIXES: .host .log .json
+
 ZIPURL1 = https://www.cisco.com/content/dam/en_us/about/ac50/ac47/doc_jpg.zip
 ZIPURL2 = https://www.cisco.com/content/dam/en_us/about/ac50/ac47/3015_jpeg.zip
 
-ZIPFILE1 = $(shell basename $(ZIPURL1))
-ZIPFILE2 = $(shell basename $(ZIPURL2))
+ZIPFILE1 != basename $(ZIPURL1)
+ZIPFILE2 != basename $(ZIPURL2)
 
 #SNMP_AGENTS = 192.168.10.1 192.168.60.1
-SNMP_AGENTS = 192.168.10.1
+SNMP_AGENTS = 192.168.50.1.host 192.168.60.1.host
 	
-LOGFILES = $(addsuffix .log,$(SNMP_AGENTS))
+LOGFILES = $(SNMP_AGENTS:.host=.log)
 JSONFILES =  $(LOGFILES:.log=.json)
 DOTFILES  =  $(JSONFILES:.json=.dot)
 PNGFILES  =  $(DOTFILES:.dot=.png)
@@ -21,19 +24,27 @@ PNGFILES  =  $(DOTFILES:.dot=.png)
 MIBDIRS = $(HOME)/.snmp/mibs
 MIBS    = ALL
 
-all : log json dot png
+#DUMMY != touch $(SNMP_AGENTS)
+
+#all : log json dot png
+all : log json
+
+
+debug :
+	echo SNMP_AGENTS is $(SNMP_AGENTS)
+	echo LOGFILES is $(LOGFILES)
 
 prepare: fetch extract icon
-
+	
 fetch :
-	curl -L -O $(ZIPURL1)
-	curl -L -O $(ZIPURL2)
+	curl -L -O -C - $(ZIPURL1)
+	curl -L -O -C - $(ZIPURL2)
 
 extract :
 	mkdir -p orig/doc_jpg
 	mkdir -p orig/3015_jpeg
-	unzip $(ZIPFILE1) -d orig/doc_jpg
-	unzip $(ZIPFILE2) -d orig/3015_jpeg
+	unzip -n -d orig/doc_jpg $(ZIPFILE1)
+	unzip -n -d orig/3015_jpeg $(ZIPFILE2)
 
 icon :
 	mkdir -p icons/doc_jpg
@@ -41,9 +52,6 @@ icon :
 	python3 jpeg2png.py -o icons/doc_jpg   orig/doc_jpg
 	python3 jpeg2png.py -o icons/3015_jpeg orig/3015_jpeg
 
-
-debug :
-	echo $(JSONFILES)
 
 sync :
 	rsync -avz opnsense:/usr/local/share/snmp/mibs $(HOME)/.snmp/
@@ -62,14 +70,14 @@ net :
 disk :
 	snmpwalk -v 2c -c public $(SNMP_AGENT) UCD-DISKIO-MIB::diskIOTable
 
-log : $(LOGFILES)
+log: $(LOGFILES)
 
-%.log :
-	snmpwalk  -v 2c -c public -OX $* . > $@
+.host.log:
+	snmpwalk  -v 2c -c public -OX ${.IMPSRC:.host=} . > ${.TARGET}
 
 json : $(JSONFILES)
 
-%.json : %.log
+.log.json :
 	python3 oid2dict.py -o $@ $<
 
 dot : $(DOTFILES)
@@ -94,8 +102,11 @@ test_old :
 		smidump --level=6 -k -f python RFC1213-MIB.txt > RFC1213-MIB.dic
 
 clean :
-	rm -f $(JSONFILES) $(DOTFILES) $(PNGFILES)
+	rm -f $(LOGFILES) $(JSONFILES) $(DOTFILES) $(PNGFILES)
+
+.OPTIONAL : $(SNMP_AGENTS)
 
 .PHONY : \
-	all clean test walk log
+	all clean test walk log $(SNMP_AGENTS)
+
 
