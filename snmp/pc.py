@@ -9,10 +9,21 @@ class pc(node):
 
   def print(self, fp, indent):
     line = ''
+
+    #line += '"{0}" [\n'.format(self.name)
+    #line += '  label="{0}"\n'.format(self.name)
+    #line += '  penwidth=0\n'
+    #line += '  image="icons/doc_jpg/pc.png"\n'
+    #line += ']\n'
+    #line += '\n'
+
     line += '"{0}" [\n'.format(self.name)
-    line += '  label="{0}"\n'.format(self.name)
-    line += '  penwidth=0\n'
-    line += '  image="icons/doc_jpg/pc.png"\n'
+    line += '  label=<\n'
+    line += '    <table cellspacing="0" border="0" cellborder="1">\n'
+    line += '      <tr><td><img src="icons/doc_jpg/pc.png" /></td></tr>\n'
+    line += '      <tr><td>{0}</td></tr>\n'.format(self.name)
+    line += '    </table>\n'
+    line += '  >\n'
     line += ']\n'
     line += '\n'
     

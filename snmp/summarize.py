@@ -88,9 +88,11 @@ def main():
 
     ifnumber = 0
     # IF-MIB:ifNumber.0
-    if 'IF-MIB' in data :
-        if 'ifNumber.0' in data['IF-MIB'] :
-            ifnumber = data['IF-MIB']['ifNumber.0']
+    #if 'IF-MIB' in data :
+    #    if 'ifNumber.0' in data['IF-MIB'] :
+    #        ifnumber = data['IF-MIB']['ifNumber.0']
+    items = get_items(data, [ 'IF-MIB', 'ifNumber.0' ])
+    ifnumber = items['val']
   
     mygraph = graph('mygraph')
     mysubgraph = subgraph('mysubgraph')
