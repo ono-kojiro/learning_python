@@ -7,6 +7,8 @@ from turbo_flask import Turbo
 import threading
 import time
 
+import json
+
 app = Flask(__name__)
 turbo = Turbo(app)
 
@@ -27,6 +29,19 @@ def inject_load():
         load = [int(random.random() * 100) / 100 for _ in range(3)]
     return {'load1': load[0], 'load5': load[1], 'load15': load[2]}
 
+@app.context_processor
+def inject_hello():
+    data = [ "", "", "" ]
+    with open('./input.json', 'rt') as f:
+        data = json.load(f)
+    return {'data0': data[0], 'data1': data[1], 'data2': data[2]}
+
+#@app.context_processor
+#def inject_vms():
+#    data = []
+#    with open('./vm_list.json', 'rt') as f:
+#        data = json.load(f)
+#    return data
 
 #@app.before_first_request
 #def before_first_request():
@@ -37,6 +52,10 @@ def update_load():
         while True:
             time.sleep(5)
             turbo.push(turbo.replace(render_template('loadavg.html'), 'load'))
+            time.sleep(5)
+            turbo.push(turbo.replace(render_template('hello.html'), 'hello'))
+            #time.sleep(5)
+            #turbo.push(turbo.replace(render_template('vmlist.html'), 'vmlist'))
 
 with app.app_context():
     threading.Thread(target=update_load).start()
