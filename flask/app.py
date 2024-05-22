@@ -9,8 +9,12 @@ import time
 
 import json
 
+from MyForm import MyForm
+
 app = Flask(__name__)
 turbo = Turbo(app)
+
+app.config['SECRET_KEY'] = '7d441f27d441f27567d441f2b6176a'
 
 @app.route('/')
 def index():
@@ -23,6 +27,14 @@ def page2():
 @app.route('/toggle')
 def toggle():
     return render_template('toggle.html')
+
+@app.route('/myform', methods=['GET', 'POST'])
+def myform():
+    form = MyForm()
+    if form.validate_on_submit():
+        val = form.name.data
+        return render_template('myform.html', form=form, value=val)
+    return render_template('myform.html', form=form)
 
 @app.context_processor
 def inject_load():

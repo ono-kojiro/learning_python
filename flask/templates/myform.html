@@ -1,0 +1,14 @@
+<html>
+  <body>
+    <head>
+    </head>
+    <form method="POST" action="/myform">
+      {{ form.csrf_token }}
+	  {{ form.name.label }} {{ form.name(size=20) }}
+      <input type="submit" value="Go">
+    </form>
+    <p>{{ form.name.data }}</p>
+    <p>Go back to the <a href="/">home page</a>.</p>
+  </body>
+</html>
+
