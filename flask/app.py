@@ -20,6 +20,10 @@ def index():
 def page2():
     return render_template('page2.html')
 
+@app.route('/toggle')
+def toggle():
+    return render_template('toggle.html')
+
 @app.context_processor
 def inject_load():
     if sys.platform.startswith('linux'): 
@@ -36,12 +40,12 @@ def inject_hello():
         data = json.load(f)
     return {'data0': data[0], 'data1': data[1], 'data2': data[2]}
 
-#@app.context_processor
-#def inject_vms():
-#    data = []
-#    with open('./vm_list.json', 'rt') as f:
-#        data = json.load(f)
-#    return data
+@app.context_processor
+def inject_vmlist():
+    data = []
+    with open('./vmlist.json', 'rt') as f:
+        data = json.load(f)
+    return { 'data': data }
 
 #@app.before_first_request
 #def before_first_request():
@@ -51,11 +55,12 @@ def update_load():
     with app.app_context():
         while True:
             time.sleep(5)
-            turbo.push(turbo.replace(render_template('loadavg.html'), 'load'))
-            time.sleep(5)
-            turbo.push(turbo.replace(render_template('hello.html'), 'hello'))
-            #time.sleep(5)
-            #turbo.push(turbo.replace(render_template('vmlist.html'), 'vmlist'))
+            turbo.push(turbo.replace(
+                render_template('loadavg.html'), 'load'))
+            turbo.push(turbo.replace(
+                render_template('hello.html'), 'hello'))
+            turbo.push(turbo.replace(
+                render_template('vmlist.html'), 'vmlist'))
 
 with app.app_context():
     threading.Thread(target=update_load).start()

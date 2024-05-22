@@ -30,12 +30,27 @@
         text-align: center;
       }
     </style>
+    <style>
+      .vmlist {
+        float: left;
+        width: 650px;
+        border: 1px solid black;
+        margin-left: 10px;
+        margin-bottom: 10px;
+        padding: 10px;
+      }
+      .vmlist th, .vmlist td {
+        padding: 6px;
+        text-align: left;
+      }
+    </style>
 	{{ turbo() }}
   </head>
   <body>
     {% include "loadavg.html" %}
     {% block content %}{% endblock %}
     {% include "hello.html" %}
+    {% include "vmlist.html" %}
   </body>
 </html>
 

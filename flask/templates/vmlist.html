@@ -1,8 +1,26 @@
-<div>
+<div id="vmlist" class="vmlist">
   <table>
-    <tr><th>VM</th><th>State</th></tr>
-	{% for item in vms %}
-    <tr><th>{{ item.NAME }}</th><th>{{ item.STATE }}</th></tr>
+    <tr>
+	  <th>NAME</th>
+	  <th>DATASTORE</th>
+	  <th>LOADER</th>
+	  <th>CPU</th>
+	  <th>MEMORY</th>
+	  <th>VNC</th>
+	  <th>AUTO</th>
+	  <th>STATE</th>
+	</tr>
+	{% for item in data %}
+    <tr>
+	  <td>{{ item.NAME }}</td>
+	  <td>{{ item.DATASTORE }}</td>
+	  <td>{{ item.LOADER }}</td>
+	  <td>{{ item.CPU }}</td>
+	  <td>{{ item.MEMORY }}</td>
+	  <td>{{ item.VNC }}</td>
+	  <td>{{ item.AUTO }}</td>
+	  <td>{{ item.STATE }}</td>
+	</tr>
 	{% endfor %}
   </table>
 </div>
