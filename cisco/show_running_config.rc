@@ -1,0 +1,5 @@
+terminal datadump
+
+show running-config
+exit
+

@@ -1,0 +1,34 @@
+terminal datadump:
+  Dump all output of a show command without prompting
+
+show version:
+  System hardware and software version
+
+show system:
+  Show system information
+
+show inventory:
+  Show system information
+
+show running-config:
+  Current operating configuration
+
+show ip interface:
+  IP interface status and configuration
+
+show running-config detailed:
+  Displays configuration with binary data such as SSL and SSH keys
+
+show running-config brief:
+  Displays the configuration without binary data such as
+  SSL and SSH keys (default)
+
+
+show vlan:
+
+show vlan internal usage:
+
+
+
+show snmp users
+

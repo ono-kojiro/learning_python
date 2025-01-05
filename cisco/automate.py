@@ -61,7 +61,6 @@ def main():
         # prompt
         patterns = [
             '^.+#',
-            'More: <space>,  Quit: q or CTRL\\+Z, One line: <return>',
         ]
 
         cpl = p.compile_pattern_list(patterns)
@@ -75,10 +74,6 @@ def main():
                         break
                     line = re.sub(r'\r?\n?$', '', line)
                     p.sendline(line + '\n')
-                elif index == 1:
-                    #print('index 1', file=sys.stderr)
-                    # More: <space>
-                    p.sendline(' ')
                 else :
                     pass
             except pexpect.EOF:
