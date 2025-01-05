@@ -32,3 +32,17 @@ show vlan internal usage:
 
 show snmp users
 
+
+# snmpwalk
+
+  $ snmpwalk -c 3 -a SHA-256 -l noAuthNoPriv \
+    -u username 192.168.0.249 1.3.6.1.2.1.1
+
+  $ snmpwalk -c 3 -a SHA-256 -l authNoPriv \
+    -u username -A passphrase 192.168.0.249 1.3.6.1.2.1.1
+
+  $ snmpwalk -c 3 -a SHA-256 -l authPriv \
+      -u username -A passphrase \
+      -x AES -X privacypassphrase \
+      192.168.0.249 1.3.6.1.2.1.1
+
