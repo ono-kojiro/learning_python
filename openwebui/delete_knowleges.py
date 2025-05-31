@@ -64,9 +64,8 @@ def main():
 
     client = Client(base_url, api_key)
 
-    for filepath in args:
-        client.add_file(filepath)
-    
+    client.delete_knowledges()
+
     if output is not None :
         fp.close()
 

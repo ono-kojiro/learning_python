@@ -19,10 +19,11 @@ def main():
     try:
         opts, args = getopt.getopt(
             sys.argv[1:],
-            "hvo:",
+            "hvo:n:",
             [
                 "help",
                 "version",
+                "name=",
                 "output="
             ]
         )
@@ -31,6 +32,7 @@ def main():
         sys.exit(2)
 
     output = None
+    name   = None
 
     for o, a in opts:
         if o == "-v":
@@ -39,6 +41,8 @@ def main():
         elif o in ("-h", "--help"):
             usage()
             sys.exit(0)
+        elif o in ("-n", "--name"):
+            name = a
         elif o in ("-o", "--output"):
             output = a
         else:
@@ -48,6 +52,10 @@ def main():
         fp = open(output, mode="w", encoding='utf-8')
     else :
         fp = sys.stdout
+
+    if name is None :
+        print('ERROR: no name option')
+        sys.exit(1)
 
     if ret != 0:
         sys.exit(ret)
@@ -65,7 +73,12 @@ def main():
     client = Client(base_url, api_key)
 
     for filepath in args:
+        print('DEBUG: create_knowledge')
+        client.create_knowledge(name)
+        print('DEBUG: add_file')
         client.add_file(filepath)
+        print('DEBUG: add_file_to_knowledge')
+        client.add_file_to_knowledge(name, filepath)
     
     if output is not None :
         fp.close()

@@ -22,13 +22,12 @@ def main():
     base_url = params['base_url']
     api_key  = params['api_key']
 
-    url = base_url + '/api/v1/files/'
-    headers = {
-        'Authorization': 'Bearer {0}'.format(api_key),
-    }
-
     client = Client(base_url, api_key)
-    client.show_files()
+
+    items = client.get_knowledges()
+    for item in items:
+        print('{0}, {1}'.format(item['name'], item['id']))
+        print('  files: {0}'.format(item['files']))
 
 if __name__ == "__main__" :
     main()

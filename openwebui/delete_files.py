@@ -3,77 +3,71 @@
 import sys
 import os
 
+import getopt
+
 import re
 import json
 
-import requests
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
+import tomllib
+from openwebui import Client
 
 from pprint import pprint
 
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-
-def read_params(filepath, params):
-    fp = open(filepath, mode='r', encoding='utf-8')
-    while True:
-        line = fp.readline()
-        if not line:
-            break
-
-        line = re.sub('\r?\n?$', '', line)
-        m = re.search(r'(.+)\s*=\s*(.+)', line)
-        if m :
-            k = m.group(1)
-            v = m.group(2)
-            v = re.sub(r'^"', '', v)
-            v = re.sub(r'"$', '', v)
-            params[k] = v
-    fp.close()
-    return params
-
-def delete_file(params, file_id):
-    url = params['base_url'] + '/api/v1/files/{0}'.format(file_id)
-    headers = {
-        'Authorization': 'Bearer {0}'.format(params['api_key']),
-    }
-
-    res = requests.delete(
-        url,
-        headers=headers,
-        verify=False,
-        )
-    text = json.loads(res.text)
-
-    print(
-        json.dumps(
-            text,
-            indent=4,
-            ensure_ascii=False,
-        )
-    )
-
 def main():
+    ret = 0
+
+    try:
+        opts, args = getopt.getopt(
+            sys.argv[1:],
+            "hvo:",
+            [
+                "help",
+                "version",
+                "output="
+            ]
+        )
+    except getopt.GetoptError as err:
+        print(str(err))
+        sys.exit(2)
+
+    output = None
+
+    for o, a in opts:
+        if o == "-v":
+            usage()
+            sys.exit(0)
+        elif o in ("-h", "--help"):
+            usage()
+            sys.exit(0)
+        elif o in ("-o", "--output"):
+            output = a
+        else:
+            assert False, "unknown option"
+
+    if output is not None :
+        fp = open(output, mode="w", encoding='utf-8')
+    else :
+        fp = sys.stdout
+
+    if ret != 0:
+        sys.exit(ret)
+
     params = {}
 
-    params = read_params('./api_key.shrc', params)
-    params = read_params('./config.shrc', params)
+    configs = [ './api_key.shrc', './config.shrc' ]
+    for filepath in configs:
+        with open(filepath, mode='rb') as f:
+            params = params | tomllib.load(f)
 
-    url = params['base_url'] + '/api/v1/files/'
-    headers = {
-        'Authorization': 'Bearer {0}'.format(params['api_key']),
-    }
+    base_url = params['base_url']
+    api_key  = params['api_key']
 
-    res = requests.get(
-        url,
-        headers=headers,
-        verify=False,
-        )
-    items = json.loads(res.text)
+    client = Client(base_url, api_key)
 
-    for item in items:
-        filename = item['filename']
-        print('INFO: delete {0}'.format(filename))
-        delete_file(params, item['id'])
+    client.delete_files()
+
+    if output is not None :
+        fp.close()
 
 if __name__ == "__main__" :
     main()
