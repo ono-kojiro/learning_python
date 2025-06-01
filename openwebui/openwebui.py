@@ -102,6 +102,37 @@ class Client():
         text = json.loads(res.text)
         pprint(text)
 
+    def chat_completions(self, model, collection, query):
+        knowledge_id = self.get_knowledge_id(collection)
+        print('DEBUG: knowledge id is {0}'.format(knowledge_id))
+        if knowledge_id is None :
+            print('ERROR: no such knowledge base, {0}'.format(collection))
+            return None
+
+        url = self.base_url + '/api/chat/completions'
+        payload = {
+            'model': model,
+            'messages': [
+                {
+                    'role': 'user',
+                    'content': query,
+                },
+            ],
+            'files': [
+                {
+                    'type': 'collection',
+                    'id'  : knowledge_id,
+                }
+            ],
+        }
+
+        res = requests.post(
+            url,
+            headers=self.headers,
+            json=payload,
+            verify=False,
+        )
+        return res.json()
         
     def add_file(self, filepath):
         url = self.base_url + '/api/v1/files/'
@@ -114,18 +145,61 @@ class Client():
         )
         text = json.loads(res.text)
         pprint(text)
+    
+    def get_base_models(self):
+        url = self.base_url + '/api/models/base'
+        res = requests.get(
+            url,
+            headers=self.headers,
+            verify=False,
+        )
+        if res.status_code == 200:
+            return res.json()['data']
+        else :
+            return None
         
-    def show_models(self):
+    def get_models(self):
         url = self.base_url + '/api/models'
         res = requests.get(
             url,
             headers=self.headers,
             verify=False,
         )
-        obj = json.loads(res.text)
-        print('INFO: Models')
-        for item in obj['data']:
-            print('  {0}'.format(item['name']))
+        if res.status_code == 200:
+            return json.loads(res.text)['data']
+        else :
+            return None
+
+        #print('INFO: Models')
+        #for item in obj['data']:
+        #    print('  {0}'.format(item['name']))
+    
+    def create_model(self, name):
+        ret = 1
+
+        items = self.get_models()
+        for item in items:
+            if item['name'] == name :
+                print('ERROR: model {0} is already existing'.format(name))
+                return ret
+
+        url = self.base_url + '/api/v1/models/create'
+        payload = {
+            'name': name,
+            'description': name,
+            'base' : 'hf.co/alfredplpl/gemma-2-baku-2b-it-gguf:lates',
+        }
+        res = requests.post(
+            url,
+            headers=self.headers,
+            json=payload,
+            verify=False,
+        )
+        if res.status_code == 200:
+            ret = 0
+        print(res)
+        return ret
+    
    
     def create_knowledge(self, name):
         ret = 1
@@ -193,10 +267,7 @@ class Client():
             headers=self.headers,
             verify=False,
         )
-        obj = json.loads(res.text)
-        print('INFO: Knowledges')
-        for item in obj:
-            print('  {0}'.format(item['name']))
+        return res.json()
 
     def show_files(self):
         url = self.base_url + '/api/v1/files/'
@@ -294,8 +365,15 @@ def main():
     api_key  = params['api_key']
 
     client = Client(base_url, api_key)
-    client.show_models()
-    client.show_knowledges()
+    items = client.get_models()
+    for item in items:
+        print('  {0}'.format(item['name']))
+
+    print('INFO: Knowledges')
+    items = client.show_knowledges()
+    for item in items:
+        print('  {0}: {1}'.format(item['name'], item['id']))
+
     client.show_files()
     
     if output is not None :
