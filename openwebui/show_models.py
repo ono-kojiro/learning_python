@@ -6,59 +6,28 @@ import os
 import re
 import json
 
-import requests
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
+import tomllib
+from openwebui import Client
 
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-
-def read_params(filepath, params):
-    fp = open(filepath, mode='r', encoding='utf-8')
-    while True:
-        line = fp.readline()
-        if not line:
-            break
-
-        line = re.sub('\r?\n?$', '', line)
-        m = re.search(r'(.+)\s*=\s*(.+)', line)
-        if m :
-            k = m.group(1)
-            v = m.group(2)
-            v = re.sub(r'^"', '', v)
-            v = re.sub(r'"$', '', v)
-            params[k] = v
-    fp.close()
+from pprint import pprint
 
 def main():
     params = {}
 
-    read_params('./api_key.shrc', params)
-    read_params('./config.shrc', params)
-    #print(params)
+    configs = [ './api_key.shrc', './config.shrc' ]
+    for filepath in configs:
+        with open(filepath, mode='rb') as f:
+            params = params | tomllib.load(f)
 
-    url = params['base_url'] + '/api/models'
-    headers = {
-        'Authorization': 'Bearer {0}'.format(params['api_key']),
-    }
+    base_url = params['base_url']
+    api_key  = params['api_key']
 
-    res = requests.get(
-        url,
-        headers=headers,
-        verify=False,
-        )
-    #print(res)
-    data = json.loads(res.text)
+    client = Client(base_url, api_key)
 
-    #print(
-    #    json.dumps(
-    #        data,
-    #        indent=4,
-    #        ensure_ascii=False,
-    #    )
-    #)
-
-    for item in data['data']:
-        print(item['name'])
-
+    items = client.get_models()
+    for item in items:
+        print('{0}, {1}'.format(item['name'], item['id']))
+        pprint(item)
 
 if __name__ == "__main__" :
     main()
