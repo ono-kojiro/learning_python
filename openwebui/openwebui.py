@@ -11,6 +11,8 @@ import json
 import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
+import asyncio
+
 import tomllib
 import hashlib
 
@@ -102,6 +104,64 @@ class Client():
         text = json.loads(res.text)
         pprint(text)
 
+    def chat_completions_async(self, model, collection, query):
+        knowledge_id = self.get_knowledge_id(collection)
+        print('DEBUG: knowledge id is {0}'.format(knowledge_id))
+        if knowledge_id is None :
+            print('ERROR: no such knowledge base, {0}'.format(collection))
+            return None
+
+        url = self.base_url + '/api/chat/completions'
+        payload = {
+            'model': model,
+            'messages': [
+                {
+                    'role': 'user',
+                    'content': query,
+                },
+            ],
+            'files': [
+                {
+                    'type': 'collection',
+                    'id'  : knowledge_id,
+                }
+            ],
+            'stream': True,
+        }
+
+        res = requests.post(
+            url,
+            headers=self.headers,
+            json=payload,
+            verify=False,
+            stream=True,
+        )
+        res.raise_for_status()
+        for line in res.iter_lines():
+            if line:
+                line = line.decode('utf-8')
+                #s = line.decode('utf-8')
+                line = re.sub(r'^data: ', '', line)
+                if line == '[DONE]' :
+                    continue
+                print('[DEBUG]: ' + line, file=sys.stderr)
+                data = json.loads(line)
+                if 'choices' in data :
+                    choices = data['choices']
+                    for choice in choices :
+                        if 'delta' in choice and 'content' in choice['delta'] :
+                            content = choice['delta']['content']
+                            if content is not None :
+                                print(content, end='', flush=True)
+
+        print('')
+        #for chunk in res.iter_content(chunk_size=80):
+        #    if chunk:
+        #        print(chunk)
+        #        #data = json.loads(chunk.decode('utf-8'))
+        #        #print(data)
+
+
     def chat_completions(self, model, collection, query):
         knowledge_id = self.get_knowledge_id(collection)
         print('DEBUG: knowledge id is {0}'.format(knowledge_id))
@@ -124,6 +184,7 @@ class Client():
                     'id'  : knowledge_id,
                 }
             ],
+            #'stream': True,
         }
 
         res = requests.post(
