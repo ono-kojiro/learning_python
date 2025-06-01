@@ -1,0 +1,4 @@
+model="hf.co/alfredplpl/gemma-2-baku-2b-it-gguf:latest"
+collection="example"
+query="なぜ空は青いのですか？"
+
