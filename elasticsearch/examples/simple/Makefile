@@ -1,6 +1,12 @@
+include api_key.mk
 
-URL = https://192.168.0.98:9200
-INDEX = my_index-0001
+BASE_URL = https://192.168.0.98:9200
+INDEX = myindex
+PRETTY = ?pretty
+
+
+CURL_OPTS = -k -H 'Authorization: ApiKey $(ENCODED)' -H 'Content-type: application/json'
+
 PRETTY = ?pretty
 
 all : data create upload
@@ -9,19 +15,18 @@ data :
 	python3 xml2jsonl.py -o output.jsonl input.xml
 
 create :
-	curl -n -XPUT $(URL)/$(INDEX)
+	curl $(CURL_OPTS) -XPUT $(BASE_URL)/$(INDEX)$(PRETTY)
 
 delete :
-	curl -n -XDELETE $(URL)/$(INDEX)
+	curl $(CURL_OPTS) -XDELETE $(BASE_URL)/$(INDEX)$(PRETTY)
 
 upload :
-	curl -n -H 'Content-Type: application/json' \
-        -XPOST "$(URL)/$(INDEX)/_bulk" \
+	curl $(CURL_OPTS) \
+        -XPOST "$(BASE_URL)/$(INDEX)/_bulk$(PRETTY)" \
         --data-binary "@output.jsonl"
 
 dump :
-	curl -n -H 'Content-Type: application/json' \
-        -XGET "$(URL)/$(INDEX)/_search$(PRETTY)"
+	curl $(CURL_OPTS) -XGET "$(BASE_URL)/$(INDEX)/_search$(PRETTY)"
 
 clean :
 	$(MAKE) delete
