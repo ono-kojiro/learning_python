@@ -61,20 +61,14 @@
 
       /*
       "url": "https://raw.githubusercontent.com/vega/vega/refs/heads/main/docs/data/miserables.json",
-      "format": {"type": "json", "property": "nodes"},
+      "format": {"type": "json", "property": "nodes"}
       */
-
       "url" : {
         "index": "miserables*",
         "body": { "size" : 1000 }
       },
-      "format" : { "property": "hits.hits" },
-      "transform": [
-        { "type": "filter",  "expr": "datum['_source'].type == 'nodes'" },
-        { "type": "formula", "expr": "datum['_source'].name", "as": "name" },
-        { "type": "formula", "expr": "datum['_source'].group", "as": "group" },
-        { "type": "formula", "expr": "datum['_source'].index", "as": "index" }
-      ]
+      "format" : { "property": "hits.hits[0]['_source']['nodes']" },
+
     },
     {
       "name": "link-data",
@@ -82,18 +76,12 @@
       "url": "https://raw.githubusercontent.com/vega/vega/refs/heads/main/docs/data/miserables.json",
       "format": {"type": "json", "property": "links"}
       */
-
       "url" : {
         "index": "miserables*",
         "body": { "size" : 1000 }
       },
-      "format" : { "property": "hits.hits" },
-      "transform": [
-        { "type": "filter",  "expr": "datum['_source'].type == 'links'" },
-        { "type": "formula", "expr": "datum['_source'].source", "as": "source" },
-        { "type": "formula", "expr": "datum['_source'].target", "as": "target" },
-        { "type": "formula", "expr": "datum['_source'].value", "as": "value" }
-      ]
+      "format" : { "property": "hits.hits[0]['_source']['links']" },
+
     }
   ],
 

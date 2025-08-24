@@ -10,6 +10,51 @@ from pprint import pprint
 def usage():
     print("Usage : {0}".format(sys.argv[0]))
 
+def print_array(name, items):
+    i = 1
+    _id = '{0}-{1:03}'.format(name, i)
+    print('{{"index": {{"_id": "{0}"}}}}'.format(_id))
+
+    #data = {
+    #    'type': name,
+    #    name: items,
+    #}
+    print(
+        json.dumps(
+            items,
+            #indent=4,
+            ensure_ascii=False
+        )
+    )
+    print('')
+
+def print_jsonl(name, items):
+    i = 1
+    for item in items:
+        #for key in item.keys() :
+        #    val = item[key]
+        #    print('key: {0}, val: {1}'.format(key, val))
+        _id = '{0}-{1:03}'.format(name, i)
+        print('{{"index": {{"_id": "{0}"}}}}'.format(_id))
+
+        if name is not None:
+            item['type'] = name
+
+        #data = {
+        #    name : item
+        #}
+
+        print(
+            json.dumps(
+                item,
+	            #indent=4,
+                ensure_ascii=False
+            )
+        )
+        print('')
+
+        i += 1
+
 def main():
     ret = 0
 
@@ -64,30 +109,8 @@ def main():
         items = json.load(fp_in)
         fp_in.close()
 
-        i = 1
-        for item in items:
-            #for key in item.keys() :
-            #    val = item[key]
-            #    print('key: {0}, val: {1}'.format(key, val))
-            _id = '{0}-{1:03}'.format(name, i)
-            print('{{"index": {{"_id": "{0}"}}}}'.format(_id))
-
-            if name is not None:
-                item['type'] = name
-
-            #data = {
-            #    name : item
-            #}
-
-            print(
-                json.dumps(
-                    item,
-	                #indent=4,
-                    ensure_ascii=False
-                )
-            )
-
-            i += 1
+        #print_jsonl(name, items)
+        print_array(name, items)
             
     if output is not None :
         fp.close()
