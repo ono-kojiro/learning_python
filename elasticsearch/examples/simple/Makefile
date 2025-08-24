@@ -26,7 +26,8 @@ upload :
         --data-binary "@output.jsonl"
 
 dump :
-	curl $(CURL_OPTS) -XGET "$(BASE_URL)/$(INDEX)/_search$(PRETTY)"
+	curl $(CURL_OPTS) -XGET "$(BASE_URL)/$(INDEX)/_search$(PRETTY)" | \
+		jq ".hits.hits"
 
 clean :
 	$(MAKE) delete
