@@ -2,11 +2,12 @@
 
 import sys
 
-from mypackage.mymodule import *
+from mypackage import mymodule
 
-print(type(myfunc))
+def test_import() :
+    print(type(mymodule.myfunc))
 
-myfunc()
+    mymodule.myfunc()
 
-sys.stderr.write('stderr output')
+    sys.stderr.write('stderr output')
 
