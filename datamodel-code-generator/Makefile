@@ -1,6 +1,6 @@
 
-#SCHEMA = v6.json
-SCHEMA_JSON  = v5.json
+SCHEMA_JSON  = v6.json
+#SCHEMA_JSON  = v5.json
 SCHEMA_URL   = https://vega.github.io/schema/vega/$(SCHEMA_JSON)
 
 #OUTPUT_MODEL_TYPE = dataclasses.dataclass
