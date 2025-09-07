@@ -27,8 +27,10 @@ generate :
 		--output tests/vega.py
 	cd tests && patch -p0 -i 0001-fix_default_errors.patch
 	cd tests && patch -p0 -i 0002-fix_regex.patch
+	cd tests && patch -p0 -i 0003-fix_stroke_type.patch
+	cd tests && patch -p0 -i 0004-fix_encode_entry.patch
 
 test :
-	cd tests && pytest
+	$(MAKE) -C tests
 
 
