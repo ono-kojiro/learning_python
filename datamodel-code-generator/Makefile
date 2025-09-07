@@ -12,6 +12,14 @@ SPEC_URL = https://raw.githubusercontent.com/PBI-David/Deneb-Showcase/refs/heads
 
 all : generate test
 
+help :
+	@echo "usage : make TARGET"
+	@echo "  target"
+	@echo "    prepare"
+	@echo "    fetch"
+	@echo "    generate"
+	@echo "    test"
+
 prepare :
 	python3 -m pip install -r requirements.txt
 
