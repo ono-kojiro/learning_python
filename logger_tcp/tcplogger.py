@@ -12,6 +12,8 @@ import logging
 from logging import getLogger, DEBUG, INFO, WARNING, ERROR, CRITICAL
 from logging.handlers import SysLogHandler
 
+from syslog import LOG_USER
+
 def usage():
     msg = '''
 usage: python3 tcplogger.py -h host -p port message
@@ -88,10 +90,13 @@ def main():
             logger = getLogger(sys.argv[0])
             logger.setLevel(getattr(logging, level.upper(), INFO))
 
-            handler = SysLogHandler(address=(host, port),
+            handler = SysLogHandler(
+                address=(host, port),
+                facility=LOG_USER,
                 socktype=socket.SOCK_STREAM)
             
-            fmt = '{0} %(name)s[%(process)d]: %(message)s'.format(hostname)
+            fmt = '{0} '.format(hostname)
+            fmt += '%(name)s[%(process)d]: %(message)s'
             formatter = logging.Formatter(fmt)
             handler.setFormatter(formatter)
  
