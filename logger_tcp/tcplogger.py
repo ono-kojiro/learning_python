@@ -3,6 +3,8 @@
 import os
 import sys
 
+import re
+
 import getopt
 import socket
 
@@ -21,13 +23,14 @@ def main():
     try:
         options, args = getopt.getopt(
             sys.argv[1:],
-            "vo:h:p:",
+            "vo:h:p:P:",
             [
               "help",
               "version",
               "output=",
               "host=",
               "port=",
+              "priority=",
             ]
         )
     except getopt.GetoptError as err:
@@ -37,6 +40,7 @@ def main():
     output = None
     host   = None
     port   = None
+    priority = "local3.info"
 
     for opt, arg in options:
         if opt in ("-v", "--help"):
@@ -46,6 +50,8 @@ def main():
             output = arg
         elif opt in ("-h", "--host"):
             host = arg
+        elif opt in ("-P", "--priority"):
+            priority = arg
         elif opt in ("-p", "--port"):
             port = int(arg)
         else:
@@ -66,28 +72,39 @@ def main():
 
     if ret :
         sys.exit(ret)
+
+    m = re.search(r'([^.]+)\.([^.]+)', priority)
+    if not m :
+        print('ERROR: invalid priority, {0}'.format(priority))
+        sys.exit(1)
+
+    facility = m.group(1)
+    level    = m.group(2)
         
     hostname = socket.gethostname()
-    appname  = sys.argv[0]
     process_id = os.getpid()
+        
+    print('priority: {0}'.format(priority))
+    print('host: {0}'.format(host))
+    print('port: {0}'.format(port))
+    print('facility: {0}'.format(facility))
+    print('level: {0}'.format(level))
 
     for msg in args:
-        # Example usage
-        tmp  = "{0}".format(hostname)
-        tmp += " {0}[{1}]:".format(appname, process_id)
-        msg  = tmp + " " + msg
-
-        print('host: {0}'.format(host))
-        print('port: {0}'.format(port))
         print('msg : {0}'.format(msg))
         
         try :
-            logger = logging.getLogger(appname)
+            logger = logging.getLogger(sys.argv[0])
+            logger.setLevel(getattr(logging, level.upper(), logging.INFO))
             logger.setLevel(logging.INFO)
-            
+
             handler = SysLogHandler(address=(host, port),
                 socktype=socket.SOCK_STREAM)
             
+            fmt = '{0} %(name)s[%(process)d]: %(message)s'.format(hostname)
+            formatter = logging.Formatter(fmt)
+            handler.setFormatter(formatter)
+ 
             logger.addHandler(handler)
             logger.info(msg)
         except Exception as e:
