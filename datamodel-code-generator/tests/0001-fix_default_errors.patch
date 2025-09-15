@@ -1,0 +1,277 @@
+*** vega.py	2025-09-06 16:22:26.081570661 +0900
+--- vega_mod.py	2025-09-06 16:25:26.995283615 +0900
+*************** class AnyValueItem2(BaseModel):
+*** 4035,4040 ****
+--- 4035,4042 ----
+  class AnyValue12(BaseModel):
+      field: FieldModel
+  
++ class AnyValueItem(Rule, StringModifiers):
++     pass
+  
+  class AnyValue(RootModel[Union[List[AnyValueItem], StringModifiers]]):
+      root: Union[List[AnyValueItem], StringModifiers]
+*************** class BlendValueItem2(BaseModel):
+*** 4047,4052 ****
+--- 4049,4108 ----
+  class BlendValue12(BaseModel):
+      field: FieldModel
+  
++ class BlendValueItem(Rule, StringModifiers):
++     pass
++ 
++ 
++ class StringValueItem(Rule, StringModifiers):
++     pass
++ 
++ 
++ class TextValueItem(Rule, StringModifiers):
++     pass
++ 
++ 
++ class BooleanValueItem(Rule, StringModifiers):
++     pass
++ 
++ 
++ class ArrayValueItem(Rule, StringModifiers):
++     pass
++ 
++ 
++ class FontWeightValueItem(Rule, StringModifiers):
++     pass
++ 
++ 
++ class AnchorValueItem(Rule, StringModifiers):
++     pass
++ 
++ 
++ class AlignValueItem(Rule, StringModifiers):
++     pass
++ 
++ 
++ class BaselineValueItem(Rule, StringModifiers):
++     pass
++ 
++ 
++ class DirectionValueItem(Rule, StringModifiers):
++     pass
++ 
++ 
++ class OrientValueItem(Rule, StringModifiers):
++     pass
++ 
++ 
++ class StrokeCapValueItem(Rule, StringModifiers):
++     pass
++ 
++ 
++ class StrokeJoinValueItem(Rule, StringModifiers):
++     pass
++ 
++ 
++ class NumberValueItem(Rule, NumberModifiers):
++     pass
+  
+  class BlendValue(RootModel[Union[List[BlendValueItem], StringModifiers]]):
+      root: Union[List[BlendValueItem], StringModifiers]
+*************** class ColorHCL(BaseModel):
+*** 4272,4277 ****
+--- 4328,4334 ----
+      c: NumberValue
+      l: NumberValue
+  
++ ColorValueItem = Rule
+  
+  class ColorValue(RootModel[Union[List[ColorValueItem], BaseColorValue]]):
+      root: Union[List[ColorValueItem], BaseColorValue]
+*************** class Mark(BaseModel):
+*** 4367,4372 ****
+--- 4424,4461 ----
+      transform: Optional[List[TransformMark]] = None
+      on: Optional[OnMarkTrigger] = None
+  
++ class Stream2(BaseModel):
++     stream: Stream
++ 
++ 
++ class Stream3(BaseModel):
++     merge: List[Stream] = Field(..., min_length=1)
++ 
++ 
++ class Stream4(BaseModel):
++     between: Optional[List[Stream]] = Field(None, max_length=2, min_length=2)
++     marktype: Optional[str] = None
++     markname: Optional[str] = None
++     filter: Optional[Union[ExprString, List[ExprString]]] = None
++     throttle: Optional[float] = None
++     debounce: Optional[float] = None
++     consume: Optional[bool] = None
++ 
++ class Stream5(Stream1, Stream4):
++     pass
++ 
++ 
++ class Stream6(Stream2, Stream4):
++     pass
++ 
++ 
++ class Stream7(Stream3, Stream4):
++     pass
++ 
++ 
++ 
++ class Stream(RootModel[Union[Stream5, Stream6, Stream7]]):
++     root: Union[Stream5, Stream6, Stream7]
+  
+  class Listener(RootModel[Union[SignalRef, Listener1, Stream]]):
+      root: Union[SignalRef, Listener1, Stream]
+*************** class OnEvent3(BaseModel):
+*** 4376,4381 ****
+--- 4465,4476 ----
+      events: Union[Selector, Listener, List[Listener]]
+      force: Optional[bool] = None
+  
++ class OnEvent4(OnEvent1, OnEvent3):
++     pass
++ 
++ 
++ class OnEvent5(OnEvent2, OnEvent3):
++     pass
+  
+  class OnEvent(RootModel[Union[OnEvent4, OnEvent5]]):
+      root: Union[OnEvent4, OnEvent5]
+*************** class Signal(RootModel[Union[Signal1, Si
+*** 4438,4463 ****
+      root: Union[Signal1, Signal2, Signal3]
+  
+  
+- class Stream2(BaseModel):
+-     stream: Stream
+- 
+- 
+- class Stream3(BaseModel):
+-     merge: List[Stream] = Field(..., min_length=1)
+- 
+- 
+- class Stream4(BaseModel):
+-     between: Optional[List[Stream]] = Field(None, max_length=2, min_length=2)
+-     marktype: Optional[str] = None
+-     markname: Optional[str] = None
+-     filter: Optional[Union[ExprString, List[ExprString]]] = None
+-     throttle: Optional[float] = None
+-     debounce: Optional[float] = None
+-     consume: Optional[bool] = None
+- 
+- 
+- class Stream(RootModel[Union[Stream5, Stream6, Stream7]]):
+-     root: Union[Stream5, Stream6, Stream7]
+  
+  
+  class Title1(BaseModel):
+--- 4533,4538 ----
+*************** class Title(RootModel[Union[str, Title1]
+*** 4506,4587 ****
+      root: Union[str, Title1]
+  
+  
+- class AnyValueItem(Rule, StringModifiers):
+-     pass
+- 
+  
+- class BlendValueItem(Rule, StringModifiers):
+-     pass
+  
+  
+- class StringValueItem(Rule, StringModifiers):
+-     pass
+- 
+- 
+- class TextValueItem(Rule, StringModifiers):
+-     pass
+- 
+- 
+- class BooleanValueItem(Rule, StringModifiers):
+-     pass
+- 
+- 
+- class ArrayValueItem(Rule, StringModifiers):
+-     pass
+- 
+- 
+- class FontWeightValueItem(Rule, StringModifiers):
+-     pass
+- 
+- 
+- class AnchorValueItem(Rule, StringModifiers):
+-     pass
+- 
+- 
+- class AlignValueItem(Rule, StringModifiers):
+-     pass
+- 
+- 
+- class BaselineValueItem(Rule, StringModifiers):
+-     pass
+- 
+- 
+- class DirectionValueItem(Rule, StringModifiers):
+-     pass
+- 
+- 
+- class OrientValueItem(Rule, StringModifiers):
+-     pass
+- 
+- 
+- class StrokeCapValueItem(Rule, StringModifiers):
+-     pass
+- 
+- 
+- class StrokeJoinValueItem(Rule, StringModifiers):
+-     pass
+- 
+- 
+- class NumberValueItem(Rule, NumberModifiers):
+-     pass
+- 
+- 
+- ColorValueItem = Rule
+- 
+  
+  class MarkVisual(Mark):
+      type: Optional[Any] = None
+      from_: Optional[From] = Field(None, alias='from')
+  
+  
+- class OnEvent4(OnEvent1, OnEvent3):
+-     pass
+- 
+- 
+- class OnEvent5(OnEvent2, OnEvent3):
+-     pass
+- 
+- 
+  class VegaVisualizationSpecificationLanguage(Scope):
+      field_schema: Optional[AnyUrl] = Field(None, alias='$schema')
+      config: Optional[Dict[str, Any]] = None
+--- 4581,4595 ----
+*************** class MarkGroup(Mark, Scope):
+*** 4599,4616 ****
+      from_: Optional[Union[From, Facet]] = Field(None, alias='from')
+  
+  
+- class Stream5(Stream1, Stream4):
+-     pass
+- 
+- 
+- class Stream6(Stream2, Stream4):
+-     pass
+- 
+- 
+- class Stream7(Stream3, Stream4):
+-     pass
+- 
+- 
+  Axis.model_rebuild()
+  EncodeEntry.model_rebuild()
+  Field1.model_rebuild()
+--- 4607,4612 ----

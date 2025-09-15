@@ -1,18 +1,31 @@
 include api_key.mk
 
 BASE_URL = https://192.168.0.98:9200
-INDEX = myindex
+INDEX = linechart
 PRETTY = ?pretty
 
+
+SPLIT_JSON = split_json.py
 
 CURL_OPTS = -k -H 'Authorization: ApiKey $(ENCODED)' -H 'Content-type: application/json'
 
 PRETTY = ?pretty
 
-all : data create upload
+all : data
 
-data :
-	python3 xml2jsonl.py -o output.jsonl input.xml
+help:
+	@echo "usage: make TARGET"
+	@echo ""
+	@echo "  target:"
+	@echo "    help"
+	@echo "    data"
+	@echo ""
+	@echo "    create"
+	@echo "    delete"
+	@echo "    upload"
+
+data:
+	python3 json2jsonl.py data.json > data.jsonl
 
 create :
 	curl $(CURL_OPTS) -XPUT $(BASE_URL)/$(INDEX)$(PRETTY)
@@ -20,18 +33,17 @@ create :
 delete :
 	curl $(CURL_OPTS) -XDELETE $(BASE_URL)/$(INDEX)$(PRETTY)
 
-upload :
+upload:
 	curl $(CURL_OPTS) \
         -XPOST "$(BASE_URL)/$(INDEX)/_bulk$(PRETTY)" \
-        --data-binary "@output.jsonl"
+        --data-binary "@data.jsonl"
 
 dump :
-	curl $(CURL_OPTS) -XGET "$(BASE_URL)/$(INDEX)/_search$(PRETTY)" | \
-		jq ".hits.hits"
+	curl $(CURL_OPTS) -XGET "$(BASE_URL)/$(INDEX)/_search$(PRETTY)"
 
 clean :
 	$(MAKE) delete
-	rm -f output.jsonl
+	rm -f data.jsonl
 
 .PHONY : \
     all clean test

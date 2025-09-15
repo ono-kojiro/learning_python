@@ -1,0 +1,19 @@
+*** vega.py	2025-09-07 10:32:40.837633297 +0900
+--- vega_mod.py	2025-09-07 10:32:35.288503324 +0900
+*************** class EncodeEntry(BaseModel):
+*** 3923,3929 ****
+      opacity: Optional[NumberValue] = None
+      fill: Optional[ColorValue] = None
+      fillOpacity: Optional[NumberValue] = None
+!     stroke: Optional[ColorValue] = None
+      strokeOpacity: Optional[NumberValue] = None
+      strokeWidth: Optional[NumberValue] = None
+      strokeCap: Optional[StrokeCapValue] = None
+--- 3923,3929 ----
+      opacity: Optional[NumberValue] = None
+      fill: Optional[ColorValue] = None
+      fillOpacity: Optional[NumberValue] = None
+!     stroke: Optional[SignalRef] = None
+      strokeOpacity: Optional[NumberValue] = None
+      strokeWidth: Optional[NumberValue] = None
+      strokeCap: Optional[StrokeCapValue] = None

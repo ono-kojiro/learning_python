@@ -1,0 +1,70 @@
+*** vega.py	2025-09-07 10:33:13.808399184 +0900
+--- vega_mod.py	2025-09-07 11:00:30.249955269 +0900
+*************** class Axis(BaseModel):
+*** 3905,3911 ****
+      labelOffset: Optional[Union[float, NumberValue]] = None
+      labelPadding: Optional[Union[float, NumberValue]] = None
+      labelSeparation: Optional[NumberOrSignal] = None
+!     encode: Optional[Encode] = None
+  
+  
+  class EncodeEntry(BaseModel):
+--- 3905,3911 ----
+      labelOffset: Optional[Union[float, NumberValue]] = None
+      labelPadding: Optional[Union[float, NumberValue]] = None
+      labelSeparation: Optional[NumberOrSignal] = None
+!     encode: Optional[EncodeEntry] = None
+  
+  
+  class EncodeEntry(BaseModel):
+*************** class Legend(BaseModel):
+*** 4406,4412 ****
+      labelOpacity: Optional[Union[float, NumberValue]] = None
+      labelOverlap: Optional[LabelOverlap] = None
+      labelSeparation: Optional[NumberOrSignal] = None
+!     encode: Optional[Encode2] = None
+  
+  
+  class Mark(BaseModel):
+--- 4406,4412 ----
+      labelOpacity: Optional[Union[float, NumberValue]] = None
+      labelOverlap: Optional[LabelOverlap] = None
+      labelSeparation: Optional[NumberOrSignal] = None
+!     encode: Optional[EncodeEntry] = None
+  
+  
+  class Mark(BaseModel):
+*************** class Mark(BaseModel):
+*** 4420,4426 ****
+      clip: Optional[Markclip] = None
+      sort: Optional[Compare] = None
+      interactive: Optional[BooleanOrSignal] = None
+!     encode: Optional[Encode1] = None
+      transform: Optional[List[TransformMark]] = None
+      on: Optional[OnMarkTrigger] = None
+  
+--- 4420,4426 ----
+      clip: Optional[Markclip] = None
+      sort: Optional[Compare] = None
+      interactive: Optional[BooleanOrSignal] = None
+!     encode: Optional[EncodeEntry] = None
+      transform: Optional[List[TransformMark]] = None
+      on: Optional[OnMarkTrigger] = None
+  
+*************** class OnEvents(RootModel[List[OnEvent]])
+*** 4481,4487 ****
+  
+  
+  class Scope(BaseModel):
+!     encode: Optional[Encode1] = None
+      layout: Optional[Layout] = None
+      signals: Optional[List[Signal]] = None
+      data: Optional[List[Data]] = None
+--- 4481,4487 ----
+  
+  
+  class Scope(BaseModel):
+!     encode: Optional[EncodeEntry] = None
+      layout: Optional[Layout] = None
+      signals: Optional[List[Signal]] = None
+      data: Optional[List[Data]] = None

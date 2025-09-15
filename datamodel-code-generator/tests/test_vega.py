@@ -1,0 +1,34 @@
+import pytest
+import sys
+import json
+
+from pprint import pprint
+
+from vega import Autosize1, Autosize
+from vega import Data
+from vega import Signal, Signal1, Signal2, Signal3
+from vega import Padding, Padding1, Padding2
+from vega import Mark
+from vega import Scale
+from vega import Scope
+from vega import VegaVisualizationSpecificationLanguage
+
+def read_json(filepath):
+    fp = open(filepath, mode='r', encoding='utf-8')
+    data = json.load(fp)
+    fp.close()
+    return data
+
+def write_json(filepath, json_str):
+    fp = open(filepath, mode='w', encoding='utf-8')
+    fp.write(json_str)
+    fp.write('\n')
+    fp.close()
+
+data = read_json('Spec.json')
+
+def test_spec() :
+    spec = VegaVisualizationSpecificationLanguage.model_validate(data)
+    write_json('output.json', spec.model_dump_json(indent=2))
+    pass
+

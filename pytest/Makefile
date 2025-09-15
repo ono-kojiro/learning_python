@@ -1,3 +1,5 @@
-all :
-	pytest-3
+all : test
+
+test :
+	pytest
 

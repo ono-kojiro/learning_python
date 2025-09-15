@@ -1,0 +1,19 @@
+*** vega.py	2025-09-06 17:17:32.040960649 +0900
+--- vega_mod.py	2025-09-06 17:18:46.313809101 +0900
+*************** class Title1(BaseModel):
+*** 4568,4574 ****
+      subtitlePadding: Optional[NumberOrSignal] = None
+      encode: Optional[
+          Union[
+!             Dict[constr(pattern=r'^(?!interactive|name|style).+$'), EncodeEntry],
+              Encode3,
+          ]
+      ] = None
+--- 4568,4574 ----
+      subtitlePadding: Optional[NumberOrSignal] = None
+      encode: Optional[
+          Union[
+!             Dict[constr(pattern=r'^!(interactive|name|style).+$'), EncodeEntry],
+              Encode3,
+          ]
+      ] = None
