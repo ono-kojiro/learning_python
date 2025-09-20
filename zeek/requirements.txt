@@ -1,0 +1,5 @@
+zeek-client==1.4.0
+GitPython==3.1.45
+semantic-version==2.10.0
+
+
