@@ -377,6 +377,12 @@ class Client():
         for item in items:
             self.delete_file(item['id'])
 
+def usage():
+    print("usage: {0}".format(sys.argv[0])) 
+    print('config files:')
+    print('  ./api_key.shrc     define api_key variable')
+    print('  ./config.shrc      define base_url variable')
+
 def main():
     ret = 0
 
@@ -419,8 +425,16 @@ def main():
     params = {}
     configfiles = [ './api_key.shrc', './config.shrc' ]
     for filepath in configfiles:
+        if not os.path.isfile(filepath) :
+            print('ERROR: not found {0}'.format(filepath))
+            ret += 1
+            continue
+        
         with open(filepath, mode='rb') as f:
             params = params | tomllib.load(f)
+    if ret :
+        usage()
+        sys.exit(ret)
 
     base_url = params['base_url']
     api_key  = params['api_key']
