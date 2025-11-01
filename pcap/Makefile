@@ -1,5 +1,5 @@
-PCAPXZ = /var/lib/pcapd/20251031-210323-ue0.pcap.xz
-#PCAPXZ = $(wildcard /var/lib/pcapd/*.pcap.xz)
+#PCAPXZ = /var/lib/pcapd/20251031-210323-ue0.pcap.xz
+PCAPXZ = $(wildcard /var/lib/pcapd/*.pcap.xz)
 NDJSON = $(PCAPXZ:.pcap.xz=.ndjson)
 		
 $(shell cp bulk2ndjson.py /tmp/)

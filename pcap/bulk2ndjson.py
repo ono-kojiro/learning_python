@@ -81,8 +81,7 @@ def main():
             icmpv6 = layers.get('icmpv6', None)
             eth    = layers.get('eth', None)
 
-
-            data['timestamp'] = frame['frame_frame_time_epoch']
+            data['@timestamp'] = frame['frame_frame_time_epoch']
             #protocols = frame['frame_frame_protocols']
             data['network.protocol'] = protocol
 
@@ -133,7 +132,7 @@ def main():
     if output is not None :
         fp.close()
 
-    print(protocol_list)
+    #print(protocol_list)
 
 	
 if __name__ == "__main__":
