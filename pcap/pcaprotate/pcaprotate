@@ -56,10 +56,9 @@ done
 #fi
 
 targetdir="/var/lib/pcapd"
-exts="*.pcap.xz *.ndjson"
+wildcard="*.pcap.xz"
 
-for ext in $exts; do
-  find $targetdir -maxdepth 1 -type f -name "$ext" -print -exec sh -c '
+find $targetdir -maxdepth 1 -type f -name "$wildcard" -exec sh -c '
   target={}
   dirname=`dirname $target`
   basename=`basename $target`
@@ -74,8 +73,4 @@ for ext in $exts; do
   mkdir -p $dirname/$subdir/
   mv $target $dirname/$subdir/
 ' \;
-
-done
-
-
 
