@@ -19,11 +19,13 @@ def main():
     try:
         opts, args = getopt.getopt(
             sys.argv[1:],
-            "hvo:",
+            "hvo:a:c:",
             [
                 "help",
                 "version",
-                "output="
+                "output=",
+                "api-key=",
+                "config=",
             ]
         )
     except getopt.GetoptError as err:
@@ -31,6 +33,8 @@ def main():
         sys.exit(2)
 
     output = None
+    api_key_shrc = './api_key.shrc'
+    config_shrc    = './config.shrc'
 
     for o, a in opts:
         if o == "-v":
@@ -41,6 +45,10 @@ def main():
             sys.exit(0)
         elif o in ("-o", "--output"):
             output = a
+        elif o in ("-a", "--api-key"):
+            api_key_shrc = a
+        elif o in ("-c", "--config"):
+            config_shrc = a
         else:
             assert False, "unknown option"
 
@@ -54,8 +62,8 @@ def main():
 
     params = {}
 
-    configs = [ './api_key.shrc', './config.shrc' ]
-    for filepath in configs:
+    configfiles = [ api_key_shrc, config_shrc ]
+    for filepath in configfiles:
         with open(filepath, mode='rb') as f:
             params = params | tomllib.load(f)
 

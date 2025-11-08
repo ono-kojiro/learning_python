@@ -83,7 +83,23 @@ class Client():
                 id = item['id']
                 break
         return id
-    
+
+    def get_file_by_name(self, filepath):
+        url = self.base_url + '/api/v1/files/'
+        res = requests.get(
+            url,
+            headers=self.headers,
+            verify=False,
+        )
+        items = json.loads(res.text)
+
+        res = None
+        for item in items:
+            if item['filename'] == filepath :
+                res = item
+                break
+        return res
+
     def add_file_to_knowledge(self, name, filename):
         k_id = self.get_knowledge_id(name)
         f_id = self.get_file_id(filename)
@@ -343,6 +359,7 @@ class Client():
             filename = item['filename']
             id = item['id']
             print('  {0} : {1}'.format(filename, id))
+            print('    hash : {0}'.format(item['hash']))
             #pprint(item)
     
     def get_files(self):
@@ -389,11 +406,13 @@ def main():
     try:
         opts, args = getopt.getopt(
             sys.argv[1:],
-            "hvo:",
+            "hvo:a:c:",
             [
                 "help",
                 "version",
-                "output="
+                "output=",
+                "api-key=",
+                "config=",
             ]
         )
     except getopt.GetoptError as err:
@@ -401,6 +420,8 @@ def main():
         sys.exit(2)
 
     output = None
+    api_key_shrc = './api_key.shrc'
+    config_shrc    = './config.shrc'
 
     for o, a in opts:
         if o == "-v":
@@ -411,6 +432,10 @@ def main():
             sys.exit(0)
         elif o in ("-o", "--output"):
             output = a
+        elif o in ("-a", "--api-key"):
+            api_key_shrc = a
+        elif o in ("-c", "--config"):
+            config_shrc = a
         else:
             assert False, "unknown option"
 
@@ -423,7 +448,7 @@ def main():
         sys.exit(ret)
 
     params = {}
-    configfiles = [ './api_key.shrc', './config.shrc' ]
+    configfiles = [ api_key_shrc, config_shrc ]
     for filepath in configfiles:
         if not os.path.isfile(filepath) :
             print('ERROR: not found {0}'.format(filepath))
@@ -440,9 +465,11 @@ def main():
     api_key  = params['api_key']
 
     client = Client(base_url, api_key)
+    
+    print('Models:')
     items = client.get_models()
     for item in items:
-        print('  {0}'.format(item['name']))
+        print('  - {0}'.format(item['name']))
 
     print('INFO: Knowledges')
     items = client.show_knowledges()

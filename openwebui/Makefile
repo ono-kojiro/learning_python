@@ -1,5 +1,8 @@
 all : init
 
+prepare:
+	python3 -m pip install -r requirements.txt
+
 init :
 	python3 add_file_to_knowledge.py -n example files/*.md
 
