@@ -73,13 +73,21 @@ def main():
     client = Client(base_url, api_key)
 
     items = client.get_files()
-        
-    for item in items:
-        filename = item['filename']
-        ident = item['id']
-        fp.write('  {0} : {1}\n'.format(filename, ident))
-        fp.write('    hash : {0}\n'.format(item['hash']))
     
+    for item in items:
+        # remove content
+        if 'data' in item:
+            item['data'] = '(hidden)'
+
+        fp.write(
+            json.dumps(
+                item,
+                indent=4,
+                ensure_ascii=False,
+            )
+        )
+        fp.write('\n')
+
     if output is not None :
         fp.close()
 
