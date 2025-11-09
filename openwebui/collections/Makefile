@@ -1,7 +1,6 @@
 TOPDIR = ..
-
 PYTHONPATH = $(TOPDIR)
-PDFFILES = $(wildcard $(HOME)/doc/linuc/*.pdf)
+PDFFILES = $(wildcard $(HOME)/doc/linuc/latest/*.pdf)
 
 PYTHON = PYTHONPATH=$(PYTHONPATH) python3
 
@@ -19,20 +18,13 @@ help :
 	@echo "usage: make TARGET"
 	@echo ""
 	@echo "target:"
-	@echo "  create"
+	@echo "  add"
 	@echo "  list"
-	@echo "  files"
-	@echo "  delete"
 
-create :
-	$(PYTHON) create_knowledge.py -a $(API_KEY) -c $(CONFIG) -n $(NAME)
+add:
+	$(PYTHON) add_file_to_knowledge.py -a $(API_KEY) -c $(CONFIG) -n $(NAME) $(PDFFILES)
 
-list :
+list:
 	$(PYTHON) list_knowledges.py -a $(API_KEY) -c $(CONFIG)
 
-files:
-	$(PYTHON) list_files.py -a $(API_KEY) -c $(CONFIG)
-
-delete:
-	$(PYTHON) delete_knowledges.py -a $(API_KEY) -c $(CONFIG)
 

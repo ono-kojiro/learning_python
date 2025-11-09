@@ -11,6 +11,7 @@ import json
 import tomllib
 from OpenWebUI import Client
 
+import json
 from pprint import pprint
 
 def main():
@@ -33,8 +34,9 @@ def main():
         sys.exit(2)
 
     output = None
+
     api_key_shrc = './api_key.shrc'
-    config_shrc    = './config.shrc'
+    config_shrc  = './config.shrc'
 
     for o, a in opts:
         if o == "-v":
@@ -53,17 +55,17 @@ def main():
             assert False, "unknown option"
 
     if output is not None :
-        fp = open(output, mode="w", encoding='utf-8')
+        fp = open(output, mode='w', encoding='utf-8')
     else :
         fp = sys.stdout
 
-    if ret != 0:
+    if ret :
         sys.exit(ret)
 
+    configs = [ api_key_shrc, config_shrc ]
+    
     params = {}
-
-    configfiles = [ api_key_shrc, config_shrc ]
-    for filepath in configfiles:
+    for filepath in configs:
         with open(filepath, mode='rb') as f:
             params = params | tomllib.load(f)
 
@@ -72,18 +74,11 @@ def main():
 
     client = Client(base_url, api_key)
 
-    items = client.get_files()
-        
+    items = client.get_knowledges()
     for item in items:
-        filename = item['filename']
-        ident = item['id']
-        fp.write('  {0} : {1}\n'.format(filename, ident))
-        fp.write('    hash : {0}\n'.format(item['hash']))
-        for attr in item:
-            fp.write('    attr: {0}\n'.format(attr))
-        fp.write('  {0}\n'.format(item['meta']))
-        fp.write('\n'.format(item['meta']))
-    
+        fp.write('{0}, {1}\n'.format(item['name'], item['id']))
+        fp.write('  files: {0}\n'.format(item['files']))
+
     if output is not None :
         fp.close()
 

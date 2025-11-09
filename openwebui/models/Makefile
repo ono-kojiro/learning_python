@@ -1,8 +1,10 @@
-PYTHONPATH = ..
+TOPDIR = $(shell git rev-parse --show-toplevel)/openwebui
 
-CONFIG = ../config.shrc
-API_KEY = ../api_key.shrc
-PYTHON = PYTHONPATH=$(PYTHONPATH) python3
+PYTHONPATH = $(TOPDIR)
+
+CONFIG  = $(TOPDIR)/config.shrc
+API_KEY = $(TOPDIR)/api_key.shrc
+PYTHON  = PYTHONPATH=$(PYTHONPATH) python3
 
 all : list
 

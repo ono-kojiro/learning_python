@@ -1,11 +1,12 @@
-PYTHONPATH = ..
-PDFFILES = \
-	$(wildcard $(HOME)/doc/linuc/*.pdf)
+TOPDIR = ..
+
+PYTHONPATH = $(TOPDIR)
+PDFFILES = $(wildcard $(HOME)/doc/linuc/latest/*.pdf)
 
 PYTHON = PYTHONPATH=$(PYTHONPATH) python3
 
-CONFIG = ../config.shrc
-API_KEY = ../api_key.shrc
+CONFIG = $(TOPDIR)/config.shrc
+API_KEY = $(TOPDIR)/api_key.shrc
 
 all : help
 

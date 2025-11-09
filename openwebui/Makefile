@@ -1,3 +1,14 @@
+TOPDIR = $(shell git rev-parse --show-toplevel)/openwebui
+
+PDFFILES = $(wildcard $(HOME)/doc/linuc/latest/*.pdf)
+PYTHON = PYTHONPATH=$(TOPDIR) python3
+
+CONFIG = $(TOPDIR)/config.shrc
+API_KEY = $(TOPDIR)/api_key.shrc
+
+KNOWLEDGE = myknowledge
+
+
 all : init
 
 prepare:
@@ -15,4 +26,24 @@ normalize:
 
 async:
 	./chat_completions_async.py template.shrc 2>debug.log
+
+create :
+	$(MAKE) -C knowledge create
+
+add :
+	$(MAKE) -C files add
+	$(MAKE) -C collections add
+
+list :
+	$(MAKE) -C knowledge list 
+
+chat :
+	$(MAKE) -C chat
+
+delete :
+	$(MAKE) -C files delete
+	$(MAKE) -C knowledge delete
+
+.PHONY : \
+	all clean test add list chat delete
 
