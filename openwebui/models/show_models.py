@@ -75,10 +75,17 @@ def main():
     client = Client(base_url, api_key)
 
     items = client.get_models()
-    for item in items:
-        print('{0}, {1}'.format(item['name'], item['id']))
-        pprint(item)
+    #for item in items:
+    #    print('{0}, {1}'.format(item['name'], item['id']))
+    #    pprint(item)
 
+    fp.write(
+        json.dumps(
+            items,
+            ensure_ascii=False,
+        )
+    )
+    fp.write('\n')
 
     if output is not None :
         fp.close()

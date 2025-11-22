@@ -9,7 +9,8 @@ PYTHON  = PYTHONPATH=$(PYTHONPATH) python3
 all : list
 
 list :
-	$(PYTHON) show_models.py --api-key $(API_KEY) --config $(CONFIG)
+	$(PYTHON) show_models.py --api-key $(API_KEY) --config $(CONFIG) -o models.json
+	cat models.json | jq
 
 help :
 	@echo "usage: make TARGET"
