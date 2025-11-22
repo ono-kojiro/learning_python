@@ -25,7 +25,8 @@ add :
 	$(PYTHON) add_files.py -a $(API_KEY) -c $(CONFIG) $(PDFFILES)
 
 list :
-	$(PYTHON) list_files.py -a $(API_KEY) -c $(CONFIG)
+	$(PYTHON) list_files.py -a $(API_KEY) -c $(CONFIG) -o files.json
+	cat files.json | jq
 
 delete:
 	$(PYTHON) delete_files.py -a $(API_KEY) -c $(CONFIG)
