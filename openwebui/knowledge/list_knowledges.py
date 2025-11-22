@@ -74,10 +74,15 @@ def main():
 
     client = Client(base_url, api_key)
 
-    items = client.get_knowledges()
-    for item in items:
-        fp.write('{0}, {1}\n'.format(item['name'], item['id']))
-        fp.write('  files: {0}\n'.format(item['files']))
+    res_json = client.get_knowledges()
+    fp.write(
+        json.dumps(
+            res_json,
+            indent=4,
+            ensure_ascii=False,
+        )
+    )
+    fp.write('\n')
 
     if output is not None :
         fp.close()
