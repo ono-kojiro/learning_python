@@ -9,7 +9,16 @@ API_KEY = $(TOPDIR)/api_key.shrc
 KNOWLEDGE = myknowledge
 
 
-all : init
+all : list
+
+help :
+	@echo "usage: make TARGET"
+	@echo "  target:"
+	@echo "    prepare      install required modules"
+	@echo "    list         show models/knowledges/files"
+	@echo ""
+	@echo "    create       create knowledge"
+	@echo "    add          add files/collections"
 
 prepare:
 	python3 -m pip install -r requirements.txt
@@ -35,7 +44,9 @@ add :
 	$(MAKE) -C collections add
 
 list :
+	$(MAKE) -C models list 
 	$(MAKE) -C knowledge list 
+	$(MAKE) -C files list 
 
 chat :
 	$(MAKE) -C chat

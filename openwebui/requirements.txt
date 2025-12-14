@@ -1,4 +1,4 @@
 requests==2.32.5
-ollama==0.6.0
-open-webui==0.6.36
+ollama==0.6.1
+#open-webui==0.6.36
 

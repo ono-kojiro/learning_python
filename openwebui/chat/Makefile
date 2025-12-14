@@ -6,7 +6,7 @@ PYTHON = PYTHONPATH=$(PYTHONPATH) python3
 
 COLLECTION = myknowledge
 MODEL = mymodel
-QUERY = Linuxとは何ですか?
+QUERY = "Linuxとは何ですか? また、Windowsとは何が異なるのですか？"
 #MODEL = hf.co/Falfredplpl/Fgemma-2-baku-2b-it-gguf:latest
 
 all : chat
@@ -19,5 +19,5 @@ help :
 
 chat:
 	$(PYTHON) chat.py --api-key $(API_KEY) --config $(CONFIG) \
-		-m "$(MODEL)" -q "Linuxとは何ですか?" --collection "$(COLLECTION)"
+		-m "$(MODEL)" -q $(QUERY)	--collection "$(COLLECTION)"
 
