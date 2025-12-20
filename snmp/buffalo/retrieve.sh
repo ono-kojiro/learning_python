@@ -2,7 +2,6 @@
 
 top_dir="$( cd "$( dirname "$0" )" >/dev/null 2>&1 && pwd )"
 
-. ./password.shrc
 
 oids="
   SNMPv2-MIB::sysDescr
@@ -28,6 +27,7 @@ oids="
   IF-MIB::ifTable
   IP-MIB::ipNetToMediaPhysAddress
   BRIDGE-MIB::dot1dTpFdbPort
+  LLDP-MIB::lldpRemSysName
 "
 
 # SNMPv2-SMI::mib-2
@@ -103,19 +103,34 @@ if [ "$ret" -ne 0 ]; then
   exit $ret
 fi
 
-snmpver="3"
+# read agent config
+if [ ! -e "${agent}.shrc" ]; then
+  echo "ERROR: no config file, ${agent}.shrc"
+  ret=`expr $ret + 1`
+fi
+
+if [ "$ret" -ne 0 ]; then
+  exit $ret
+fi
+
+if [ -e "common.shrc" ]; then
+  . ./common.shrc
+fi
+
+if [ -e "password.shrc" ]; then
+  . ./password.shrc
+fi
+
+. ./${agent}.shrc
 
 flags=""
 flags="$flags -v $snmpver"
 
-# for BS-GS2008
-#flags="$flags -a SHA-256"
-flags="$flags -a SHA"
-
-flags="$flags -l authPriv"
+flags="$flags -l $seclevel"
 flags="$flags -u $secname"
+flags="$flags -a $authprotocol"
 flags="$flags -A $authpassword"
-flags="$flags -x AES"
+flags="$flags -x $privprotocol"
 flags="$flags -X $privpassword"
 
 # Display table indexes in a more "program like" output

@@ -68,7 +68,7 @@ def main():
 
     count = 0
     for filepath in args:
-        print('open {0}'.format(filepath))
+        #print('open {0}'.format(filepath))
         fp_in = open(filepath, mode="r", encoding="utf-8")
         while True:
             line = fp_in.readline()
