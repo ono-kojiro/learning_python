@@ -9,16 +9,9 @@ LOGFILES = $(AGENTS:=.log)
 ERRFILES  = $(LOGFILES:.log=.err)
 JSONFILES = $(LOGFILES:.log=.json)
 
-all : snmp json
-
-test : retrieve
+all : json analyze
 
 snmp : $(LOGFILES)
-
-$(LOGFILES) : Makefile retrieve.sh
-
-debug :
-	@echo logfiles are $(LOGFILES)
 
 %.log :
 	sh retrieve.sh \
@@ -33,5 +26,6 @@ json : $(JSONFILES)
 %.json : %.log Makefile oid2dict.py
 	python3 oid2dict.py -o $@ $<
 
-translate :
-	prove translate.sh
+analyze :
+	python3 analyze.py $(JSONFILES)
+
