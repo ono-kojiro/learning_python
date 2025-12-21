@@ -28,6 +28,7 @@ oids="
   IP-MIB::ipNetToMediaPhysAddress
   BRIDGE-MIB::dot1dTpFdbPort
   LLDP-MIB::lldpRemSysName
+  BRIDGE-MIB::dot1dBridge
 "
 
 # SNMPv2-SMI::mib-2

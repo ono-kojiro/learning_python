@@ -153,41 +153,51 @@ def main():
 
     if ret != 0:
         sys.exit(1)
-   
+  
+    arpscan_data = read_json('arpscan.json')
+    arp_mac2ip = arpscan_data['arp-scan']
+
     data = {}
 
     records = {}
 
     count = 0
     for filepath in args:
-        print('DEBUG: {0}'.format(filepath), file=sys.stderr)
+        #fp.write('DEBUG: {0}\n'.format(filepath))
         data = read_json(filepath)
 
         sysdescr = get_scalar_value(data, 'SNMPv2-MIB::sysDescr.0')
-        print(sysdescr)
+        fp.write('{0}\n'.format(sysdescr))
         if2status = get_dict_values(data, 'IF-MIB::ifOperStatus')
-        if2descr   = get_dict_values(data, 'IF-MIB::ifDescr')
+        if2descr  = get_dict_values(data, 'IF-MIB::ifDescr')
+        if2type   = get_dict_values(data, 'IF-MIB::ifType')
         ifaces = get_dict_values(data, 'IF-MIB::ifIndex')
         if2macs = get_if2mac_table(data, 'BRIDGE-MIB::dot1dTpFdbPort')
         mac2addrs = get_mac2addrs_table(data)
         
         for iface in ifaces:
             status = if2status[iface]
-            descr   = if2descr[iface]
+            descr  = if2descr[iface]
+            typ    = if2type[iface]
             
             if re.search(r'Ethernet', descr) and status == 'up(1)':
-                print('{0}: {1}, {2}'.format(iface, status, descr))
+                fp.write('{0}: {1}, {2}, {3}\n'.format(iface, status, descr, typ))
                 macs = if2macs[iface]
                 for mac in macs:
-                    print('  -> {0}'.format(mac), end='')
+                    fp.write('  -> {0}'.format(mac))
                     addrs = []
                     if mac in mac2addrs:
                         addrs = mac2addrs[mac]
                         for addr in addrs:
-                            print(', {0}'.format(addr), end='')
-                    print('')
+                            fp.write(', {0}(snmp)'.format(addr))
+                    if mac in arp_mac2ip:
+                        addr = arp_mac2ip[mac]['ip']
+                        vndr = arp_mac2ip[mac]['vendor']
+                        fp.write(', {0}(arp)'.format(addr))
+                        fp.write(', {0}(arp)'.format(vndr))
+                    fp.write('\n')
                     
-        print('\n')
+        fp.write('\n')
 
     #yaml.dump(data,
     #    fp,

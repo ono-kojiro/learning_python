@@ -13,7 +13,9 @@ all : json analyze
 
 snmp : $(LOGFILES)
 
-%.log :
+FORCE :
+
+%.log : FORCE
 	sh retrieve.sh \
 		--agent $(@:.log=) \
 		--mibs $(MIBS) \
@@ -27,5 +29,9 @@ json : $(JSONFILES)
 	python3 oid2dict.py -o $@ $<
 
 analyze :
-	python3 analyze.py $(JSONFILES)
+	python3 analyze.py -o result.txt $(JSONFILES)
 
+arp :
+	#sudo arp-scan --localnet --quiet --plain --ignoredups | tee arpscan.log
+	sudo arp-scan --localnet --plain --ignoredups | tee arpscan.log
+	python3 arp2json.py -o arpscan.json arpscan.log
