@@ -14,10 +14,6 @@ oids="
   BRIDGE-MIB::dot1dTpFdbPort
 "
 
-oids="
-  .
-"
-
 #
 # BUFFALO:
 #   BRIDGE-MIB::dot1dTpFdbPort,  MAC -> PortIndex
@@ -30,6 +26,10 @@ oids="
   LLDP-MIB::lldpRemSysName
   BRIDGE-MIB::dot1dBridge
 "
+
+#oids="
+#  .
+#"
 
 # SNMPv2-SMI::mib-2
 #IP-MIB::ip

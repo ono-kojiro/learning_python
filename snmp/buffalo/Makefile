@@ -13,9 +13,7 @@ all : json analyze
 
 snmp : $(LOGFILES)
 
-FORCE :
-
-%.log : FORCE
+%.log :
 	sh retrieve.sh \
 		--agent $(@:.log=) \
 		--mibs $(MIBS) \
@@ -25,7 +23,7 @@ FORCE :
 
 json : $(JSONFILES)
 
-%.json : %.log Makefile oid2dict.py
+%.json : %.log
 	python3 oid2dict.py -o $@ $<
 
 analyze :

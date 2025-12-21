@@ -72,6 +72,28 @@ def get_scalar_value(data, oidname) :
 
     return res['val']
 
+def get_ip_address(data) :
+    oidname = 'IP-MIB::ipAdEntAddr'
+    val = None
+    mibname, objname = re.split(r'::', oidname)
+
+    res = data.get(mibname, None)
+    if res is None:
+        return val
+
+    res = res.get(objname, None)
+    if res is None:
+        return val
+
+    for attr in res:
+        item = res[attr]
+        val = item['val']
+
+    if val is None :
+        print('ERROR: not found IP Address', file=sys.stderr)
+        sys.exit(1)
+    return val
+
 def get_if2mac_table(data, oidname) :
     records = {}
 
@@ -94,6 +116,28 @@ def get_if2mac_table(data, oidname) :
             records[iface] = []
 
         records[iface].append(mac)
+
+    return records
+
+def get_mac2status_table(data, oidname) :
+    records = {}
+
+    mibname, objname = re.split(r'::', oidname)
+
+    res = data.get(mibname, None)
+    if res is None:
+        return records
+
+    res = res.get(objname, None)
+    if res is None:
+        return records
+
+    for mac in res:
+        item = res[mac]
+        status = item['val']
+        mac = re.sub(r'^STRING: ', '', mac)
+        mac = normalize_mac(mac)
+        records[mac] = status
 
     return records
 
@@ -167,13 +211,19 @@ def main():
         data = read_json(filepath)
 
         sysdescr = get_scalar_value(data, 'SNMPv2-MIB::sysDescr.0')
-        fp.write('{0}\n'.format(sysdescr))
+        selfmac  = get_scalar_value(data, 'BRIDGE-MIB::dot1dBaseBridgeAddress.0')
+        selfmac = normalize_mac(selfmac)
+        ipaddr  = get_ip_address(data)
+
         if2status = get_dict_values(data, 'IF-MIB::ifOperStatus')
         if2descr  = get_dict_values(data, 'IF-MIB::ifDescr')
         if2type   = get_dict_values(data, 'IF-MIB::ifType')
         ifaces = get_dict_values(data, 'IF-MIB::ifIndex')
         if2macs = get_if2mac_table(data, 'BRIDGE-MIB::dot1dTpFdbPort')
+        mac2status = get_mac2status_table(data, 'BRIDGE-MIB::dot1dTpFdbStatus')
         mac2addrs = get_mac2addrs_table(data)
+        
+        fp.write('{0}: {1}, {2}\n'.format(sysdescr, ipaddr, selfmac))
         
         for iface in ifaces:
             status = if2status[iface]
@@ -195,6 +245,9 @@ def main():
                         vndr = arp_mac2ip[mac]['vendor']
                         fp.write(', {0}(arp)'.format(addr))
                         fp.write(', {0}(arp)'.format(vndr))
+                    if mac in mac2status :
+                        status = mac2status[mac]
+                        fp.write(', {0}(snmp)'.format(status))
                     fp.write('\n')
                     
         fp.write('\n')
