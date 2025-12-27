@@ -1,2 +1,6 @@
-password.shrc
+*.shrc
+*.err
+*.log
+*.db
+*.sql
 

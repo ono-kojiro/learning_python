@@ -2,34 +2,34 @@
 
 top_dir="$( cd "$( dirname "$0" )" >/dev/null 2>&1 && pwd )"
 
-
-oids="
-  SNMPv2-MIB::sysDescr
-  IF-MIB::ifDescr
-  IF-MIB::ifOutOctets
-  IF-MIB::ifInOctets
-  IF-MIB::ifTable
-  IF-MIB::interfaces
-  IP-MIB::ip
-  BRIDGE-MIB::dot1dTpFdbPort
-"
+#oids="
+#  SNMPv2-MIB::sysDescr
+#  IF-MIB::ifDescr
+#  IF-MIB::ifOutOctets
+#  IF-MIB::ifInOctets
+#  IF-MIB::ifTable
+#  IF-MIB::interfaces
+#  IP-MIB::ip
+#  BRIDGE-MIB::dot1dTpFdbPort
+#"
 
 #
 # BUFFALO:
 #   BRIDGE-MIB::dot1dTpFdbPort,  MAC -> PortIndex
 #
-oids="
-  SNMPv2-MIB::sysDescr
-  IF-MIB::ifTable
-  IP-MIB::ipNetToMediaPhysAddress
-  BRIDGE-MIB::dot1dTpFdbPort
-  LLDP-MIB::lldpRemSysName
-  BRIDGE-MIB::dot1dBridge
-"
-
 #oids="
-#  .
+#  SNMPv2-MIB::sysDescr
+#  IF-MIB::ifTable
+#  IP-MIB::ipNetToMediaPhysAddress
+#  BRIDGE-MIB::dot1dTpFdbPort
+#  LLDP-MIB::lldpRemSysName
+#  BRIDGE-MIB::dot1dBridge
 #"
+
+# Default
+oids="
+  .
+"
 
 # SNMPv2-SMI::mib-2
 #IP-MIB::ip
@@ -50,10 +50,6 @@ while [ "$#" -ne 0 ]; do
       usage
       exit 1
       ;;
-    -o | --output)
-      shift
-      outfile=$1
-      ;;
     -e | --error)
       shift
       errfile=$1
@@ -69,6 +65,14 @@ while [ "$#" -ne 0 ]; do
     -M | --mibdirs)
       shift
       mibdirs=$1
+      ;;
+    --oids)
+      shift
+      oids="$1"
+      ;;
+    -o | --output)
+      shift
+      outfile=$1
       ;;
     *)
       break

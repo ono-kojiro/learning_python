@@ -8,6 +8,9 @@ import yaml
 
 from pprint import pprint
 import json
+from snmpjson import get_scalar_value, normalize_mac, get_ip_address
+from snmpjson import get_dict_values, get_if2mac_table, get_mac2status_table
+from snmpjson import  get_mac2addrs_table
 
 def usage():
     print("Usage : {0}".format(sys.argv[0]))
@@ -17,147 +20,6 @@ def read_json(jsonfile) :
     data = json.load(fp)
     fp.close()
     return data
-
-def get_mac2addrs_table(data) :
-    mac2addrs = {}
-
-    ip_mib = data.get('IP-MIB', None)
-    if ip_mib :
-       addrs = ip_mib.get('ipNetToMediaPhysAddress', None)
-       if addrs :
-           for tmp in addrs:
-              items = addrs[tmp]
-              for addr in items:
-                  mac = items[addr]['val']
-                  mac = normalize_mac(mac)
-
-                  if not mac in mac2addrs :
-                    mac2addrs[mac] = []
-                  mac2addrs[mac].append(addr)
-
-    return mac2addrs
-
-def get_dict_values(data, oidname) :
-    records = {}
-
-    mibname, objname = re.split(r'::', oidname)
-
-    res = data.get(mibname, None)
-    if res is None:
-        return records
-
-    res = res.get(objname, None)
-    if res is None:
-        return records
-
-    for key in res:
-        item = res[key]
-        val = item['val']
-        records[key] = val
-
-    return records
-
-def get_scalar_value(data, oidname) :
-    val = None
-
-    mibname, objname = re.split(r'::', oidname)
-
-    res = data.get(mibname, None)
-    if res is None:
-        return val
-
-    res = res.get(objname, None)
-    if res is None:
-        return val
-
-    return res['val']
-
-def get_ip_address(data) :
-    oidname = 'IP-MIB::ipAdEntAddr'
-    val = None
-    mibname, objname = re.split(r'::', oidname)
-
-    res = data.get(mibname, None)
-    if res is None:
-        return val
-
-    res = res.get(objname, None)
-    if res is None:
-        return val
-
-    for attr in res:
-        item = res[attr]
-        val = item['val']
-
-    if val is None :
-        print('ERROR: not found IP Address', file=sys.stderr)
-        sys.exit(1)
-    return val
-
-def get_if2mac_table(data, oidname) :
-    records = {}
-
-    mibname, objname = re.split(r'::', oidname)
-
-    res = data.get(mibname, None)
-    if res is None:
-        return records
-
-    res = res.get(objname, None)
-    if res is None:
-        return records
-
-    for mac in res:
-        item = res[mac]
-        iface = item['val']
-        mac = re.sub(r'^STRING: ', '', mac)
-        mac = normalize_mac(mac)
-        if not iface in records:
-            records[iface] = []
-
-        records[iface].append(mac)
-
-    return records
-
-def get_mac2status_table(data, oidname) :
-    records = {}
-
-    mibname, objname = re.split(r'::', oidname)
-
-    res = data.get(mibname, None)
-    if res is None:
-        return records
-
-    res = res.get(objname, None)
-    if res is None:
-        return records
-
-    for mac in res:
-        item = res[mac]
-        status = item['val']
-        mac = re.sub(r'^STRING: ', '', mac)
-        mac = normalize_mac(mac)
-        records[mac] = status
-
-    return records
-
-def normalize_mac(mac_str) :
-    expr = r"([0-9a-f]{1,2})" + r"([-:]?([0-9a-f]{1,2}))" * 5 + r"$"
-    m = re.match(expr, mac_str.lower())
-    mac = ''
-
-    if m :
-        # 1, 3, 5, ... , 11
-        for i in range(1, 12, 2) :
-            val = int(m.group(i), 16)
-            mac += ":{0:02x}".format(val)
-        mac = re.sub(r'^:', '', mac)
-        #print("DEBUG: {0} -> {1}".format(mac_str, mac))
-    else :
-        print("ERROR: invalid mac address, {0}".format(mac_str))
-        sys.exit(1)
-
-    return mac
 
 def main():
     ret = 0
@@ -213,7 +75,7 @@ def main():
         sysdescr = get_scalar_value(data, 'SNMPv2-MIB::sysDescr.0')
         selfmac  = get_scalar_value(data, 'BRIDGE-MIB::dot1dBaseBridgeAddress.0')
         selfmac = normalize_mac(selfmac)
-        ipaddr  = get_ip_address(data)
+        ipaddrs  = get_ip_address(data)
 
         if2status = get_dict_values(data, 'IF-MIB::ifOperStatus')
         if2descr  = get_dict_values(data, 'IF-MIB::ifDescr')
@@ -222,8 +84,9 @@ def main():
         if2macs = get_if2mac_table(data, 'BRIDGE-MIB::dot1dTpFdbPort')
         mac2status = get_mac2status_table(data, 'BRIDGE-MIB::dot1dTpFdbStatus')
         mac2addrs = get_mac2addrs_table(data)
-        
-        fp.write('{0}: {1}, {2}\n'.format(sysdescr, ipaddr, selfmac))
+    
+        #print(ipaddrs)
+        fp.write('{0}: {1}, {2}\n'.format(sysdescr, ipaddrs, selfmac))
         
         for iface in ifaces:
             status = if2status[iface]
