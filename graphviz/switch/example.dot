@@ -1,0 +1,85 @@
+digraph mygraph {
+  rankdir="LR";
+
+  subgraph mysubgraph3 {
+    label="mysubgraph3"
+    
+    /*
+    myswitch1 [
+      shape=record
+      image="icons/doc_jpg/small_hub.png"
+      label="{myswitch1|{
+        <port0>port0
+        |<port1>port1
+        |<port2>port2
+        |<port3>port3
+      }}"
+    ];
+    */
+
+   myswitch1 [
+     shape=plaintext,
+     image="icons/doc_jpg/small_hub.png",
+     margin=0,
+     label=<
+       <table border="0">
+         <tr>
+           <td port="port0" rowspan="3">port0</td>
+           <td></td>
+           <td port="port1">port1</td>
+         </tr>
+         <tr>
+           <td>     </td>
+           <td port="port2">port2</td>
+         </tr>
+         <tr>
+           <td></td>
+           <td port="port3">port3</td>
+         </tr>
+       </table>
+     >
+   ];
+   
+    myswitch2 [
+        shape=box,
+        image="icons/doc_jpg/small_hub.png",
+        margin=0,
+        label=<
+            <table border="0">
+                <tr>
+                    <td port="port0" rowspan="3">port0</td>
+                    <td></td>
+                    <td port="port1">port1<br/>XX:XX:XX:XX:XX:XX</td>
+                </tr>
+                <tr>
+                    <td>     </td>
+                    <td port="port2">port2</td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td port="port3">port3</td>
+                </tr>
+            </table>
+        >
+   ];
+    
+    
+    mypc[
+      label=""
+      penwidth=0
+      image="icons/doc_jpg/pc.png"
+    ];
+
+    ul [shape=plainext, label="hoge"];
+    ul -> myswitch1:port0:c ;
+
+    myswitch1:port2:c -> myswitch2:port0:c;
+
+    myimage[
+      label="myimage"
+      penwidth=0
+      image="icons/doc_jpg/small_hub.png"
+    ];
+    
+  }
+}
