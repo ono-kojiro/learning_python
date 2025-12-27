@@ -1,0 +1,45 @@
+{
+    "nodes": [
+        {
+            "name": "A_Node",
+            "group": "Group_X"
+        },
+        {
+            "name": "B_Node",
+            "group": "Group_X"
+        },
+        {
+            "name": "C_Node",
+            "group": "Group_Y"
+        },
+        {
+            "name": "D_Node",
+            "group": "Group_Y"
+        },
+        {
+            "name": "E_Node",
+            "group": "Group_Z"
+        },
+        {
+            "name": "F_Node",
+            "group": "Group_Z"
+        }
+    ],
+    "links": [
+        {
+            "source": "A_Node",
+            "target": "B_Node",
+            "value": "A_Node to B_Node"
+        },
+        {
+            "source": "C_Node",
+            "target": "D_Node",
+            "value": "C_Node to D_Node"
+        },
+        {
+            "source": "E_Node",
+            "target": "F_Node",
+            "value": "E_Node to F_Node"
+        }
+    ]
+}

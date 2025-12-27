@@ -1,0 +1,3 @@
+---
+link_data_raw : "data.json"
+node_data : "{{ link_data_raw }}"
