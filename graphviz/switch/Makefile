@@ -10,8 +10,9 @@ DOC_JPG_ZIP   = $(shell basename $(DOC_JPG_URL))
 #DOTFILES = $(wildcard *.dot)
 DOTFILES = example.dot
 PNGFILES = $(DOTFILES:.dot=.png)
+PDFFILES = $(DOTFILES:.dot=.pdf)
 
-all : png
+all : png pdf
 
 help :
 	@echo "usage : make <target>"
@@ -51,6 +52,11 @@ png : $(PNGFILES)
 
 %.png : %.dot
 	dot -Tpng -o $@ $<
+
+pdf : $(PDFFILES)
+
+%.pdf : %.dot
+	dot -Tpdf -o $@ $<
 
 debug :
 	echo $(DOTFILES)

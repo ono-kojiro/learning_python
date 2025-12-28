@@ -1,6 +1,7 @@
 digraph mygraph {
   rankdir="LR";
-
+  nodesep="3";
+  ranksep="3";
   subgraph mysubgraph3 {
     label="mysubgraph3"
     
@@ -16,64 +17,151 @@ digraph mygraph {
       }}"
     ];
     */
-
-   myswitch1 [
-     shape=plaintext,
-     image="icons/doc_jpg/small_hub.png",
-     margin=0,
-     label=<
-       <table border="0">
-         <tr>
-           <td port="port0" rowspan="3">port0</td>
-           <td></td>
-           <td port="port1">port1</td>
-         </tr>
-         <tr>
-           <td>     </td>
-           <td port="port2">port2</td>
-         </tr>
-         <tr>
-           <td></td>
-           <td port="port3">port3</td>
-         </tr>
-       </table>
-     >
-   ];
-   
-    myswitch2 [
+    myswitch1 [
         shape=box,
-        image="icons/doc_jpg/small_hub.png",
         margin=0,
         label=<
-            <table border="0">
+            <table border="1">
                 <tr>
-                    <td port="port0" rowspan="3">port0</td>
-                    <td></td>
-                    <td port="port1">port1<br/>XX:XX:XX:XX:XX:XX</td>
+                    <td port="port0" rowspan="8">0</td>
+                    <td rowspan="1">CISCO<br/>CBS-250</td>
+                    <td>XX:XX:XX:XX:XX:XX</td>
+                    <td port="port1" align="right">1</td>
                 </tr>
                 <tr>
-                    <td>     </td>
-                    <td port="port2">port2</td>
+                    <!-- <td>     </td> -->
+                    <td><img src="icons/doc_jpg/small_hub.png"></img></td>
+                    <td></td>
+                    <td port="port2" align="right">2</td>
+                </tr>
+                <tr>
+                    <td>192.168.0.248</td>
+                    <td></td>
+                    <td port="port3" align="right">3</td>
                 </tr>
                 <tr>
                     <td></td>
-                    <td port="port3">port3</td>
+                    <td></td>
+                    <td port="port4" align="right">4</td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td port="port5" align="right">5</td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td port="port6" align="right">6</td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td port="port7" align="right">7</td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td port="port8" align="right">8</td>
                 </tr>
             </table>
         >
-   ];
+    ];
     
+
+    myswitch2 [
+        shape=box,
+        margin=0,
+        label=<
+            <table border="1">
+                <tr>
+                    <td port="port0" rowspan="8">0</td>
+                    <td rowspan="1">Buffalo<br/>CBS-250</td>
+                    <td>XX:XX:XX:XX:XX:XX</td>
+                    <td port="port1" align="right">1</td>
+                </tr>
+                <tr>
+                    <!-- <td>     </td> -->
+                    <td><img src="icons/doc_jpg/small_hub.png"></img></td>
+                    <td></td>
+                    <td port="port2" align="right">2</td>
+                </tr>
+                <tr>
+                    <td>192.168.0.252</td>
+                    <td></td>
+                    <td port="port3" align="right">3</td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td port="port4" align="right">4</td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td port="port5" align="right">5</td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td port="port6" align="right">6</td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td port="port7" align="right">7</td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td port="port8" align="right">8</td>
+                </tr>
+            </table>
+        >
+    ];
     
     mypc[
       label=""
       penwidth=0
       image="icons/doc_jpg/pc.png"
     ];
+    
+    mypc2[
+      label=""
+      penwidth=0
+      image="flirc_raspberrypi_4_case.jpg"
+        imagescale=true
+    ];
+    
+    mypc3[
+      label=""
+      penwidth=0
+      image="icons/doc_jpg/pc.png"
+    ];
 
-    ul [shape=plainext, label="hoge"];
-    ul -> myswitch1:port0:c ;
+    optiplex_micro [
+        shape=none,
+        label="",
+        image="optiplex_7060_micro.jpg"
+        imagescale=true
+    ];
 
-    myswitch1:port2:c -> myswitch2:port0:c;
+    modem [
+        shape=none,
+        border="0",
+        label="Modem",
+        image="icons/doc_jpg/modem.png"
+    ];
+    modem -> myswitch1:port0:c ;
+
+    myswitch1:port2:e -> myswitch2:port0:w;
+
+    myswitch1:port1:e -> mypc;
+    myswitch1:port3:e -> mypc3;
+
+    myswitch2:port4:e -> mypc2;
+    
+    myswitch1:port5:e -> optiplex_micro;
 
     myimage[
       label="myimage"
