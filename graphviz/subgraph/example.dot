@@ -5,6 +5,8 @@ digraph mygraph {
     //newrank = true;
     nodesep="0.1";
     ranksep="0.1";
+    splines=true;
+    overlap=false;
 
     subgraph cluster_Modem {
         label = "Modem\n192.168.0.1";
@@ -89,12 +91,14 @@ digraph mygraph {
         sw1_image -> sw1_port1 [color=none, penwidth=1];
 
         /* fix order */
+        /*
         sw1_port1 -> sw1_port2 [color=none];
-        sw1_port2 -> sw1_port3 [color=black, weight=50];
-        sw1_port3 -> sw1_port4 [color=black];
+        sw1_port2 -> sw1_port3 [color=none];
+        sw1_port3 -> sw1_port4 [color=none];
         sw1_port4 -> sw1_port5 [color=none];
         sw1_port5 -> sw1_port6 [color=none];
         sw1_port6 -> sw1_port7 [color=none];
+        */
     };
 
 
@@ -107,51 +111,35 @@ digraph mygraph {
         ];
 
         sw2_port8 [ shape=box label="8" fixedsize=true width=0.3 height=0.3 ];
-        sw2_port1 [
-            shape=box
-            label="1"
-            fixedsize=true
-            width=0.3
-            height=0.3
-        ];
-        sw2_port3 [
-            shape=box
-            label="3"
-            fixedsize=true
-            width=0.3
-            height=0.3
-        ];
-        sw2_port2 [
-            shape=box
-            label="2"
-            fixedsize=true
-            width=0.3
-            height=0.3
-        ];
+        sw2_port1 [ shape=box label="1" fixedsize=true width=0.3 height=0.3 ];
+        sw2_port3 [ shape=box label="3" fixedsize=true width=0.3 height=0.3 ];
+        sw2_port2 [ shape=box label="2" fixedsize=true width=0.3 height=0.3 ];
         sw2_port4 [ shape=box label="4" fixedsize=true width=0.3 height=0.3 ];
         sw2_port5 [ shape=box label="5" fixedsize=true width=0.3 height=0.3 ];
         sw2_port6 [ shape=box label="6" fixedsize=true width=0.3 height=0.3 ];
         sw2_port7 [ shape=box label="7" fixedsize=true width=0.3 height=0.3 ];
 
-        { rank = same; sw2_port3 sw2_port2 sw2_port1 sw2_port5 
-            sw2_port6 sw2_port7 sw2_port8
+        { rank = same; sw2_port1 sw2_port3 sw2_port4 sw2_port5 
+            sw2_port7 sw2_port8
         }
-        sw2_port4 -> sw2_image [color=none, weight=10];
+        sw2_port6 -> sw2_image [color=none, weight=10];
         sw2_image -> sw2_port8 [color=none];
         sw2_image -> sw2_port7 [color=none];
-        sw2_image -> sw2_port6 [color=none];
-        sw2_image -> sw2_port5 [color=none, weight=10];
+        sw2_image -> sw2_port4 [color=none];
+        sw2_image -> sw2_port5 [color=none];
         sw2_image -> sw2_port3 [color=none];
         sw2_image -> sw2_port2 [color=none];
         sw2_image -> sw2_port1 [color=none];
         
         /* fix order */
+        /*
         sw1_port1 -> sw1_port2 [color=none];
         sw1_port2 -> sw1_port3 [color=none];
         sw1_port3 -> sw1_port5 [color=none];
         sw1_port5 -> sw1_port6 [color=none];
         sw1_port6 -> sw1_port7 [color=none];
         sw1_port7 -> sw1_port8 [color=none];
+        */
     };
     
     subgraph cluster_Desktop {
@@ -165,15 +153,54 @@ digraph mygraph {
         ];
         micro_image [
             shape=none
-            image="icons/doc_jpg/pc.png"
-            label=none
+            image="optiplex_7060_micro.jpg"
+            label=""
+            fixedsize=true
+            imagescale=height
         ];
 
-        micro_port1 -> micro_image [color=none, penwidth=1, weight=10];
+        micro_dummy [style=invisible
+            shape=box
+            label="1"
+            fixedsize=true
+            width=0.3
+            height=0.3
+        ];
+        micro_port1 -> micro_image [color=none, weight=10];
+        micro_image -> micro_dummy [color=none]
+    }
+    
+    subgraph cluster_RaspberryPi {
+        label = "RaspberryPi 400 B\n192.168.0.31";
+        pi_port1 [
+            shape=box
+            label="1"
+            fixedsize=true
+            width=0.3
+            height=0.3
+        ];
+        pi_image [
+            shape=none
+            image="flirc_raspberrypi_4_case.jpg"
+            label=""
+            fixedsize=true
+            width=1.0
+        ];
+
+        pi_dummy [style=invisible
+            shape=box
+            label="1"
+            fixedsize=true
+            width=0.3
+            height=0.3
+        ];
+        pi_port1 -> pi_image [color=none, weight=10];
+        pi_image -> pi_dummy [color=none]
     }
 
-    sw1_port5 -> micro_port1 [minlen=20, weight=20];
-    modem_port3 -> sw1_port8 [minlen=20, weight=20];
-    sw1_port7 -> sw2_port4 [minlen=20, weight=20];
 
+    sw1_port5 -> micro_port1 [label="vlan1", minlen=10, weight=20];
+    modem_port3 -> sw1_port8 [label="vlan1", minlen=10, weight=20];
+    sw1_port7 -> sw2_port6 [label="vlan1", minlen=10, weight=20];
+    sw2_port4 -> pi_port1 [label="vlan1", minlen=10, weight=20];
 }
