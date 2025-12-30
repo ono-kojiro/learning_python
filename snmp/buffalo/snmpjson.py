@@ -136,7 +136,8 @@ def normalize_mac(mac_str) :
     if mac_str is None :
         return None
 
-    expr = r"([0-9a-f]{1,2})" + r"([-:]?([0-9a-f]{1,2}))" * 5 + r"$"
+    mac_str = re.sub(r'\s+$', '', mac_str)
+    expr = r"([0-9a-fA-F ]{1,2})" + r"([-: ]?([0-9a-fA-F]{1,2}))" * 5 + r"$"
     m = re.match(expr, mac_str.lower())
     mac = ''
 
