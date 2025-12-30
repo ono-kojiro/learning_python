@@ -29,8 +29,7 @@ def create_agents_view(conn, view):
 
     c.execute(sql)
 
-
-def create_macaddrs_view(conn, view):
+def create_connections_view(conn, view):
     c = conn.cursor()
 
     sql = 'DROP VIEW IF EXISTS {0};'.format(view)
@@ -94,7 +93,7 @@ def main():
 
     conn = sqlite3.connect(output)
     create_agents_view(conn, 'agents_view')
-    create_macaddrs_view(conn, 'macaddrs_view')
+    create_connections_view(conn, 'connections_view')
     conn.commit()
     conn.close()
 

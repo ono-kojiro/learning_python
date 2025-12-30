@@ -64,7 +64,7 @@ db :
 	sqlite3 $(DATABASE) ".dump" > $(DATABASE:.db=.sql)
 	cat $(DATABASE:.db=.sql)
 	sqlite3 $(DATABASE) ".schema"
-	sqlite3 $(DATABASE) "select * from macaddrs_view;"
+	sqlite3 $(DATABASE) "select * from connections_view;"
 
 debug :
 	sh retrieve.sh \
