@@ -11,6 +11,8 @@ from snmpjson import get_scalar_value, normalize_mac, get_ip_address
 from snmpjson import get_dict_values, get_if2mac_table, get_mac2status_table
 from snmpjson import get_mac2addrs_table
 
+from pprint import pprint
+
 def usage():
     print("Usage : {0}".format(sys.argv[0]))
 
@@ -119,9 +121,7 @@ def insert_agent(conn, table, item):
         item['mac'],
         item['sysdescr'],
     ]
-
     c.execute(sql, lst)
-
 
 def main():
     try:
@@ -172,17 +172,22 @@ def main():
         data = read_json(jsonfile)
 
         sysdescr = get_scalar_value(data, 'SNMPv2-MIB::sysDescr.0')
-        ip = get_ip_address(data)
+        ips = get_ip_address(data)
         mac = get_scalar_value(data, 'BRIDGE-MIB::dot1dBaseBridgeAddress.0')
         mac = normalize_mac(mac)
+
+        if len(ips) != 1 :
+            print('ERROR: some IP address found', file=sys.stderr)
+            print('ERROR: ips {0}'.format(ips))
+            sys.exit(1)
+            
+        ip = ips[0]
+
         item = {
             'sysdescr': sysdescr,
             'ip': ip,
             'mac': mac,
         }
-        print(ip)
-        print(mac)
-        print(sysdescr)
         insert_agent(conn, 'agents_table', item)
 
         if2status = get_dict_values(data, 'IF-MIB::ifOperStatus')
