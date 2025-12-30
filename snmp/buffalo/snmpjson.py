@@ -10,7 +10,8 @@ import json
 def get_mac2addrs_table(data) :
     mac2addrs = {}
 
-    ip_mib = data.get('IP-MIB', None)
+    #ip_mib = data.get('IP-MIB', None)
+    ip_mib = data.get('RFC1213-MIB', None)
     if ip_mib :
        addrs = ip_mib.get('ipNetToMediaPhysAddress', None)
        if addrs :
@@ -64,7 +65,8 @@ def get_scalar_value(data, oidname) :
 def get_ip_address(data) :
     addrs = []
 
-    oidname = 'IP-MIB::ipAdEntAddr'
+    #oidname = 'IP-MIB::ipAdEntAddr'
+    oidname = 'RFC1213-MIB::ipAdEntAddr'
     val = None
     mibname, objname = re.split(r'::', oidname)
 
