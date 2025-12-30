@@ -9,6 +9,8 @@ import yaml
 from pprint import pprint
 import json
 
+import ipaddress
+
 def usage():
     print("Usage : {0}".format(sys.argv[0]))
 
@@ -17,6 +19,13 @@ def read_json(jsonfile) :
     data = json.load(fp)
     fp.close()
     return data
+
+def is_valid_ipv4(addr) :
+    try :
+        ipaddress.IPv4Address(addr)
+        return True
+    except :
+        return False
 
 def main():
     ret = 0
@@ -72,10 +81,11 @@ def main():
                 ip = m.group(1)
                 mac = m.group(2)
                 vendor = m.group(3)
-                mac2ip[mac] = {
-                    'ip' : ip,
-                    'vendor' : vendor,
-                }
+                if is_valid_ipv4(ip) :
+                    mac2ip[mac] = {
+                        'ip' : ip,
+                        'vendor' : vendor,
+                    }
 
         fp_in.close()
 

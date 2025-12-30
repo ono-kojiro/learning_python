@@ -1,5 +1,5 @@
 MIBS = ALL
-MIBDIRS := /usr/share/snmp/cisco-mibs/v2
+MIBDIRS := /usr/share/snmp/mibs
 
 OIDS = \
   SNMPv2-MIB::sysDescr \
@@ -12,7 +12,7 @@ OIDS = \
   BRIDGE-MIB::dot1dBridge
 
 AGENTS =
-AGENTS += 192.168.0.252
+AGENTS += 192.168.11.252
 AGENTS += 192.168.0.248
 
 LOGFILES = $(AGENTS:=.log)
@@ -21,9 +21,17 @@ JSONFILES = $(LOGFILES:.log=.json)
 
 DATABASE = database.db
 
+ARP_OPTS = --localnet --ignoredups --plain --ouifile=/usr/share/arp-scan/ieee-oui.txt --macfile=/etc/arp-scan/mac-vendor.txt
+
 all : json analyze
 
-snmp : $(LOGFILES)
+prepare :
+	sudo apt -y install snmp net-tools
+
+snmp : presnmp $(LOGFILES)
+
+presnmp :
+	rm -rf $(LOGFILES)
 
 %.log :
 	sh retrieve.sh \
@@ -43,8 +51,9 @@ analyze :
 	python3 analyze.py -o result.log $(JSONFILES)
 
 arp :
-	#sudo arp-scan --localnet --quiet --plain --ignoredups | tee arpscan.log
-	sudo arp-scan --localnet --plain --ignoredups | tee arpscan.log
+	rm -rf arpscan.log
+	ssh -t abaoaqu "sudo -E arp-scan $(ARP_OPTS)" | tee -a arpscan.log
+	ssh -t solomon "sudo -E arp-scan $(ARP_OPTS)" | tee -a arpscan.log
 	python3 arp2json.py -o arpscan.json arpscan.log
 
 db :
