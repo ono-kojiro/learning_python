@@ -15,6 +15,21 @@ def read_json(filepath) :
         data = json.loads(fp.read())
         return data
 
+def create_agents_view(conn, view):
+    c = conn.cursor()
+
+    sql = 'DROP VIEW IF EXISTS {0};'.format(view)
+    c.execute(sql)
+
+    sql = 'CREATE VIEW {0} AS '.format(view)
+    sql += 'SELECT '
+    sql += '  DISTINCT agent '
+    sql += 'FROM interfaces_table '
+    sql += ';'
+
+    c.execute(sql)
+
+
 def create_macaddrs_view(conn, view):
     c = conn.cursor()
 
@@ -32,7 +47,9 @@ def create_macaddrs_view(conn, view):
     sql += '  ON interfaces_table.idx = macaddrs_table.idx '
     sql += 'LEFT OUTER JOIN arp_table '
     sql += '  ON macaddrs_table.mac = arp_table.mac '
-    sql += 'WHERE status = "up(1)" '
+    sql += 'WHERE '
+    sql += '  status = "up(1)" '
+    sql += '  AND macaddrs_table.mac != "" '
     sql += ';'
 
     c.execute(sql)
@@ -76,6 +93,7 @@ def main():
         sys.exit(1)
 
     conn = sqlite3.connect(output)
+    create_agents_view(conn, 'agents_view')
     create_macaddrs_view(conn, 'macaddrs_view')
     conn.commit()
     conn.close()
