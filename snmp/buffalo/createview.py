@@ -37,23 +37,29 @@ def create_connections_view(conn, view):
 
     sql = 'CREATE VIEW {0} AS '.format(view)
     sql += 'SELECT '
-    sql += '  interfaces_table.agent AS agent, '
-    sql += '  interfaces_table.idx AS idx, '
-    sql += '  macaddrs_table.mac AS mac, '
-    sql += '  arp_table.ip AS ip '
+    #sql += '  interfaces_table.agent AS agent_ip, '
+    sql += '  agents_table.ip  AS src_ip, '
+    sql += '  agents_table.mac AS src_mac, '
+    sql += '  interfaces_table.idx AS src_port, '
+    sql += '  macaddrs_table.mac AS dst_mac, '
+    sql += '  arp_table.ip AS dst_ip '
     sql += 'FROM interfaces_table '
     sql += 'LEFT OUTER JOIN macaddrs_table '
     sql += '  ON interfaces_table.idx = macaddrs_table.idx '
     sql += 'LEFT OUTER JOIN arp_table '
     sql += '  ON macaddrs_table.mac = arp_table.mac '
+    sql += 'LEFT OUTER JOIN agents_table '
+    sql += '  ON interfaces_table.agent = agents_table.ip '
     sql += 'WHERE '
     sql += '  status = "up(1)" '
     sql += '  AND macaddrs_table.mac != "" '
+    #sql += '  AND agents_table.sysdescr IS NULL '
     sql += ';'
 
     c.execute(sql)
 
 def create_a2a_view(conn, view):
+
     c = conn.cursor()
 
     sql = 'DROP VIEW IF EXISTS {0};'.format(view)
@@ -61,13 +67,14 @@ def create_a2a_view(conn, view):
 
     sql = 'CREATE VIEW {0} AS '.format(view)
     sql += 'SELECT '
-    sql += '  connections_view.agent AS agent, '
-    sql += '  connections_view.idx   AS idx, '
-    sql += '  connections_view.mac   AS mac, '
-    sql += '  connections_view.ip    AS ip '
+    sql += '  connections_view.src_ip AS src_ip, '
+    sql += '  connections_view.src_mac   AS src_mac, '
+    sql += '  connections_view.src_port   AS src_port, '
+    sql += '  connections_view.dst_mac   AS dst_mac, '
+    sql += '  connections_view.dst_ip    AS dst_ip '
     sql += 'FROM connections_view '
     sql += 'INNER JOIN agents_view '
-    sql += '  ON connections_view.mac = agents_view.mac '
+    sql += '  ON connections_view.dst_mac = agents_view.mac '
     sql += ';'
 
     c.execute(sql)

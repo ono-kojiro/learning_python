@@ -23,7 +23,7 @@ DATABASE = database.db
 
 ARP_OPTS = --localnet --ignoredups --plain --ouifile=/usr/share/arp-scan/ieee-oui.txt --macfile=/etc/arp-scan/mac-vendor.txt
 
-all : json analyze
+all : json analyze db
 
 prepare :
 	sudo apt -y install snmp net-tools
