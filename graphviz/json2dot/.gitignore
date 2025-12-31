@@ -1,0 +1,8 @@
+*~
+*.json
+*.dot
+*.jpg
+*.pdf
+icons/
+__pycache__/
+
