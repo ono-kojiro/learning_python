@@ -93,13 +93,13 @@ digraph mygraph {
     data = {}
     for jsonfile in args:
         data = read_json(jsonfile)
-        agent_ips = data['agents']
+        agents = data['agents']
 
         conns = data['connections']
 
         # draw agents
-        for agent_ip in agent_ips :
-            #agent = Agent(agent_ip)
+        for agent in agents :
+            agent_ip = agent['ip']
 
             lines = []
             cluster = re.sub(r'\.', '_', agent_ip)
@@ -171,8 +171,8 @@ digraph mygraph {
 
 
         agent_list = {}
-        for agent_ip in agent_ips :
-            agent_list[agent_ip] = 1
+        for agent in agents :
+            agent_list[agent['ip']] = 1
       
         pprint(agent_list)
 

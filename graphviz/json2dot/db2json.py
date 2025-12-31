@@ -24,8 +24,12 @@ def get_agents(conn) :
     items = []
     rows = c.execute(sql)
     for row in rows :
-        agent = row['agent']
-        items.append(agent)
+        item = {
+            'ip' : row['ip'],
+            'mac' : row['mac'],
+            'sysdescr' : row['sysdescr'],
+        }
+        items.append(item)
 
     return items
 
