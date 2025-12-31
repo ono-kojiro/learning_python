@@ -166,8 +166,6 @@ def main():
     create_interfaces_table(conn, 'interfaces_table')
     create_macaddrs_table(conn, 'macaddrs_table')
 
-    #create_macaddrs_view(conn, 'macaddrs_view')
-
     for jsonfile in args:
         data = read_json(jsonfile)
 

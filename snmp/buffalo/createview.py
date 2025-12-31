@@ -59,6 +59,32 @@ def create_connections_view(conn, view):
     c.execute(sql)
 
 def create_a2a_view(conn, view):
+    c = conn.cursor()
+
+    sql = 'DROP VIEW IF EXISTS {0};'.format(view)
+    c.execute(sql)
+
+    sql = 'CREATE VIEW {0} AS '.format(view)
+    sql += 'SELECT '
+    sql += '  macaddrs_table.agent, '
+    sql += '  macaddrs_table.idx, '
+    sql += '  macaddrs_table.mac, '
+    sql += '  src_table.sysdescr, '
+    sql += '  dst_table.ip, '
+    sql += '  dst_table.mac, '
+    sql += '  dst_table.sysdescr '
+    sql += 'FROM macaddrs_table '
+    sql += 'LEFT OUTER JOIN agents_table AS src_table '
+    sql += '  ON macaddrs_table.agent = src_table.ip '
+    sql += 'LEFT OUTER JOIN agents_table AS dst_table '
+    sql += '  ON macaddrs_table.mac = dst_table.mac '
+    sql += 'WHERE '
+    sql += '  dst_table.sysdescr IS NOT NULL '
+    sql += ';'
+
+    c.execute(sql)
+
+def create_a2a_view_old(conn, view):
 
     c = conn.cursor()
 

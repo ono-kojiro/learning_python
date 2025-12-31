@@ -62,6 +62,8 @@ db :
 	python3 json2db.py -o $(DATABASE) $(JSONFILES)
 	python3 createview.py -o $(DATABASE)
 	sqlite3 $(DATABASE) ".dump" > $(DATABASE:.db=.sql)
+
+test :
 	cat $(DATABASE:.db=.sql)
 	sqlite3 $(DATABASE) ".schema"
 	sqlite3 $(DATABASE) "select * from connections_view;"
@@ -71,7 +73,7 @@ db :
 schema :
 	sqlite3 $(DATABASE) ".schema"
 
-debug :
+check :
 	sh retrieve.sh \
 		--agent 192.168.0.248 \
 		--mibs $(MIBS) \
