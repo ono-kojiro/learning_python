@@ -66,6 +66,10 @@ db :
 	sqlite3 $(DATABASE) ".schema"
 	sqlite3 $(DATABASE) "select * from connections_view;"
 	sqlite3 $(DATABASE) "select * from agents_view;"
+	sqlite3 $(DATABASE) "select * from a2a_view;"
+
+schema :
+	sqlite3 $(DATABASE) ".schema"
 
 debug :
 	sh retrieve.sh \

@@ -53,6 +53,26 @@ def create_connections_view(conn, view):
 
     c.execute(sql)
 
+def create_a2a_view(conn, view):
+    c = conn.cursor()
+
+    sql = 'DROP VIEW IF EXISTS {0};'.format(view)
+    c.execute(sql)
+
+    sql = 'CREATE VIEW {0} AS '.format(view)
+    sql += 'SELECT '
+    sql += '  connections_view.agent AS agent, '
+    sql += '  connections_view.idx   AS idx, '
+    sql += '  connections_view.mac   AS mac, '
+    sql += '  connections_view.ip    AS ip '
+    sql += 'FROM connections_view '
+    sql += 'INNER JOIN agents_view '
+    sql += '  ON connections_view.mac = agents_view.mac '
+    sql += ';'
+
+    c.execute(sql)
+
+
 def main():
     try:
         opts, args = getopt.getopt(
@@ -94,6 +114,7 @@ def main():
     conn = sqlite3.connect(output)
     create_agents_view(conn, 'agents_view')
     create_connections_view(conn, 'connections_view')
+    create_a2a_view(conn, 'a2a_view')
     conn.commit()
     conn.close()
 
