@@ -66,13 +66,13 @@ def create_a2a_view(conn, view):
 
     sql = 'CREATE VIEW {0} AS '.format(view)
     sql += 'SELECT '
-    sql += '  macaddrs_table.agent, '
-    sql += '  macaddrs_table.idx, '
-    sql += '  macaddrs_table.mac, '
-    sql += '  src_table.sysdescr, '
-    sql += '  dst_table.ip, '
-    sql += '  dst_table.mac, '
-    sql += '  dst_table.sysdescr '
+    sql += '  macaddrs_table.agent AS src_ip, '
+    sql += '  macaddrs_table.idx   AS src_port, '
+    sql += '  macaddrs_table.mac   AS src_mac, '
+#    sql += '  src_table.sysdescr   AS sysdescr, '
+#    sql += '  dst_table.ip         AS dst_ip, '
+#    sql += '  dst_table.mac        AS dst_mac, '
+    sql += '  dst_table.sysdescr   AS dst_descr '
     sql += 'FROM macaddrs_table '
     sql += 'LEFT OUTER JOIN agents_table AS src_table '
     sql += '  ON macaddrs_table.agent = src_table.ip '
@@ -84,8 +84,7 @@ def create_a2a_view(conn, view):
 
     c.execute(sql)
 
-def create_a2a_view_old(conn, view):
-
+def create_a2t_view(conn, view):
     c = conn.cursor()
 
     sql = 'DROP VIEW IF EXISTS {0};'.format(view)
@@ -93,18 +92,19 @@ def create_a2a_view_old(conn, view):
 
     sql = 'CREATE VIEW {0} AS '.format(view)
     sql += 'SELECT '
-    sql += '  connections_view.src_ip AS src_ip, '
-    sql += '  connections_view.src_mac   AS src_mac, '
-    sql += '  connections_view.src_port   AS src_port, '
-    sql += '  connections_view.dst_mac   AS dst_mac, '
-    sql += '  connections_view.dst_ip    AS dst_ip '
-    sql += 'FROM connections_view '
-    sql += 'INNER JOIN agents_view '
-    sql += '  ON connections_view.dst_mac = agents_view.mac '
+    sql += '  macaddrs_table.agent AS src_ip, '
+    sql += '  macaddrs_table.idx   AS src_port, '
+    sql += '  macaddrs_table.mac   AS src_mac, '
+    sql += '  a2a_view.dst_descr   AS dst_descr '
+    sql += 'FROM macaddrs_table '
+    sql += 'LEFT OUTER JOIN a2a_view '
+    sql += '  ON  macaddrs_table.agent = a2a_view.src_ip '
+    sql += '  AND macaddrs_table.idx   = a2a_view.src_port '
+    sql += 'WHERE '
+    sql += '  a2a_view.dst_descr IS NULL '
     sql += ';'
 
     c.execute(sql)
-
 
 def main():
     try:
@@ -148,6 +148,7 @@ def main():
     create_agents_view(conn, 'agents_view')
     create_connections_view(conn, 'connections_view')
     create_a2a_view(conn, 'a2a_view')
+    create_a2t_view(conn, 'a2t_view')
     conn.commit()
     conn.close()
 

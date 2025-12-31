@@ -66,9 +66,14 @@ db :
 test :
 	cat $(DATABASE:.db=.sql)
 	sqlite3 $(DATABASE) ".schema"
+	@echo ""
 	sqlite3 $(DATABASE) "select * from connections_view;"
+	@echo ""
 	sqlite3 $(DATABASE) "select * from agents_view;"
+	@echo ""
 	sqlite3 $(DATABASE) "select * from a2a_view;"
+	@echo ""
+	sqlite3 $(DATABASE) "select * from a2t_view;"
 
 schema :
 	sqlite3 $(DATABASE) ".schema"
