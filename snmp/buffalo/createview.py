@@ -23,8 +23,8 @@ def create_agents_view(conn, view):
 
     sql = 'CREATE VIEW {0} AS '.format(view)
     sql += 'SELECT '
-    sql += '  DISTINCT agent '
-    sql += 'FROM interfaces_table '
+    sql += '  DISTINCT ip, mac, sysdescr '
+    sql += 'FROM agents_table '
     sql += ';'
 
     c.execute(sql)

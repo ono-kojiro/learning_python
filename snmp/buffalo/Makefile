@@ -65,6 +65,7 @@ db :
 	cat $(DATABASE:.db=.sql)
 	sqlite3 $(DATABASE) ".schema"
 	sqlite3 $(DATABASE) "select * from connections_view;"
+	sqlite3 $(DATABASE) "select * from agents_view;"
 
 debug :
 	sh retrieve.sh \
