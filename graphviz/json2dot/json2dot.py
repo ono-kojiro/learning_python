@@ -131,18 +131,18 @@ digraph mygraph {
         for conn in conns :
             src_ip   = conn['src_ip']
             src_port = conn['src_port']
-            mac   = conn['dst_mac']
-            ip    = conn['dst_ip']
+            dst_mac   = conn['dst_mac']
+            dst_ip    = conn['dst_ip']
            
             uplink = configs['uplink'][src_ip]
             if src_port == uplink :
                 continue
             
             dst_port = "1"
-            if ip in configs['uplink']:
-                dst_port = configs['uplink'][ip]
+            if dst_ip in configs['uplink']:
+                dst_port = configs['uplink'][dst_ip]
                 
-            edge = Edge(src_ip, src_port, mac, ip, dst_port)
+            edge = Edge(src_ip, src_port, dst_mac, dst_ip, dst_port)
             edge.print(fp)
 
     fp.write(footer)
