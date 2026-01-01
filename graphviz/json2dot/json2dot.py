@@ -106,8 +106,7 @@ digraph mygraph {
         a2a = data['agent2agent']
         a2t = data['agent2terminal']
 
-        conns = copy.deepcopy(a2a)
-        conns.extend(a2t)
+        conns = a2a + a2t
 
         # draw agents
         for agent in agents :
@@ -121,16 +120,11 @@ digraph mygraph {
             agent_list[agent['ip']] = 1
       
         fp.write('   // plot other node\n')
-        mac_list = {}
-        for conn in a2t:
-            mac   = conn['dst_mac']
-            ip    = conn['dst_ip']
-            mac_list[mac] = ip
-
         # plot other node
-        #for conn in conns :
-        for mac in mac_list :
-            ip = mac_list[mac]
+        for conn in a2t:
+            mac = conn['dst_mac']
+            ip  = conn['dst_ip']
+
             lines = []
             if ip :
                 label = ip
