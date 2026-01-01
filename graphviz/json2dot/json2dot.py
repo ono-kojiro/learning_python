@@ -13,6 +13,7 @@ import copy
 from pprint import pprint
 
 #from Agent import Agent
+from Edge import Edge
 
 def usage():
     print("Usage : {0}".format(sys.argv[0]))
@@ -102,11 +103,11 @@ digraph mygraph {
         a2a = data['agent2agent']
         a2t = data['agent2terminal']
 
-        pprint(a2a)
+        #pprint(a2a)
 
         conns = copy.deepcopy(a2a)
         conns.extend(a2t)
-        pprint(conns)
+        #pprint(conns)
 
         # draw agents
         for agent in agents :
@@ -186,7 +187,7 @@ digraph mygraph {
         for agent in agents :
             agent_list[agent['ip']] = 1
       
-        pprint(agent_list)
+        #pprint(agent_list)
 
         fp.write('   // plot other node\n')
         
@@ -251,40 +252,21 @@ digraph mygraph {
         # draw edge
         fp.write('   // draw edge\n')
         for conn in conns :
-            agent = conn['src_ip']
-            idx   = conn['src_port']
+            src_ip   = conn['src_ip']
+            src_port = conn['src_port']
             mac   = conn['dst_mac']
             ip    = conn['dst_ip']
            
-            default_idx = configs['default_idx'][agent]
-            if idx == default_idx :
+            default_idx = configs['default_idx'][src_ip]
+            if src_port == default_idx :
                 continue
-                
-            
-            if ip and ip in agent_list :
-                print('DEBUG: ip {0} is agent, continue'.format(ip))
-                #continue
-            else :
-                #print('DEBUG: ip {0} is not agent'.format(ip))
-                pass
-
-
-            src_cluster = re.sub(r'\.', '_', agent)
-            src = "node_{0}_port{1}".format(src_cluster, idx)
-
-            if ip :
-                dst_cluster = re.sub(r'\.', '_', ip)
-            else :
-                dst_cluster = re.sub(r'\:', '_', mac)
             
             dst_port = "1"
             if ip in configs['default_idx']:
                 dst_port = configs['default_idx'][ip]
-
-            dst = "node_{0}_port{1}".format(dst_cluster, dst_port)
-            line = "    {0} -> {1} [minlen=5];".format(src, dst)
-            #line = "    {0} -> {1} ;".format(src, dst)
-            fp.write(line + '\n')
+                
+            edge = Edge(src_ip, src_port, mac, ip, dst_port)
+            edge.print(fp)
 
     fp.write(footer)
     fp.write('\n')
