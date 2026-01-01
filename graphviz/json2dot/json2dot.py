@@ -76,13 +76,15 @@ digraph mygraph {
     rankdir = "LR";
     ordering = out;
 
-    nodesep = "0.1";
-    ranksep = "0.1";
+    //nodesep = "0.1";
+    ranksep = "0.3";
 
-    splines = true;
+    //splines = true;
+    splines = curved;
+
     overlap = false;
 
-    newrank = true;
+    //newrank = true;
     '''
 
     footer = '''
@@ -235,7 +237,7 @@ digraph mygraph {
             lines.append('            width=0.3')
             lines.append('            height=0.3')
             lines.append('        ];')
-            lines.append('        node_{0}_port1 -> node_{0}_image [color=none, weight=10];'.format(cluster))
+            lines.append('        node_{0}_port1 -> node_{0}_image [color=none, weight=100, len=0.3];'.format(cluster))
             lines.append('        node_{0}_image -> node_{0}_dummy [color=none ];'.format(cluster))
             lines.append('     };')
 
@@ -280,7 +282,8 @@ digraph mygraph {
                 dst_port = configs['default_idx'][ip]
 
             dst = "node_{0}_port{1}".format(dst_cluster, dst_port)
-            line = "    {0} -> {1} [minlen=10];".format(src, dst)
+            line = "    {0} -> {1} [minlen=5];".format(src, dst)
+            #line = "    {0} -> {1} ;".format(src, dst)
             fp.write(line + '\n')
 
     fp.write(footer)
