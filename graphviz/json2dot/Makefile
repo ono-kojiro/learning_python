@@ -16,6 +16,9 @@ dot :
 pdf :
 	dot -Tpdf -o output.pdf output.dot
 
+check :
+	python3 check.py output.json
+
 schema :
 	sqlite3 $(DATABASE) ".schema"
 

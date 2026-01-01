@@ -81,6 +81,8 @@ digraph mygraph {
 
     splines = true;
     overlap = false;
+
+    newrank = true;
     '''
 
     footer = '''
@@ -94,17 +96,25 @@ digraph mygraph {
     for jsonfile in args:
         data = read_json(jsonfile)
         agents = data['agents']
+        #conns = data['connections']
+        a2a = data['agent2agent']
+        a2t = data['agent2terminal']
 
-        conns = data['connections']
+        pprint(a2a)
+
+        conns = copy.deepcopy(a2a)
+        conns.extend(a2t)
+        pprint(conns)
 
         # draw agents
         for agent in agents :
             agent_ip = agent['ip']
+            agent_mac = agent['mac']
 
             lines = []
             cluster = re.sub(r'\.', '_', agent_ip)
             lines.append('    subgraph cluster_{0} {{'.format(cluster))
-            lines.append('        label = "{0}";'.format(agent_ip))
+            lines.append('        label = "{0}\\n{1}";'.format(agent_ip, agent_mac))
 
             lines.append('        node_{0}_image ['.format(cluster))
             lines.append('            shape=none')
@@ -114,8 +124,8 @@ digraph mygraph {
             
             idxs = {}
             for conn in conns :
-                if conn['agent'] == agent_ip :
-                    idx = conn['idx']
+                if conn['src_ip'] == agent_ip :
+                    idx = conn['src_port']
                     idxs[idx] = 1
        
             for idx in idxs:
@@ -179,24 +189,14 @@ digraph mygraph {
         fp.write('   // plot other node\n')
         
         mac_list = {}
-        for conn in conns :
-            mac   = conn['mac']
-            ip    = conn['ip']
-            if ip in agent_list :
-                continue
+        for conn in a2t:
+            mac   = conn['dst_mac']
+            ip    = conn['dst_ip']
             mac_list[mac] = ip
 
         # plot other node
         #for conn in conns :
         for mac in mac_list :
-            #agent = conn['agent']
-            #idx   = conn['idx']
-            #mac   = conn['mac']
-            #ip    = conn['ip']
-
-            #if ip in agent_list :
-            #    continue
-           
             ip = mac_list[mac]
             lines = []
             if ip :
@@ -205,6 +205,11 @@ digraph mygraph {
             else :
                 label = mac
                 cluster = re.sub(r'\:', '_', mac)
+
+            if label in agent_list :
+                dst_port = configs['default_idx'][label]
+            else :
+                dst_port = "1"
 
             lines.append('    subgraph cluster_{0} {{'.format(cluster))
             lines.append('        label = "{0}";'.format(label))
@@ -215,7 +220,7 @@ digraph mygraph {
             lines.append('            fixedsize=true')
             lines.append('            imagescale=height')
             lines.append('        ];'.format(cluster))
-            lines.append('        node_{0}_port1 ['.format(cluster))
+            lines.append('        node_{0}_port{1} ['.format(cluster, dst_port))
             lines.append('            shape=box')
             lines.append('            label="1"')
             lines.append('            fixedsize=true')
@@ -244,18 +249,19 @@ digraph mygraph {
         # draw edge
         fp.write('   // draw edge\n')
         for conn in conns :
-            agent = conn['agent']
-            idx   = conn['idx']
-            mac   = conn['mac']
-            ip    = conn['ip']
-            
+            agent = conn['src_ip']
+            idx   = conn['src_port']
+            mac   = conn['dst_mac']
+            ip    = conn['dst_ip']
+           
             default_idx = configs['default_idx'][agent]
             if idx == default_idx :
                 continue
+                
             
             if ip and ip in agent_list :
                 print('DEBUG: ip {0} is agent, continue'.format(ip))
-                continue
+                #continue
             else :
                 #print('DEBUG: ip {0} is not agent'.format(ip))
                 pass
@@ -268,9 +274,13 @@ digraph mygraph {
                 dst_cluster = re.sub(r'\.', '_', ip)
             else :
                 dst_cluster = re.sub(r'\:', '_', mac)
+            
+            dst_port = "1"
+            if ip in configs['default_idx']:
+                dst_port = configs['default_idx'][ip]
 
-            dst = "node_{0}_port1".format(dst_cluster)
-            line = "    {0} -> {1};".format(src, dst)
+            dst = "node_{0}_port{1}".format(dst_cluster, dst_port)
+            line = "    {0} -> {1} [minlen=10];".format(src, dst)
             fp.write(line + '\n')
 
     fp.write(footer)
