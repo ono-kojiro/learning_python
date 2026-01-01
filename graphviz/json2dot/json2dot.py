@@ -115,28 +115,12 @@ digraph mygraph {
             a = Agent(agent_ip, agent_mac)
             a.print(fp, conns, configs)
 
-        agent_list = {}
-        for agent in agents :
-            agent_list[agent['ip']] = 1
-      
         fp.write('   // plot other node\n')
         # plot other node
         for conn in a2t:
             mac = conn['dst_mac']
             ip  = conn['dst_ip']
-
-            lines = []
-            if ip :
-                label = ip
-                cluster = re.sub(r'\.', '_', ip)
-            else :
-                label = mac
-                cluster = re.sub(r'\:', '_', mac)
-
-            if label in agent_list :
-                dst_port = configs['uplink'][label]
-            else :
-                dst_port = "1"
+            dst_port = "1"
 
             terminal = Terminal(ip, mac, dst_port)
             terminal.print(fp)
