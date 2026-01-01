@@ -15,7 +15,7 @@ class Agent() :
         agent_ip = self.ip
         agent_mac = self.mac
         
-        default_idx = configs['default_idx'][agent_ip]
+        uplink = configs['uplink'][agent_ip]
         idxs = {}
         for conn in conns :
             if conn['src_ip'] == agent_ip :
@@ -24,7 +24,7 @@ class Agent() :
         
         ports = []
         for idx in idxs:
-            if default_idx != idx :
+            if uplink != idx :
                 ports.append(idx)
 
         lines = []
@@ -55,12 +55,6 @@ class Agent() :
         lines.append('    {')
         lines.append('        rank = same;')
 
-        #for idx in idxs:
-        #    if default_idx != idx :
-        #        line  = '        '
-        #        line += 'node_{0}_port{1};'.format(cluster, idx)
-        #        lines.append(line)
-
         for port in ports:
              line  = '        '
              line += 'node_{0}_port{1};'.format(cluster, port)
@@ -70,15 +64,12 @@ class Agent() :
         lines.append('')
 
         line  = '    '
-        line += 'node_{0}_port{1} -> node_{0}_image;'.format(cluster, default_idx)
+        line += 'node_{0}_port{1} -> node_{0}_image;'.format(cluster, uplink)
         lines.append(line)
 
-        for idx in idxs:
-            if default_idx == idx :
-                continue
-
+        for port in ports:
             line  = '    '
-            line += 'node_{0}_image -> node_{0}_port{1};'.format(cluster, idx)
+            line += 'node_{0}_image -> node_{0}_port{1};'.format(cluster, port)
             lines.append(line)
 
         # end of subgraph

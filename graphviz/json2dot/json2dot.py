@@ -139,7 +139,7 @@ digraph mygraph {
                 cluster = re.sub(r'\:', '_', mac)
 
             if label in agent_list :
-                dst_port = configs['default_idx'][label]
+                dst_port = configs['uplink'][label]
             else :
                 dst_port = "1"
 
@@ -155,13 +155,13 @@ digraph mygraph {
             mac   = conn['dst_mac']
             ip    = conn['dst_ip']
            
-            default_idx = configs['default_idx'][src_ip]
-            if src_port == default_idx :
+            uplink = configs['uplink'][src_ip]
+            if src_port == uplink :
                 continue
             
             dst_port = "1"
-            if ip in configs['default_idx']:
-                dst_port = configs['default_idx'][ip]
+            if ip in configs['uplink']:
+                dst_port = configs['uplink'][ip]
                 
             edge = Edge(src_ip, src_port, mac, ip, dst_port)
             edge.print(fp)
