@@ -1,12 +1,14 @@
 import sys
 import re
 
+import copy
+
 class Agent() :
     def __init__(self, ip, mac) :
         self.ip  = ip
         self.mac = mac
         self.indent = 1
-        self.minlen = 1
+        self.minlen = 4
     
     def get_downlink_ports(self, uplink, conns):
         ports = []
@@ -72,14 +74,29 @@ class Agent() :
         lines.append('')
 
         line  = '    '
-        line += 'node_{0}_port{1} -> node_{0}_image;'.format(cluster, uplink)
+        line += 'node_{0}_port{1} -> node_{0}_image [color=none];'.format(cluster, uplink)
         lines.append(line)
 
         for port in ports:
             line  = '    '
-            line += 'node_{0}_image -> node_{0}_port{1};'.format(cluster, port)
+            line += 'node_{0}_image -> node_{0}_port{1} [color=none];'.format(cluster, port)
             lines.append(line)
+        
+        lines.append('')
+        src = None
+        dst = None
+        for port in ports:
+            dst = port
+            if src is None:
+                src = dst
+                continue
 
+            line  = '    '
+            line += 'node_{0}_port{1} -> node_{0}_port{2} [color=none,minlen={3}];'.format(cluster, src, dst, minlen)
+            lines.append(line)
+            src = dst
+
+        lines.append('    // end of subgraph')
         # end of subgraph
         lines.append('}')
 

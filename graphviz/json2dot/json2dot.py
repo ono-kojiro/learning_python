@@ -83,7 +83,8 @@ digraph mygraph {
     ranksep = "0.3";
 
     //splines = true;
-    splines = curved;
+    //splines = curved;
+    splines = false;
 
     overlap = false;
 
