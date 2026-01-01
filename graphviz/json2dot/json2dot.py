@@ -88,14 +88,15 @@ digraph mygraph {
     overlap = false;
 
     //newrank = true;
+
     '''
 
     footer = '''
 }
+
     '''
 
     fp.write(header)
-    fp.write('\n')
 
     data = {}
     for jsonfile in args:
@@ -166,7 +167,6 @@ digraph mygraph {
             edge.print(fp)
 
     fp.write(footer)
-    fp.write('\n')
 
     if output is not None :
         fp.close()

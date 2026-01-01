@@ -132,9 +132,6 @@ def main():
 
         agents = get_agents(conn)
         data['agents'] = agents
-
-        connections = get_connections_view(conn)
-        data['connections'] = connections
         
         a2a = get_a2a_view(conn)
         data['agent2agent'] = a2a

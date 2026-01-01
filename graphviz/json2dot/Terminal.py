@@ -15,7 +15,7 @@ class Terminal() :
 
         lines = []
         if ip :
-            label = ip
+            label = ip + '\n' + mac
             cluster = re.sub(r'\.', '_', ip)
         else :
             label = mac
