@@ -24,8 +24,10 @@ class Edge() :
 
         dst = "node_{0}_port{1}".format(dst_cluster, self.dst_port)
 
+        portpos = 'e' # east
+
         line  = ' ' * self.indent * 4
-        line += '"{0}" -> "{1}"'.format(src, dst)
+        line += '"{0}":{1} -> "{2}"'.format(src, portpos, dst)
         if self.minlen :
             line += ' [minlen={0}]'.format(self.minlen)
         line += ';'
