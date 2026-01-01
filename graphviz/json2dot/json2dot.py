@@ -89,12 +89,12 @@ digraph mygraph {
 
     //newrank = true;
 
-    '''
+'''
 
     footer = '''
 }
 
-    '''
+'''
 
     fp.write(header)
 
