@@ -7,6 +7,21 @@ class Agent() :
         self.mac = mac
         self.indent = 1
         self.minlen = 1
+    
+    def get_downlink_ports(self, uplink, conns):
+        ports = []
+        for conn in conns :
+            if conn['src_ip'] != self.ip :
+                continue
+
+            port = conn['src_port']
+            if port == uplink :
+                continue
+
+            if not port in ports :
+                ports.append(port)
+
+        return sorted(ports)
 
     def print(self, fp, conns, configs) :
         indent = self.indent
@@ -16,16 +31,7 @@ class Agent() :
         agent_mac = self.mac
         
         uplink = configs['uplink'][agent_ip]
-        idxs = {}
-        for conn in conns :
-            if conn['src_ip'] == agent_ip :
-                idx = conn['src_port']
-                idxs[idx] = 1
-        
-        ports = []
-        for idx in idxs:
-            if uplink != idx :
-                ports.append(idx)
+        ports = self.get_downlink_ports(uplink, conns)
 
         lines = []
         cluster = re.sub(r'\.', '_', agent_ip)
@@ -40,10 +46,11 @@ class Agent() :
             
        
         lines.append('')
-        for idx in idxs:
+        # uplink port and downlink port
+        for port in [ uplink ] + ports:
             line  = '    '
-            line += 'node_{0}_port{1} ['.format(cluster, idx)
-            line += '  shape=rectangle label="{0}"'.format(idx)
+            line += 'node_{0}_port{1} ['.format(cluster, port)
+            line += '  shape=rectangle label="{0}"'.format(port)
             lines.append(line)
                     
             line  = '    '
@@ -55,6 +62,7 @@ class Agent() :
         lines.append('    {')
         lines.append('        rank = same;')
 
+        # downlink port only
         for port in ports:
              line  = '        '
              line += 'node_{0}_port{1};'.format(cluster, port)
