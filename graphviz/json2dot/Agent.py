@@ -32,7 +32,7 @@ class Agent() :
         agent_ip = self.ip
         agent_mac = self.mac
         
-        uplink = configs['uplink'][agent_ip]
+        uplink = configs['nodes'][agent_ip]['uplink']
         ports = self.get_downlink_ports(uplink, conns)
 
         lines = []

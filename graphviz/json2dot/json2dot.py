@@ -123,7 +123,7 @@ digraph mygraph {
             dst_port = "1"
 
             terminal = Terminal(ip, mac, dst_port)
-            terminal.print(fp)
+            terminal.print(fp, configs)
 
         # agents
         # draw edge
@@ -134,13 +134,21 @@ digraph mygraph {
             dst_mac   = conn['dst_mac']
             dst_ip    = conn['dst_ip']
            
-            uplink = configs['uplink'][src_ip]
-            if src_port == uplink :
-                continue
+            if src_ip in configs['nodes'] : 
+                config = configs['nodes'][src_ip]
+                uplink = config.get('uplink', None)
+                draw_uplink_edge = config.get('draw_uplink_edge', None)
+
+                if src_port == uplink and draw_uplink_edge != True:
+                    continue
+                else :
+                    is_uplink = True
             
             dst_port = "1"
-            if dst_ip in configs['uplink']:
-                dst_port = configs['uplink'][dst_ip]
+            # if dst is Agent, use uplink port number
+            if dst_ip in configs['nodes']:
+                uplink = configs['nodes'][dst_ip]['uplink']
+                dst_port = uplink
                 
             edge = Edge(src_ip, src_port, dst_mac, dst_ip, dst_port)
             edge.print(fp)

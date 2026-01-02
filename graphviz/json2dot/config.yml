@@ -1,5 +1,14 @@
 ---
-uplink:
-  192.168.0.248: "1"
-  192.168.11.252: "8"
+nodes :
+  192.168.0.248:
+    uplink: "1"
+    draw_uplink_edge: true
 
+  192.168.11.252:
+    uplink: "8"
+
+images :
+  # https://panasonic.jp/pc/products/CF-SZ5WDKPR.html
+  00:4e:01:9d:0c:82 : images/cf-sz5wdkpr.jpg
+
+  20:c6:eb:91:e2:0b : images/cf-rz4.jpg

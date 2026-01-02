@@ -8,7 +8,7 @@ class Terminal() :
         self.dst_port = dst_port
         self.indent = 1
 
-    def print(self, fp) :
+    def print(self, fp, configs) :
         ip = self.ip
         mac = self.mac
         dst_port = self.dst_port
@@ -21,11 +21,15 @@ class Terminal() :
             label = mac
             cluster = re.sub(r'\:', '_', mac)
 
+        imagepath='icons/doc_jpg/pc.png'
+        if mac in configs['images'] :
+            imagepath = configs['images'][mac]
+
         lines.append('subgraph cluster_{0} {{'.format(cluster))
         lines.append('    label = "{0}";'.format(label))
         lines.append('    node_{0}_image ['.format(cluster))
         lines.append('        shape=none')
-        lines.append('        image="icons/doc_jpg/pc.png"')
+        lines.append('        image="{0}"'.format(imagepath))
         lines.append('        label=""')
         lines.append('        fixedsize=true')
         lines.append('        imagescale=height')
