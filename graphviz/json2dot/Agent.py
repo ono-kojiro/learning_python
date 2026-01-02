@@ -4,7 +4,7 @@ import re
 import copy
 
 class Agent() :
-    def __init__(self, ip, mac, uplink, downlinks) :
+    def __init__(self, ip, mac, uplink, downlinks, imagepath) :
         self.ip  = ip
         self.mac = mac
         self.indent = 1
@@ -12,6 +12,7 @@ class Agent() :
 
         self.uplink = uplink
         self.downlinks = downlinks
+        self.imagepath = imagepath
     
     def print(self, fp) :
         indent = self.indent
@@ -22,6 +23,11 @@ class Agent() :
         uplink   = self.uplink
         ports = self.downlinks
 
+        imagepath = self.imagepath
+        
+        if imagepath is None :
+            imagepath = 'icons/doc_jpg/small_hub.png'
+
         lines = []
         cluster = re.sub(r'\.', '_', agent_ip)
         lines.append('subgraph cluster_{0} {{'.format(cluster))
@@ -29,8 +35,10 @@ class Agent() :
         lines.append('')
         lines.append('    node_{0}_image ['.format(cluster))
         lines.append('        shape=none')
-        lines.append('        image="icons/doc_jpg/small_hub.png"')
-        lines.append('        label=none')
+        lines.append('        image="{0}"'.format(imagepath))
+        lines.append('        label=""')
+        lines.append('        fixedsize=true')
+        lines.append('        imagescale=height')
         lines.append('    ];'.format(cluster))
             
        

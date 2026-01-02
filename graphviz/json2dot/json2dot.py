@@ -78,8 +78,6 @@ def main():
 
     configs = read_yaml('./config.yml')
     
-    graph.print_header(fp)
-
     data = {}
     for jsonfile in args:
         data = read_json(jsonfile)
@@ -89,7 +87,7 @@ def main():
 
         conns = a2a + a2t
 
-        # draw agents
+        # agents
         for agent in agents :
             agent_ip = agent['ip']
             agent_mac = agent['mac']
@@ -104,13 +102,15 @@ def main():
                     continue
                 if not port in downlinks :
                     downlinks.append(port)
+            
+            imagepath = None
+            if agent_mac in configs['images'] :
+                imagepath = configs['images'][agent_mac]
 
-            a = Agent(agent_ip, agent_mac, uplink, downlinks)
+            a = Agent(agent_ip, agent_mac, uplink, downlinks, imagepath)
             graph.add_agent(a)
 
-        graph.print_agents(fp)
-
-        # plot other node
+        # terminals
         for conn in a2t:
             mac = conn['dst_mac']
             ip  = conn['dst_ip']
@@ -124,11 +124,7 @@ def main():
 
             graph.add_terminal(terminal)
 
-        graph.print_terminals(fp)
-        #    terminal.print(fp, configs)
-
-        # agents
-        # draw edge
+        # edges
         for conn in conns :
             src_ip   = conn['src_ip']
             src_port = conn['src_port']
@@ -153,7 +149,6 @@ def main():
                 
             edge = Edge(src_ip, src_port, dst_mac, dst_ip, dst_port)
             graph.add_edge(edge)
-            #edge.print(fp)
 
     graph.print(fp)
 

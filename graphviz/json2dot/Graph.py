@@ -41,7 +41,9 @@ class Graph() :
             edge.print(fp)
 
     def print(self, fp) :
-        #fp.write('digraph mygraph {\n')
+        self.print_header(fp)
+        self.print_agents(fp)
+        self.print_terminals(fp)
         self.print_edges(fp)
         self.print_footer(fp)
     

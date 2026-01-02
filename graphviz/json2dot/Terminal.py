@@ -34,7 +34,7 @@ class Terminal() :
         lines.append('        image="{0}"'.format(imagepath))
         lines.append('        label=""')
         lines.append('        fixedsize=true')
-        lines.append('        imagescale=height')
+        lines.append('        imagescale=width')
         lines.append('    ];'.format(cluster))
         lines.append('    node_{0}_port{1} ['.format(cluster, dst_port))
         lines.append('        shape=box')
