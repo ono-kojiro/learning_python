@@ -96,7 +96,19 @@ def main():
         for agent in agents :
             agent_ip = agent['ip']
             agent_mac = agent['mac']
-            a = Agent(agent_ip, agent_mac)
+            uplink = configs['nodes'][agent_ip]['uplink']
+    
+            downlinks = []
+            for conn in conns :
+                if conn['src_ip'] != agent_ip :
+                    continue
+                port = conn['src_port']
+                if port == uplink :
+                    continue
+                if not port in downlinks :
+                    downlinks.append(port)
+
+            a = Agent(agent_ip, agent_mac, uplink, downlinks)
             graph.add_agent(a)
 
         graph.print_agents(fp)

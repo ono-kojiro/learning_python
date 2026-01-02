@@ -33,7 +33,7 @@ class Graph() :
     
     def print_agents(self, fp) :
         for agent in self.agents :
-            agent.print(fp, self.conns, self.configs)
+            agent.print(fp)
 
     def add_terminal(self, terminal) :
         self.terminals.append(terminal)

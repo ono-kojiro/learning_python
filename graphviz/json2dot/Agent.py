@@ -4,36 +4,23 @@ import re
 import copy
 
 class Agent() :
-    def __init__(self, ip, mac) :
+    def __init__(self, ip, mac, uplink, downlinks) :
         self.ip  = ip
         self.mac = mac
         self.indent = 1
         self.minlen = 4
+
+        self.uplink = uplink
+        self.downlinks = downlinks
     
-    def get_downlink_ports(self, uplink, conns):
-        ports = []
-        for conn in conns :
-            if conn['src_ip'] != self.ip :
-                continue
-
-            port = conn['src_port']
-            if port == uplink :
-                continue
-
-            if not port in ports :
-                ports.append(port)
-
-        return sorted(ports)
-
-    def print(self, fp, conns, configs) :
+    def print(self, fp) :
         indent = self.indent
         minlen = self.minlen
 
         agent_ip = self.ip
         agent_mac = self.mac
-        
-        uplink = configs['nodes'][agent_ip]['uplink']
-        ports = self.get_downlink_ports(uplink, conns)
+        uplink   = self.uplink
+        ports = self.downlinks
 
         lines = []
         cluster = re.sub(r'\.', '_', agent_ip)
@@ -49,7 +36,7 @@ class Agent() :
        
         lines.append('')
         # uplink port and downlink port
-        for port in [ uplink ] + ports:
+        for port in [ self.uplink ] + ports:
             line  = '    '
             line += 'node_{0}_port{1} ['.format(cluster, port)
             line += '  shape=rectangle label="{0}"'.format(port)
