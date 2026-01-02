@@ -77,8 +77,6 @@ def main():
     graph = Graph()
 
     configs = read_yaml('./config.yml')
-
-    graph.set_configs(configs)
     
     graph.print_header(fp)
 
@@ -90,7 +88,6 @@ def main():
         a2t = data['agent2terminal']
 
         conns = a2a + a2t
-        graph.set_connections(conns)
 
         # draw agents
         for agent in agents :
@@ -119,7 +116,11 @@ def main():
             ip  = conn['dst_ip']
             dst_port = "1"
 
-            terminal = Terminal(ip, mac, dst_port)
+            imagepath = None
+            if mac in configs['images'] :
+                imagepath = configs['images'][mac]
+
+            terminal = Terminal(ip, mac, dst_port, imagepath)
 
             graph.add_terminal(terminal)
 

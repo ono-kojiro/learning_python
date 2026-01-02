@@ -2,16 +2,19 @@ import sys
 import re
 
 class Terminal() :
-    def __init__(self, ip, mac, dst_port) :
+    def __init__(self, ip, mac, dst_port, imagepath) :
         self.ip  = ip
         self.mac = mac
         self.dst_port = dst_port
         self.indent = 1
+        
+        self.imagepath = imagepath
 
-    def print(self, fp, configs) :
+    def print(self, fp) :
         ip = self.ip
         mac = self.mac
         dst_port = self.dst_port
+        imagepath = self.imagepath
 
         lines = []
         if ip :
@@ -21,9 +24,8 @@ class Terminal() :
             label = mac
             cluster = re.sub(r'\:', '_', mac)
 
-        imagepath='icons/doc_jpg/pc.png'
-        if mac in configs['images'] :
-            imagepath = configs['images'][mac]
+        if imagepath is None : 
+            imagepath='icons/doc_jpg/pc.png'
 
         lines.append('subgraph cluster_{0} {{'.format(cluster))
         lines.append('    label = "{0}";'.format(label))

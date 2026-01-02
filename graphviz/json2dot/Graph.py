@@ -10,20 +10,11 @@ class Graph() :
         self.splines = False
         self.overlap = False
 
-        self.configs = {}
         self.subgraphs = []
-        
-        self.conns = None
 
         self.agents = []
         self.terminals = []
         self.edges = []
-
-    def set_configs(self, configs) :
-        self.configs = configs
-    
-    def set_connections(self, conns) :
-        self.conns = conns
 
     def add_subgraph(self, subgraph) :
         self.subgraphs.append(subgraph)
@@ -40,7 +31,7 @@ class Graph() :
 
     def print_terminals(self, fp) :
         for terminal in self.terminals :
-            terminal.print(fp, self.configs)
+            terminal.print(fp)
 
     def add_edge(self, edge) :
         self.edges.append(edge)
