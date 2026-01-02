@@ -12,6 +12,8 @@ import copy
 
 from pprint import pprint
 
+from Graph import Graph
+
 #from Agent import Agent
 from Edge import Edge
 from Terminal import Terminal
@@ -72,32 +74,13 @@ def main():
     if ret != 0:
         sys.exit(1)
 
+    graph = Graph()
+
     configs = read_yaml('./config.yml')
 
-    header = '''
-digraph mygraph {
-    rankdir = "LR";
-    ordering = out;
-
-    //nodesep = "0.1";
-    ranksep = "0.3";
-
-    //splines = true;
-    //splines = curved;
-    splines = false;
-
-    overlap = false;
-
-    //newrank = true;
-
-'''
-
-    footer = '''
-}
-
-'''
-
-    fp.write(header)
+    graph.set_configs(configs)
+    
+    graph.print_header(fp)
 
     data = {}
     for jsonfile in args:
@@ -107,15 +90,17 @@ digraph mygraph {
         a2t = data['agent2terminal']
 
         conns = a2a + a2t
+        graph.set_connections(conns)
 
         # draw agents
         for agent in agents :
             agent_ip = agent['ip']
             agent_mac = agent['mac']
             a = Agent(agent_ip, agent_mac)
-            a.print(fp, conns, configs)
+            graph.add_agent(a)
 
-        fp.write('   // plot other node\n')
+        graph.print_agents(fp)
+
         # plot other node
         for conn in a2t:
             mac = conn['dst_mac']
@@ -123,11 +108,14 @@ digraph mygraph {
             dst_port = "1"
 
             terminal = Terminal(ip, mac, dst_port)
-            terminal.print(fp, configs)
+
+            graph.add_terminal(terminal)
+
+        graph.print_terminals(fp)
+        #    terminal.print(fp, configs)
 
         # agents
         # draw edge
-        fp.write('   // draw edge\n')
         for conn in conns :
             src_ip   = conn['src_ip']
             src_port = conn['src_port']
@@ -151,9 +139,10 @@ digraph mygraph {
                 dst_port = uplink
                 
             edge = Edge(src_ip, src_port, dst_mac, dst_ip, dst_port)
-            edge.print(fp)
+            graph.add_edge(edge)
+            #edge.print(fp)
 
-    fp.write(footer)
+    graph.print(fp)
 
     if output is not None :
         fp.close()
