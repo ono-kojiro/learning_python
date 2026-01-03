@@ -79,14 +79,30 @@ schema :
 	sqlite3 $(DATABASE) ".schema"
 
 check :
+	$(MAKE) check-cisco
+	$(MAKE) check-buffalo
+	python3 oid2dict.py -o cisco.json cisco.log
+	cat cisco.json
+	python3 oid2dict.py -o buffalo.json buffalo.log
+	cat buffalo.json
+
+check-cisco :
 	sh retrieve.sh \
 		--agent 192.168.0.248 \
 		--mibs $(MIBS) \
 		--mibdirs $(MIBDIRS) \
-		--oids "$(OIDS)" \
+  		--oids "SNMPv2-MIB::sysDescr" \
 		--output cisco.log \
 		--error  cisco.err
-	python3 oid2dict.py -o cisco.json cisco.log
+
+check-buffalo :
+	sh retrieve.sh \
+		--agent 192.168.11.252 \
+		--mibs $(MIBS) \
+		--mibdirs $(MIBDIRS) \
+  		--oids "SNMPv2-MIB::sysDescr" \
+		--output buffalo.log \
+		--error  buffalo.err
 
 clean :
 	rm -f $(LOGFILES) $(JSONFILES)
