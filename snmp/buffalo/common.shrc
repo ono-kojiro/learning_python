@@ -1,4 +1,0 @@
-snmpver="3"
-seclevel="authPriv"
-privprotocol="AES"
-

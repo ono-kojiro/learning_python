@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 import sys
 import re
@@ -68,7 +68,7 @@ def main():
 
     count = 0
     for filepath in args:
-        print('open {0}'.format(filepath))
+        #print('open {0}'.format(filepath))
         fp_in = open(filepath, mode="r", encoding="utf-8")
         while True:
             line = fp_in.readline()
@@ -77,6 +77,13 @@ def main():
             count += 1
 
             line = re.sub(r'\r?\n?$', '', line)
+
+            # remove comment
+            line = re.sub(r'#.+', '', line)
+
+            # skip if line is empty
+            if re.search(r'^\s*$', line) :
+                continue
 
             oid = None
             val = None
@@ -110,7 +117,6 @@ def main():
 
         fp_in.close()
 
-    
     #yaml.dump(data,
     #    fp,
     #    allow_unicode=True,
@@ -126,6 +132,7 @@ def main():
             sort_keys=True,
         )
     )
+    fp.write('\n')
 
     if output is not None:
         fp.close()
