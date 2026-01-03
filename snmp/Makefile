@@ -82,7 +82,7 @@ check-buffalo :
 		--error  buffalo.err
 
 clean :
-	rm -f $(JSONFILES) $(DATABASE)
+	rm -f $(JSONFILES) $(DATABASE) $(ERRFILES)
 
 mclean :
 	$(MAKE) clean
