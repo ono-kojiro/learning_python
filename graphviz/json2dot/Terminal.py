@@ -2,13 +2,14 @@ import sys
 import re
 
 class Terminal() :
-    def __init__(self, ip, mac, dst_port, imagepath) :
+    def __init__(self, ip, mac, dst_port, imagepath, is_src_port_uplink) :
         self.ip  = ip
         self.mac = mac
         self.dst_port = dst_port
         self.indent = 1
         
         self.imagepath = imagepath
+        self.is_src_port_uplink = is_src_port_uplink
 
     def print(self, fp) :
         ip = self.ip

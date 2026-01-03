@@ -40,6 +40,14 @@ class Graph() :
         for edge in self.edges :
             edge.print(fp)
 
+    def get_edge_by_dst_mac(self, mac) :
+        item = None
+        for edge in self.edges :
+            if edge.dst_mac == mac :
+                item = edge
+                break
+        return item
+
     def print(self, fp) :
         self.print_header(fp)
         self.print_agents(fp)

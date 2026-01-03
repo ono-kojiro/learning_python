@@ -110,6 +110,37 @@ def main():
             a = Agent(agent_ip, agent_mac, uplink, downlinks, imagepath)
             graph.add_agent(a)
 
+        # edges
+        for conn in conns :
+            src_ip   = conn['src_ip']
+            src_port = conn['src_port']
+            dst_mac   = conn['dst_mac']
+            dst_ip    = conn['dst_ip']
+          
+            is_src_port_uplink = False
+            is_available = True
+
+            if src_ip in configs['nodes'] : 
+                config = configs['nodes'][src_ip]
+                uplink = config.get('uplink', None)
+
+                if src_port == uplink :
+                    is_src_port_uplink = True
+
+                draw_uplink_edge = config.get('draw_uplink_edge', None)
+                if is_src_port_uplink and draw_uplink_edge != True:
+                    is_available = False
+            
+            dst_port = "1"
+            # if dst is Agent, use uplink port number
+            if dst_ip in configs['nodes']:
+                uplink = configs['nodes'][dst_ip]['uplink']
+                dst_port = uplink
+                
+            edge = Edge(src_ip, src_port, dst_mac, dst_ip, dst_port, \
+                        is_src_port_uplink, is_available)
+            graph.add_edge(edge)
+        
         # terminals
         for conn in a2t:
             mac = conn['dst_mac']
@@ -120,35 +151,13 @@ def main():
             if mac in configs['images'] :
                 imagepath = configs['images'][mac]
 
-            terminal = Terminal(ip, mac, dst_port, imagepath)
+            edge = graph.get_edge_by_dst_mac(mac)
+
+            terminal = Terminal(ip, mac, dst_port, imagepath, \
+                    edge.is_src_port_uplink)
 
             graph.add_terminal(terminal)
 
-        # edges
-        for conn in conns :
-            src_ip   = conn['src_ip']
-            src_port = conn['src_port']
-            dst_mac   = conn['dst_mac']
-            dst_ip    = conn['dst_ip']
-           
-            if src_ip in configs['nodes'] : 
-                config = configs['nodes'][src_ip]
-                uplink = config.get('uplink', None)
-                draw_uplink_edge = config.get('draw_uplink_edge', None)
-
-                if src_port == uplink and draw_uplink_edge != True:
-                    continue
-                else :
-                    is_uplink = True
-            
-            dst_port = "1"
-            # if dst is Agent, use uplink port number
-            if dst_ip in configs['nodes']:
-                uplink = configs['nodes'][dst_ip]['uplink']
-                dst_port = uplink
-                
-            edge = Edge(src_ip, src_port, dst_mac, dst_ip, dst_port)
-            graph.add_edge(edge)
 
     graph.print(fp)
 

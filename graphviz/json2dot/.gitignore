@@ -1,4 +1,6 @@
 *~
+*.db
+*.sql
 *.json
 *.dot
 *.jpg
