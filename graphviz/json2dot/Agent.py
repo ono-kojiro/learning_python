@@ -3,6 +3,8 @@ import re
 
 import copy
 
+from Port import Port
+
 class Agent() :
     def __init__(self, ip, mac, uplink, downlinks, imagepath) :
         self.ip  = ip

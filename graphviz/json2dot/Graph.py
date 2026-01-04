@@ -1,6 +1,8 @@
 import sys
 import re
 
+from Port import Port
+
 class Graph() :
     def __init__(self) :
         self.rankdir = "LR"
@@ -43,7 +45,7 @@ class Graph() :
     def get_edge_by_dst_mac(self, mac) :
         item = None
         for edge in self.edges :
-            if edge.dst_mac == mac :
+            if edge.dport.mac == mac :
                 item = edge
                 break
         return item

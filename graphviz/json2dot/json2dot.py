@@ -18,6 +18,7 @@ from Graph import Graph
 from Edge import Edge
 from Terminal import Terminal
 from Agent import Agent
+from Port import Port
 
 def usage():
     print("Usage : {0}".format(sys.argv[0]))
@@ -116,7 +117,15 @@ def main():
             src_port = conn['src_port']
             dst_mac   = conn['dst_mac']
             dst_ip    = conn['dst_ip']
-          
+
+            dst_port = "1"
+            
+            # add
+            sport = Port(None, src_ip)
+            sport.set_uplink(False)
+            dport = Port(dst_mac, dst_ip, dst_port)
+
+
             is_src_port_uplink = False
             is_available = True
 
@@ -126,19 +135,24 @@ def main():
 
                 if src_port == uplink :
                     is_src_port_uplink = True
+                    # add
+                    sport.set_uplink(True)
 
                 draw_uplink_edge = config.get('draw_uplink_edge', None)
                 if is_src_port_uplink and draw_uplink_edge != True:
                     is_available = False
             
-            dst_port = "1"
             # if dst is Agent, use uplink port number
             if dst_ip in configs['nodes']:
                 uplink = configs['nodes'][dst_ip]['uplink']
                 dst_port = uplink
+
+                # add
+                dport.set_pnum(uplink)
                 
-            edge = Edge(src_ip, src_port, dst_mac, dst_ip, dst_port, \
-                        is_src_port_uplink, is_available)
+            #edge = Edge(src_ip, src_port, dst_mac, dst_ip, dst_port, \
+            #            is_src_port_uplink, is_available)
+            edge = Edge(sport, dport, is_available)
             graph.add_edge(edge)
         
         # terminals
@@ -154,7 +168,7 @@ def main():
             edge = graph.get_edge_by_dst_mac(mac)
 
             terminal = Terminal(ip, mac, dst_port, imagepath, \
-                    edge.is_src_port_uplink)
+                    edge.sport.is_uplink)
 
             graph.add_terminal(terminal)
 

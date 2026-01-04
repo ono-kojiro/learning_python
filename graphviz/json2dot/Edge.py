@@ -7,36 +7,37 @@ DST_TYPE_TERMINAL = 0
 DST_TYPE_AGENT = 1
 
 class Edge() :
-    def __init__(self, src_ip, src_port, dst_mac, dst_ip, dst_port,
-                 is_src_port_uplink, is_available) :
+    #def __init__(self, src_ip, src_port, dst_mac, dst_ip, dst_port,
+    #             is_src_port_uplink, is_available) :
+    def __init__(self, sport, dport, is_available) :
+
         self.indent = 1
         self.minlen = 5
         self.fp = sys.stdout
 
-        self.src_ip = src_ip
-        self.src_port = src_port
-        self.dst_mac = dst_mac
-        self.dst_ip = dst_ip
-        self.dst_port = dst_port
+        self.sport = sport
+        self.dport = dport
 
-        self.is_src_port_uplink = is_src_port_uplink
         self.is_available = is_available
 
         self.dst_type = DST_TYPE_TERMINAL
 
     def set_dst_type(dst_type) :
-        self.dst_type = dst_type
+        self.dport.ptype = dst_type
 
     def print(self, fp) :
-        src_cluster = re.sub(r'\.', '_', self.src_ip)
-        src = "node_{0}_port{1}".format(src_cluster, self.src_port)
+        src_ip = self.sport.ip
+        src_port = self.sport.pnum
 
-        if self.dst_ip :
-            dst_cluster = re.sub(r'\.', '_', self.dst_ip)
+        src_cluster = re.sub(r'\.', '_', src_ip)
+        src = "node_{0}_port{1}".format(src_cluster, src_port)
+
+        if self.dport.ip :
+            dst_cluster = re.sub(r'\.', '_', self.dport.ip)
         else :
-            dst_cluster = re.sub(r'\:', '_', self.dst_mac)
+            dst_cluster = re.sub(r'\:', '_', self.dport.mac)
 
-        dst = "node_{0}_port{1}".format(dst_cluster, self.dst_port)
+        dst = "node_{0}_port{1}".format(dst_cluster, self.dport.pnum)
 
         portpos = 'e' # east
 
