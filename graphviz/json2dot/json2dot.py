@@ -121,7 +121,7 @@ def main():
             dst_port = "1"
             
             # add
-            sport = Port(None, src_ip)
+            sport = Port(None, src_ip, src_port)
             sport.set_uplink(False)
             dport = Port(dst_mac, dst_ip, dst_port)
 
