@@ -188,10 +188,12 @@ def main():
             imagepath = None
             if mac in configs['images'] :
                 imagepath = configs['images'][mac]
+            
+            dport = Port(mac, ip, dst_port, Port.TYPE_TERMINAL)
 
             edge = graph.get_edge_by_dst_mac(mac)
 
-            terminal = Terminal(ip, mac, dst_port, imagepath, \
+            terminal = Terminal(dport, imagepath, \
                     edge.sport.is_uplink)
 
             graph.add_terminal(terminal)
@@ -202,7 +204,10 @@ def main():
                 tmp = edge.sport
                 edge.sport = edge.dport
                 edge.dport = tmp
-                pass
+
+                for terminal in graph.terminals :
+                    if terminal.dport.mac == edge.sport.mac :
+                        terminal.port_order = 1
 
     graph.print(fp)
 
