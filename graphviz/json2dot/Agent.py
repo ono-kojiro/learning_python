@@ -6,15 +6,17 @@ import copy
 from Port import Port
 
 class Agent() :
-    def __init__(self, ip, mac, uplink, downlinks, imagepath) :
-        self.ip  = ip
-        self.mac = mac
+    def __init__(self, uport, dports, imagepath) :
+        self.ip  = uport.ip
+        self.mac = uport.mac
         self.indent = 1
         self.minlen = 4
 
-        self.uplink = uplink
-        self.downlinks = downlinks
+        self.uplink = uport.pnum
+        self.dports = dports
         self.imagepath = imagepath
+
+        self.uport = uport
     
     def print(self, fp) :
         indent = self.indent
@@ -23,7 +25,8 @@ class Agent() :
         agent_ip = self.ip
         agent_mac = self.mac
         uplink   = self.uplink
-        ports = self.downlinks
+        uport    = self.uport
+        dports = self.dports
 
         imagepath = self.imagepath
         
@@ -46,10 +49,10 @@ class Agent() :
        
         lines.append('')
         # uplink port and downlink port
-        for port in [ self.uplink ] + ports:
+        for port in [ self.uport ] + self.dports:
             line  = '    '
-            line += 'node_{0}_port{1} ['.format(cluster, port)
-            line += '  shape=rectangle label="{0}"'.format(port)
+            line += 'node_{0}_port{1} ['.format(cluster, port.pnum)
+            line += '  shape=rectangle label="{0}"'.format(port.pnum)
             lines.append(line)
                     
             line  = '    '
@@ -62,28 +65,28 @@ class Agent() :
         lines.append('        rank = same;')
 
         # downlink port only
-        for port in ports:
+        for port in dports:
              line  = '        '
-             line += 'node_{0}_port{1};'.format(cluster, port)
+             line += 'node_{0}_port{1};'.format(cluster, port.pnum)
              lines.append(line)
         
         lines.append('    }')
         lines.append('')
 
         line  = '    '
-        line += 'node_{0}_port{1} -> node_{0}_image [color=none];'.format(cluster, uplink)
+        line += 'node_{0}_port{1} -> node_{0}_image [color=none];'.format(cluster, uport.pnum)
         lines.append(line)
 
-        for port in ports:
+        for port in dports:
             line  = '    '
-            line += 'node_{0}_image -> node_{0}_port{1} [color=none];'.format(cluster, port)
+            line += 'node_{0}_image -> node_{0}_port{1} [color=none];'.format(cluster, port.pnum)
             lines.append(line)
         
         lines.append('')
         src = None
         dst = None
-        for port in ports:
-            dst = port
+        for port in dports:
+            dst = port.pnum
             if src is None:
                 src = dst
                 continue

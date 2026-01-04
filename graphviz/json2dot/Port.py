@@ -1,10 +1,10 @@
 import sys
 import re
 
-TYPE_TERMINAL = 0
-TYPE_AGENT    = 1
-
 class Port() :
+    TYPE_TERMINAL = 0
+    TYPE_AGENT    = 1
+
     def __init__(self, mac, ip, pnum = 1, ptype = TYPE_TERMINAL):
         self.pnum = pnum
         self.ip  = ip

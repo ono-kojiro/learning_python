@@ -93,22 +93,28 @@ def main():
             agent_ip = agent['ip']
             agent_mac = agent['mac']
             uplink = configs['nodes'][agent_ip]['uplink']
-    
-            downlinks = []
+
+            dports = []
             for conn in conns :
                 if conn['src_ip'] != agent_ip :
                     continue
                 port = conn['src_port']
                 if port == uplink :
                     continue
-                if not port in downlinks :
-                    downlinks.append(port)
+
+                # get all pnum from dports and create list
+                port_list = [ item.pnum for item in dports ]
+                if not port in port_list :
+                    dport = Port(None, agent_ip, port, Port.TYPE_AGENT)
+                    dports.append(dport)
             
             imagepath = None
             if agent_mac in configs['images'] :
                 imagepath = configs['images'][agent_mac]
 
-            a = Agent(agent_ip, agent_mac, uplink, downlinks, imagepath)
+            uport = Port(agent_mac, agent_ip, uplink, Port.TYPE_AGENT)
+
+            a = Agent(uport, dports, imagepath)
             graph.add_agent(a)
 
         # edges
