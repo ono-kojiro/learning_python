@@ -96,6 +96,8 @@ def main():
             agent_ip = agent['ip']
             agent_mac = agent['mac']
             uplink = configs['nodes'][agent_ip]['uplink']
+            
+            uport = Port(agent_mac, agent_ip, uplink, Port.TYPE_AGENT)
 
             dports = []
             for conn in conns :
@@ -115,7 +117,6 @@ def main():
             if agent_mac in configs['images'] :
                 imagepath = configs['images'][agent_mac]
 
-            uport = Port(agent_mac, agent_ip, uplink, Port.TYPE_AGENT)
 
             a = Agent(uport, dports, imagepath)
             graph.add_agent(a)
@@ -131,6 +132,12 @@ def main():
             dst_ip    = conn['dst_ip']
 
             dst_port = "1"
+
+            if dst_ip is None :
+                for agent in graph.agents :
+                    if agent.uport.mac == dst_mac :
+                        dst_ip = agent.uport.ip
+
 
             target = None
             for port in all_ports :

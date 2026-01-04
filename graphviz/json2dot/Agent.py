@@ -12,7 +12,6 @@ class Agent() :
         self.indent = 1
         self.minlen = 4
 
-        self.uplink = uport.pnum
         self.dports = dports
         self.imagepath = imagepath
 
@@ -24,7 +23,6 @@ class Agent() :
 
         agent_ip = self.ip
         agent_mac = self.mac
-        uplink   = self.uplink
         uport    = self.uport
         dports = self.dports
 
