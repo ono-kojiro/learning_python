@@ -80,6 +80,9 @@ def main():
     configs = read_yaml('./config.yml')
     
     data = {}
+
+    all_ports = []
+
     for jsonfile in args:
         data = read_json(jsonfile)
         agents = data['agents']
@@ -117,6 +120,9 @@ def main():
             a = Agent(uport, dports, imagepath)
             graph.add_agent(a)
 
+            all_ports.extend([ uport ])
+            all_ports.extend(dports)
+
         # edges
         for conn in conns :
             src_ip   = conn['src_ip']
@@ -125,9 +131,21 @@ def main():
             dst_ip    = conn['dst_ip']
 
             dst_port = "1"
-            
+
+            target = None
+            for port in all_ports :
+                if port.ip == src_ip and port.pnum == src_port :
+                    target = port
+                    break
+
+            if target is None :
+                print('WARN: no port found, {0}, {1}'.format(src_ip, src_port))
+                sys.exit(1)
+
             # add
-            sport = Port(None, src_ip, src_port)
+            #sport = Port(None, src_ip, src_port)
+            sport = target
+
             sport.set_uplink(False)
             dport = Port(dst_mac, dst_ip, dst_port)
 
@@ -178,6 +196,13 @@ def main():
 
             graph.add_terminal(terminal)
 
+        # swap edge
+        for edge in graph.edges :
+            if edge.sport.is_uplink :
+                tmp = edge.sport
+                edge.sport = edge.dport
+                edge.dport = tmp
+                pass
 
     graph.print(fp)
 

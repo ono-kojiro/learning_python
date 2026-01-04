@@ -27,9 +27,14 @@ class Edge() :
 
     def print(self, fp) :
         src_ip = self.sport.ip
+        src_mac = self.sport.mac
         src_port = self.sport.pnum
 
-        src_cluster = re.sub(r'\.', '_', src_ip)
+        if src_ip :
+            src_cluster = re.sub(r'\.', '_', src_ip)
+        else :
+            src_cluster = re.sub(r':', '_', src_mac)
+        
         src = "node_{0}_port{1}".format(src_cluster, src_port)
 
         if self.dport.ip :
