@@ -1,7 +1,7 @@
 ---
 nodes :
-  192.168.0.248:
-    uplink: "1"
+  192.168.1.248:
+    uplink: "2"
     draw_uplink_edge: true
 
   192.168.11.252:
@@ -19,5 +19,6 @@ images :
   92:96:f3:c8:dd:f1 : images/WSR-5400AX6S-MB.jpg
   92:96:f3:c8:dd:f2 : images/WSR-5400AX6S-MB.jpg
   90:96:f3:c8:dd:f9 : images/WSR-5400AX6S-MB.jpg
-
+  98:41:5c:c0:48:e5 : images/switch1.jpg
+  bc:89:a6:2e:ad:ad : images/switch2.jpg
 
