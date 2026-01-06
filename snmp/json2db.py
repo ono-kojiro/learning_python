@@ -166,8 +166,6 @@ def main():
     create_interfaces_table(conn, 'interfaces_table')
     create_macaddrs_table(conn, 'macaddrs_table')
 
-    #create_macaddrs_view(conn, 'macaddrs_view')
-
     for jsonfile in args:
         data = read_json(jsonfile)
 
@@ -177,9 +175,10 @@ def main():
         mac = normalize_mac(mac)
 
         if len(ips) != 1 :
-            print('ERROR: some IP address found', file=sys.stderr)
-            print('ERROR: ips {0}'.format(ips))
-            sys.exit(1)
+            print('WARNING: some IP address found', file=sys.stderr)
+            print('WARNING: ips {0}'.format(ips))
+            print('WARNING: use only {0}'.format(ips[0]))
+            #sys.exit(1)
             
         ip = ips[0]
 

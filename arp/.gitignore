@@ -1,6 +1,6 @@
-*.shrc
-*.err
+*~
 *.log
+*.json
 *.db
 *.sql
 

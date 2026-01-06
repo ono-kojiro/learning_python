@@ -1,8 +1,11 @@
 *~
+*.db
+*.sql
 *.json
 *.dot
 *.jpg
 *.pdf
 icons/
+icons
 __pycache__/
 

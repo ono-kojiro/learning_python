@@ -41,10 +41,44 @@ def get_connections_view(conn) :
     rows = c.execute(sql)
     for row in rows :
         item = {
-            'agent' : row['agent'],
-            'idx'   : row['idx'],
-            'mac'   : row['mac'],
-            'ip'    : row['ip'],
+            'agent' : row['src_ip'],
+            'idx'   : row['src_port'],
+            'mac'   : row['dst_mac'],
+            'ip'    : row['dst_ip'],
+        }
+        items.append(item)
+
+    return items
+
+def get_a2a_view(conn) :
+    c = conn.cursor()
+    sql = 'SELECT * FROM a2a_view;'
+    
+    items = []
+    rows = c.execute(sql)
+    for row in rows :
+        item = {
+            'src_ip'   : row['src_ip'],
+            'src_port'  : row['src_port'],
+            'dst_mac'  : row['dst_mac'],
+            'dst_ip'  : row['dst_ip'],
+        }
+        items.append(item)
+
+    return items
+
+def get_a2t_view(conn) :
+    c = conn.cursor()
+    sql = 'SELECT * FROM a2t_view;'
+    
+    items = []
+    rows = c.execute(sql)
+    for row in rows :
+        item = {
+            'src_ip'   : row['src_ip'],
+            'src_port'  : row['src_port'],
+            'dst_mac'  : row['dst_mac'],
+            'dst_ip'  : row['dst_ip'],
         }
         items.append(item)
 
@@ -98,9 +132,12 @@ def main():
 
         agents = get_agents(conn)
         data['agents'] = agents
-
-        connections = get_connections_view(conn)
-        data['connections'] = connections
+        
+        a2a = get_a2a_view(conn)
+        data['agent2agent'] = a2a
+        
+        a2t = get_a2t_view(conn)
+        data['agent2terminal'] = a2t
 
     fp.write(
         json.dumps(

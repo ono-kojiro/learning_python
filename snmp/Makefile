@@ -1,112 +1,89 @@
-#
-# write following lines in $HOME/.snmp/snmp.conf
-#
-#     mibdirs $HOME/.snmp/mibs
-#     mibs    all
-#
-.SUFFIXES:
-.SUFFIXES: .host .log .json
+MIBS = ALL
+MIBDIRS := /usr/share/snmp/mibs
 
-ZIPURL1 = https://www.cisco.com/content/dam/en_us/about/ac50/ac47/doc_jpg.zip
-ZIPURL2 = https://www.cisco.com/content/dam/en_us/about/ac50/ac47/3015_jpeg.zip
+OIDS = \
+  SNMPv2-MIB::sysDescr \
+  IF-MIB::ifDescr \
+  IF-MIB::ifOutOctets \
+  IF-MIB::ifInOctets \
+  IF-MIB::ifTable \
+  IF-MIB::interfaces \
+  IP-MIB::ip \
+  BRIDGE-MIB::dot1dBridge
 
-ZIPFILE1 != basename $(ZIPURL1)
-ZIPFILE2 != basename $(ZIPURL2)
+AGENTS =
+AGENTS += 192.168.11.252
+AGENTS += 192.168.0.248
 
-#SNMP_AGENTS = 192.168.10.1 192.168.60.1
-SNMP_AGENTS = 192.168.40.1.host 192.168.50.1.host 192.168.60.1.host
-	
-LOGFILES = $(SNMP_AGENTS:.host=.log)
-JSONFILES =  $(LOGFILES:.log=.json)
-DOTFILES  =  $(JSONFILES:.json=.dot)
-PNGFILES  =  $(DOTFILES:.dot=.png)
+LOGFILES = $(AGENTS:=.log)
+ERRFILES  = $(LOGFILES:.log=.err)
+JSONFILES = $(LOGFILES:.log=.json)
 
-MIBDIRS = $(HOME)/.snmp/mibs
-MIBS    = ALL
+DATABASE = database.db
 
-#DUMMY != touch $(SNMP_AGENTS)
+all : json db
 
-#all : log json dot png
-all : log json
+prepare :
+	sudo apt -y install snmp net-tools
 
+snmp : presnmp $(LOGFILES)
 
-debug :
-	echo SNMP_AGENTS is $(SNMP_AGENTS)
-	echo LOGFILES is $(LOGFILES)
+presnmp :
+	rm -rf $(LOGFILES)
 
-prepare: fetch extract icon
-	
-fetch :
-	curl -L -O -C - $(ZIPURL1)
-	curl -L -O -C - $(ZIPURL2)
-
-extract :
-	mkdir -p orig/doc_jpg
-	mkdir -p orig/3015_jpeg
-	unzip -n -d orig/doc_jpg $(ZIPFILE1)
-	unzip -n -d orig/3015_jpeg $(ZIPFILE2)
-
-icon :
-	mkdir -p icons/doc_jpg
-	mkdir -p icons/3015_jpeg
-	python3 jpeg2png.py -o icons/doc_jpg   orig/doc_jpg
-	python3 jpeg2png.py -o icons/3015_jpeg orig/3015_jpeg
-
-
-sync :
-	rsync -avz opnsense:/usr/local/share/snmp/mibs $(HOME)/.snmp/
-
-system :
-	snmpwalk -v 2c -c public $(SNMP_AGENT) system
-
-net :
-	snmpwalk -v 2c -c public $(SNMP_AGENT) IF-MIB::ifDescr
-	snmpwalk -v 2c -c public $(SNMP_AGENT) IF-MIB::ifOutOctets
-	snmpwalk -v 2c -c public $(SNMP_AGENT) IF-MIB::ifInOctets
-	snmpwalk -v 2c -c public $(SNMP_AGENT) IF-MIB::ifTable
-
-#debug :
-#	snmpwalk -v 2c -c public $(SNMP_AGENT) IP-MIB::ipNetToPhysicalPhysAddress
-disk :
-	snmpwalk -v 2c -c public $(SNMP_AGENT) UCD-DISKIO-MIB::diskIOTable
-
-log: $(LOGFILES)
-
-.host.log:
-	snmpwalk  -v 2c -c public -OX ${.IMPSRC:.host=} . > ${.TARGET}
+%.log :
+	sh retrieve.sh \
+		--agent $(@:.log=) \
+		--mibs $(MIBS) \
+		--mibdirs $(MIBDIRS) \
+		--oids "$(OIDS)" \
+		--output $(@:.log=).log \
+		--error  $(@:.log=).err
 
 json : $(JSONFILES)
 
-.log.json :
+%.json : %.log
 	python3 oid2dict.py -o $@ $<
 
-dot : $(DOTFILES)
+db : $(DATABASE)
 
-%.dot : %.json
-	python3 summarize.py -o $@ $<
+$(DATABASE) : $(JSONFILES)
+	rm -f $@
+	python3 json2db.py -o $@ $(JSONFILES)
+	sqlite3 $@ ".dump" > $(DATABASE:.db=.sql)
 
-png : $(PNGFILES)
+schema :
+	sqlite3 $(DATABASE) ".schema"
 
-%.png : %.dot
-	dot -Tpng -o $@ $<
+check :
+	$(MAKE) check-cisco
+	$(MAKE) check-buffalo
+	python3 oid2dict.py -o cisco.json cisco.log
+	cat cisco.json
+	python3 oid2dict.py -o buffalo.json buffalo.log
+	cat buffalo.json
 
-translate:
-	snmptranslate 1.3.6.1.4.1
+check-cisco :
+	sh retrieve.sh \
+		--agent 192.168.0.248 \
+		--mibs $(MIBS) \
+		--mibdirs $(MIBDIRS) \
+  		--oids "SNMPv2-MIB::sysDescr" \
+		--output cisco.log \
+		--error  cisco.err
 
-
-#fetch :
-#	curl -o RFC-1212.txt https://docs.sensu.io/sensu-enterprise/latest/files/RFC-1212-MIB.txt
-
-test_old :
-	SMIPATH=":$(HOME)/.snmp/mibs/:." \
-		smidump --level=6 -k -f python RFC1213-MIB.txt > RFC1213-MIB.dic
+check-buffalo :
+	sh retrieve.sh \
+		--agent 192.168.11.252 \
+		--mibs $(MIBS) \
+		--mibdirs $(MIBDIRS) \
+  		--oids "SNMPv2-MIB::sysDescr" \
+		--output buffalo.log \
+		--error  buffalo.err
 
 clean :
-	rm -f $(LOGFILES) $(JSONFILES) $(DOTFILES) $(PNGFILES)
+	rm -f $(JSONFILES) $(DATABASE) $(ERRFILES)
 
-.OPTIONAL : $(SNMP_AGENTS)
-
-.PHONY : \
-	all clean test walk log $(SNMP_AGENTS)
-
-
+mclean :
+	$(MAKE) clean
+	rm -f $(LOGFILES)

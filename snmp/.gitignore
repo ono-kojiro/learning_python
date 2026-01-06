@@ -1,7 +1,8 @@
-*.dot
-*.json
+*.shrc
+*.err
 *.log
-*.png
-*.zip
+*.db
+*.sql
 __pycache__/
+*.json
 
