@@ -11,7 +11,10 @@ URL_PNG = $(URL_ROOT)/projects/myproject/issues/gantt.png?month=10&months=6&year
 URL_PDF = $(URL_ROOT)/issues/gantt.pdf?month=9&months=6&year=2023&zoom=2
 URL_C = $(URL_ROOT)/attachments/download/1/main.c
 
-all : c
+all : test
+
+test :
+	python3 html2txt.py -o page.txt page.html
 
 help :
 	@echo "usage: make target"
