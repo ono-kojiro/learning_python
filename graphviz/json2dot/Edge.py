@@ -26,23 +26,8 @@ class Edge() :
         self.dport.ptype = dst_type
 
     def print(self, fp) :
-        src_ip = self.sport.ip
-        src_mac = self.sport.mac
-        src_port = self.sport.pnum
-
-        if src_ip :
-            src_cluster = re.sub(r'\.', '_', src_ip)
-        else :
-            src_cluster = re.sub(r':', '_', src_mac)
-        
-        src = "node_{0}_port{1}".format(src_cluster, src_port)
-
-        if self.dport.ip :
-            dst_cluster = re.sub(r'\.', '_', self.dport.ip)
-        else :
-            dst_cluster = re.sub(r'\:', '_', self.dport.mac)
-
-        dst = "node_{0}_port{1}".format(dst_cluster, self.dport.pnum)
+        src = str(self.sport)
+        dst = str(self.dport)
 
         portpos = 'e' # east
 

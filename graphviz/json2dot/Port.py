@@ -26,3 +26,12 @@ class Port() :
     def set_pnum(self, val) :
         self.pnum = val
 
+    def __str__(self) :
+        if self.ip :
+            cluster = self.ip
+        else :
+            cluster = self.mac
+        cluster = re.sub(r'[\.\:]', '_', cluster)
+        res = 'node_{0}_port{1}'.format(cluster, self.pnum)
+        return res
+
