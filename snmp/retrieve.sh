@@ -145,6 +145,7 @@ flags="$flags -OX"
 flags="$flags -m $mibs"
 flags="$flags -M $mibdirs"
 flags="$flags -Pe"
+flags="$flags --hexOutputLength=0"
 
 {
   for oid in $oids; do
