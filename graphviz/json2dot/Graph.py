@@ -3,8 +3,10 @@ import re
 
 from Port import Port
 
+from pprint import pprint, pformat
+
 class Graph() :
-    def __init__(self) :
+    def __init__(self, logger=None) :
         self.rankdir = "LR"
         self.ordering = "out"
         self.nodesep = None
@@ -17,6 +19,8 @@ class Graph() :
         self.agents = []
         self.terminals = []
         self.edges = []
+
+        self.logger = logger
 
     def add_subgraph(self, subgraph) :
         self.subgraphs.append(subgraph)
@@ -63,8 +67,12 @@ class Graph() :
         return item
 
     def update_edges(self) :
+        logger = self.logger
+
         dst2src = {}
         src2dst = {}
+                
+        logger.debug('check edges')
 
         for edge in self.edges :
             if not edge.is_available :
@@ -79,13 +87,18 @@ class Graph() :
             if not src in src2dst :
                 src2dst[src] = []
             src2dst[src].append(edge.dport)
-        
+
+        #lines = pformat(src2dst).splitlines() 
+        #for line in lines :
+        #    logger.info(line)
+
         targets = {}
         for dst in dst2src :
             num_src = len(dst2src[dst])
             if num_src == 1:
                 continue
-            
+            logger.debug('len of dst2src is {0}'.format(num_src))
+
             for sport in dst2src[dst]:
                 src = str(sport)
                 num_dst = len(src2dst[src])
@@ -94,12 +107,14 @@ class Graph() :
                         targets[src] = {}
                     if not dst in targets[src] :
                         targets[src][dst] = 1
+
         for edge in self.edges :
             if not edge.is_available:
                 continue
             dst = str(edge.dport)
             src = str(edge.sport)
             if src in targets and dst in targets[src] :
+                logger.debug('disable src:{0} to dst:{1}'.format(src, dst))
                 edge.is_available = False
 
     def print(self, fp) :

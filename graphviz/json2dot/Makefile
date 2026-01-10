@@ -5,6 +5,9 @@ SNMP_DATABASE_SQL = $(TOPDIR)/snmp/database.sql
 
 DATABASE = database.db
 
+LOGFILE  = output.log
+LOGLEVEL = debug
+
 all : db json dot pdf
 
 arp :
@@ -41,7 +44,9 @@ json :
 	python3 db2json.py -o output.json $(DATABASE)
 
 dot :
-	python3 json2dot.py -o output.dot output.json
+	rm -f output.log
+	./json2dot.py -o output.dot -l $(LOGFILE) -L $(LOGLEVEL) output.json
+	cat output.log
 
 pdf :
 	dot -Tpdf -o output.pdf output.dot

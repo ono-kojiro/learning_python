@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+import os
 
 import getopt
 import json
@@ -19,6 +20,8 @@ from Edge import Edge
 from Terminal import Terminal
 from Agent import Agent
 from Port import Port
+
+import logging
 
 def usage():
     print("Usage : {0}".format(sys.argv[0]))
@@ -64,11 +67,14 @@ def main():
     try:
         opts, args = getopt.getopt(
             sys.argv[1:],
-            "hvo:",
+            "hvo:c:l:L:",
             [
                 "help",
                 "version",
-                "output="
+                "output=",
+                "config=",
+                "logfile=",
+                "loglevel=",
             ]
         )
     except getopt.GetoptError as err:
@@ -76,7 +82,10 @@ def main():
         sys.exit(2)
     
     output = None
-	
+    configfile = None
+    logfile = None
+    loglevel = 'info'
+
     for o, a in opts:
         if o == "-v":
             usage()
@@ -84,6 +93,12 @@ def main():
         elif o in ("-h", "--help"):
             usage()
             sys.exit(0)
+        elif o in ("-c", "--config"):
+            outputfile = a
+        elif o in ("-l", "--logfile"):
+            logfile = a
+        elif o in ("-L", "--loglevel"):
+            loglevel = a
         elif o in ("-o", "--output"):
             output = a
         else:
@@ -93,14 +108,59 @@ def main():
         fp = open(output, mode='w', encoding='utf-8')
     else :
         fp = sys.stdout
-	
+
+    if loglevel in ('info') :
+        level = logging.INFO
+    elif loglevel in ('warn', 'warning') :
+        level = logging.WARNING
+    elif loglevel in ('debug') :
+        level = logging.DEBUG
+    else :
+        print('ERROR: unknown loglevel')
+        ret += 1
+
+    if logfile is not None:
+        handler = logging.FileHandler(filename=logfile)
+    else :
+        handler = logging.StreamHandler(stream=sys.stderr)
+
+    formatter = logging.Formatter(
+        '%(asctime)s.%(msecs)03d - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%dT%H:%M:%S',
+    )
+
+    handler.setFormatter(formatter)
+    logging.basicConfig(
+        level = level,
+        handlers = [
+            handler
+        ],
+    )
+
+    logger = logging.getLogger(sys.argv[0].split('/')[-1])
+
     if ret != 0:
         sys.exit(1)
+	
+    logger.info('create Graph')
+    graph = Graph(logger=logger)
 
-    graph = Graph()
+    configs = {}
+    if configfile is None :
+        if os.path.exists('./config.yml.local'):
+            configfile = './config.yml.local'
+            configs = configs | read_yaml(configfile)
 
-    configs = read_yaml('./config.yml')
-    
+        if os.path.exists('./config.yml'):
+            configfile = './config.yml'
+            configs = configs | read_yaml(configfile)
+
+        if configfile is None :
+            logger.error('ERROR: no config files')
+            sys.exit(1)
+    else :
+        configs = read_yaml(configfile)
+
     data = {}
 
     all_ports = []
