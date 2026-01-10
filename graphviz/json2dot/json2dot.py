@@ -83,6 +83,12 @@ def main():
 
     all_ports = []
 
+    alt_ips = {}
+    for ip in configs['nodes'] :
+        if 'alternatives' in configs['nodes'][ip]:
+            for alt_ip in configs['nodes'][ip]['alternatives']:
+                alt_ips[alt_ip] = ip
+
     for jsonfile in args:
         data = read_json(jsonfile)
         agents = data['agents']
@@ -138,6 +144,8 @@ def main():
                     if agent.uport.mac == dst_mac :
                         dst_ip = agent.uport.ip
 
+            if dst_ip in alt_ips :
+                dst_ip = alt_ips[dst_ip]
 
             target = None
             for port in all_ports :
@@ -216,6 +224,25 @@ def main():
                     if terminal.dport.mac == edge.sport.mac :
                         terminal.port_order = 1
 
+        for edge in graph.edges :
+            ip = edge.sport.ip
+            if ip in alt_ips:
+                ip = alt_ips[ip]
+                edge.sport.ip = ip
+                if ip in configs['nodes']:
+                    if 'uplink' in configs['nodes'][ip] :
+                        uplink = configs['nodes'][ip]['uplink']
+                        edge.sport.pnum = uplink
+
+            ip = edge.dport.ip
+            if ip in alt_ips:
+                ip = alt_ips[ip]
+                edge.dport.ip = ip
+                if ip in configs['nodes']:
+                    if 'uplink' in configs['nodes'][ip] :
+                        uplink = configs['nodes'][ip]['uplink']
+                        edge.dport.pnum = uplink
+    
     graph.print(fp)
 
     if output is not None :
