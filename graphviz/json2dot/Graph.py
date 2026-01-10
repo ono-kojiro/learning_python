@@ -63,9 +63,44 @@ class Graph() :
         return item
 
     def update_edges(self) :
-        for edge in self.edges :
-            dst_str = str(edge)
+        dst2src = {}
+        src2dst = {}
 
+        for edge in self.edges :
+            if not edge.is_available :
+                continue
+
+            dst = str(edge.dport)
+            if not dst in dst2src :
+                dst2src[dst] = []
+            dst2src[dst].append(edge.sport)
+
+            src = str(edge.sport)
+            if not src in src2dst :
+                src2dst[src] = []
+            src2dst[src].append(edge.dport)
+        
+        targets = {}
+        for dst in dst2src :
+            num_src = len(dst2src[dst])
+            if num_src == 1:
+                continue
+            
+            for sport in dst2src[dst]:
+                src = str(sport)
+                num_dst = len(src2dst[src])
+                if num_dst > 1 or sport.is_uplink :
+                    if not src in targets :
+                        targets[src] = {}
+                    if not dst in targets[src] :
+                        targets[src][dst] = 1
+        for edge in self.edges :
+            if not edge.is_available:
+                continue
+            dst = str(edge.dport)
+            src = str(edge.sport)
+            if src in targets and dst in targets[src] :
+                edge.is_available = False
 
     def print(self, fp) :
         self.print_header(fp)
