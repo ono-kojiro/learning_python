@@ -13,7 +13,7 @@ OIDS = \
 
 AGENTS =
 AGENTS += 192.168.11.252
-AGENTS += 192.168.0.248
+AGENTS += 192.168.1.248
 
 LOGFILES = $(AGENTS:=.log)
 ERRFILES  = $(LOGFILES:.log=.err)
@@ -65,7 +65,7 @@ check :
 
 check-cisco :
 	sh retrieve.sh \
-		--agent 192.168.0.248 \
+		--agent 192.168.1.248 \
 		--mibs $(MIBS) \
 		--mibdirs $(MIBDIRS) \
   		--oids "SNMPv2-MIB::sysDescr" \
