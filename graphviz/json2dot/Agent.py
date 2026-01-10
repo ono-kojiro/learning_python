@@ -16,7 +16,13 @@ class Agent() :
         self.imagepath = imagepath
 
         self.uport = uport
-    
+   
+    def get_uport(self) :
+        return self.uport
+
+    def get_dports(self) :
+        return self.dports
+
     def print(self, fp) :
         indent = self.indent
         minlen = self.minlen

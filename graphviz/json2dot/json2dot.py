@@ -36,6 +36,28 @@ def read_yaml(filepath):
 
     return data
 
+def get_dports(agent_ip, uplink, conns) :
+    dports = []
+    for conn in conns :
+        if conn['src_ip'] != agent_ip :
+            continue
+        port = conn['src_port']
+        if port == uplink :
+            continue
+
+        # get all pnum from dports and create list
+        port_list = [ dport.pnum for dport in dports ]
+        if not port in port_list :
+            dport = Port(None, agent_ip, port, Port.TYPE_AGENT)
+            dports.append(dport)
+    return dports
+
+def get_imagepath(configs, mac) :
+    imagepath = None
+    if mac in configs['images'] :
+        imagepath = configs['images'][mac]
+    return imagepath
+
 def main():
     ret = 0
 
@@ -91,45 +113,28 @@ def main():
 
     for jsonfile in args:
         data = read_json(jsonfile)
-        agents = data['agents']
+        agent_list = data['agents']
         a2a = data['agent2agent']
         a2t = data['agent2terminal']
 
         conns = a2a + a2t
 
         # agents
-        for agent in agents :
-            agent_ip = agent['ip']
-            agent_mac = agent['mac']
-            uplink = configs['nodes'][agent_ip]['uplink']
+        for item in data['agents'] :
+            agent_ip  = item['ip']
+            agent_mac = item['mac']
+            agent_uplink = configs['nodes'][agent_ip]['uplink']
             
-            uport = Port(agent_mac, agent_ip, uplink, Port.TYPE_AGENT)
+            uport = Port(agent_mac, agent_ip, agent_uplink, Port.TYPE_AGENT)
+            dports = get_dports(agent_ip, agent_uplink, conns)
+            imagepath = get_imagepath(configs, agent_mac)
 
-            dports = []
-            for conn in conns :
-                if conn['src_ip'] != agent_ip :
-                    continue
-                port = conn['src_port']
-                if port == uplink :
-                    continue
+            agent = Agent(uport, dports, imagepath)
+            graph.add_agent(agent)
 
-                # get all pnum from dports and create list
-                port_list = [ item.pnum for item in dports ]
-                if not port in port_list :
-                    dport = Port(None, agent_ip, port, Port.TYPE_AGENT)
-                    dports.append(dport)
-            
-            imagepath = None
-            if agent_mac in configs['images'] :
-                imagepath = configs['images'][agent_mac]
-
-
-            a = Agent(uport, dports, imagepath)
-            graph.add_agent(a)
-
-            all_ports.extend([ uport ])
-            all_ports.extend(dports)
-
+        all_ports.extend(graph.get_agent_uports())
+        all_ports.extend(graph.get_agent_dports())
+        
         # edges
         for conn in conns :
             src_ip   = conn['src_ip']

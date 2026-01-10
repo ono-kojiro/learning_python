@@ -42,6 +42,18 @@ class Graph() :
         for edge in self.edges :
             edge.print(fp)
 
+    def get_agent_uports(self) :
+        items = []
+        for agent in self.agents :
+            items.append(agent.uport)
+        return items
+
+    def get_agent_dports(self) :
+        items = []
+        for agent in self.agents :
+            items.extend(agent.dports)
+        return items
+
     def get_edge_by_dst_mac(self, mac) :
         item = None
         for edge in self.edges :
