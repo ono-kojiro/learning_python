@@ -61,6 +61,16 @@ def get_imagepath(configs, mac) :
         imagepath = configs['images'][mac]
     return imagepath
 
+def recursive_merge(dict1, dict2):
+    for key, value in dict2.items():
+        if key in dict1 and isinstance(dict1[key], dict) and isinstance(value, dict):
+            # If both values are dictionaries, recurse
+            recursive_merge(dict1[key], value)
+        else:
+            # Otherwise, update (or add) the value
+            dict1[key] = value
+    return dict1
+
 def main():
     ret = 0
 
@@ -149,17 +159,21 @@ def main():
     if configfile is None :
         if os.path.exists('./config.yml.local'):
             configfile = './config.yml.local'
-            configs = configs | read_yaml(configfile)
+            configs = recursive_merge(configs, read_yaml(configfile))
+        pprint(configs)
 
         if os.path.exists('./config.yml'):
             configfile = './config.yml'
-            configs = configs | read_yaml(configfile)
+            configs = recursive_merge(configs, read_yaml(configfile))
+        pprint(configs)
 
         if configfile is None :
             logger.error('ERROR: no config files')
             sys.exit(1)
     else :
         configs = read_yaml(configfile)
+
+    pprint(configs)
 
     data = {}
 
@@ -183,13 +197,19 @@ def main():
         for item in data['agents'] :
             agent_ip  = item['ip']
             agent_mac = item['mac']
-            agent_uplink = configs['nodes'][agent_ip]['uplink']
+            config = configs['nodes'][agent_ip]
+
+            agent_uplink = config['uplink']
             
             uport = Port(agent_mac, agent_ip, agent_uplink, Port.TYPE_AGENT)
             dports = get_dports(agent_ip, agent_uplink, conns)
             imagepath = get_imagepath(configs, agent_mac)
+            minlen = config.get('minlen', 4)
 
-            agent = Agent(uport, dports, imagepath)
+            agent = Agent(uport, dports, imagepath,
+                          logger=logger,
+                          minlen=minlen
+            )
             graph.add_agent(agent)
 
         all_ports.extend(graph.get_agent_uports())

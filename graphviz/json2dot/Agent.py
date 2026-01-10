@@ -6,22 +6,27 @@ import copy
 from Port import Port
 
 class Agent() :
-    def __init__(self, uport, dports, imagepath) :
+    def __init__(self, uport, dports, imagepath, logger=None, minlen=4) :
         self.ip  = uport.ip
         self.mac = uport.mac
         self.indent = 1
-        self.minlen = 4
+        self.minlen = minlen
 
         self.dports = dports
         self.imagepath = imagepath
 
         self.uport = uport
+
+        self.logger = logger
    
     def get_uport(self) :
         return self.uport
 
     def get_dports(self) :
         return self.dports
+
+    def set_minlen(self, minlen) :
+        self.minlen = minlen
 
     def print(self, fp) :
         indent = self.indent
