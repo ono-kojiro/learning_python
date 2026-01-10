@@ -247,6 +247,8 @@ def main():
                     if 'uplink' in configs['nodes'][ip] :
                         uplink = configs['nodes'][ip]['uplink']
                         edge.dport.pnum = uplink
+
+        graph.update_edges()
     
     graph.print(fp)
 

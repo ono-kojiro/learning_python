@@ -62,6 +62,11 @@ class Graph() :
                 break
         return item
 
+    def update_edges(self) :
+        for edge in self.edges :
+            dst_str = str(edge)
+
+
     def print(self, fp) :
         self.print_header(fp)
         self.print_agents(fp)
