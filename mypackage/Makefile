@@ -1,4 +1,4 @@
-all : dist
+all : build
 
 sdist :
 	python3 setup.py sdist --formats=xztar
@@ -8,6 +8,9 @@ develop :
 
 dist :
 	python3 setup.py bdist_wheel
+
+build :
+	python3 -m build
 
 install :
 	python3 -m pip install ./dist/mypackage-0.0.1-py3-none-any.whl \
