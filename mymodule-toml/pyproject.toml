@@ -1,0 +1,13 @@
+[project]
+name = "mymodule"
+#res-python = ">=3.9"
+version = "0.0.1"
+
+dependencies = [
+  "json",
+]
+
+[tool.pytest.ini_options]
+pythonpath = "src"
+testpaths = [ "tests", ]
+
