@@ -21,7 +21,29 @@ def read_yaml(filepath):
     fp.close()
     return items
 
-def insert_asset(conn, item):
+def insert_interfaces(conn, item):
+    table = 'interfaces_table'
+    ph = ', ?' * 4
+    sql = 'INSERT INTO {0} VALUES ( NULL{1});'.format(table, ph)
+        
+    aid = item['aid']
+
+    for iface in item['interfaces']:
+        c = conn.cursor()
+        ifid = iface['ifid']
+        for prop in iface:
+            if prop == 'ifid':
+                continue
+            val = iface[prop]
+            record = [
+                aid,
+                ifid,
+                prop,
+                val,
+            ]
+            c.execute(sql, record)
+
+def insert_asset(conn, item, schema):
     table = 'assets_table'
     ph = ', ?' * 3
     sql = 'INSERT INTO {0} VALUES ( NULL{1} );'.format(table, ph)
@@ -33,29 +55,7 @@ def insert_asset(conn, item):
     ]
     c.execute(sql, record)
     
-    table = 'interfaces_table'
-    ph = ', ?' * 4
-    sql = 'INSERT INTO {0} VALUES ( NULL{1});'.format(table, ph)
-        
-    aid = item['aid']
-
-    for iface in item['interfaces']:
-        ifid = iface['ifid']
-
-        for prop in iface:
-            if prop == 'ifid':
-                continue
-
-            val = iface[prop]
-
-            record = [
-                aid,
-                ifid,
-                prop,
-                val,
-            ]
-
-            c.execute(sql, record)
+    insert_interfaces(conn, item)
 
 def main() :
     ret = 0
@@ -63,11 +63,12 @@ def main() :
     try:
         options, args = getopt.getopt(
             sys.argv[1:],
-            "hvo:",
+            "hvo:s:",
             [
               "help",
               "version",
-              "output="
+              "output=",
+              "schema=",
             ]
         )
     except getopt.GetoptError as err:
@@ -75,6 +76,7 @@ def main() :
         sys.exit(2)
 
     output = None
+    schema_yml = None
 
     for option, arg in options:
         if option in ("-v", "-h", "--help"):
@@ -82,6 +84,8 @@ def main() :
             sys.exit(0)
         elif option in ("-o", "--output"):
             output = arg
+        elif option in ("-s", "--schema"):
+            schema_yml = arg
         else:
             assert False, "unknown option"
 
@@ -94,8 +98,14 @@ def main() :
         print('ERROR: no output option')
         sys.exit(1)
 
+    if schema_yml is None :
+        print('ERROR: no schema option')
+        sys.exit(1)
+
     if ret != 0:
         sys.exit(1)
+
+    schema = read_yaml(schema_yml)
 
     conn = sqlite3.connect(output)
 
@@ -105,7 +115,7 @@ def main() :
             aid = item['aid']
             descr = item['descr']
 
-            insert_asset(conn, item)
+            insert_asset(conn, item, schema)
 
     #print(data)
 

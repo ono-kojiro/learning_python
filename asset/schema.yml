@@ -19,3 +19,14 @@
   - name: val
     type: TEXT
 
+- name: applications_table
+  columns:
+  - name: aid
+    type: TEXT
+  - name: name
+    type: TEXT
+  - name: version
+    type: TEXT
+  - name: descr
+    type: TEXT
+

@@ -17,6 +17,14 @@
     ipv6: None
     mac: AA:BB:CC:DD:FF:00
 
+  applications:
+  - name: bash
+    descr: default shell
+    version: 5.2.21
+  - name: tmux
+    descr: terminal multiplexer
+    version: 3.4
+
 ---
 - aid: bbb
   name: raspberrypi
