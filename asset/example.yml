@@ -1,51 +1,51 @@
 ---
 - aid: aaa
   name: desktop
-  desc: my desktop pc
+  descr: my desktop pc
 
   interfaces:
 
   - ifid: eth0
-    desc: first ethernet
+    descr: first ethernet
     ipv4: 192.168.1.100
-    mac:  AA:BB:CC:DD:EE:00
     ipv6: None
+    mac: AA:BB:CC:DD:EE:00
 
   - ifid: eth1
-    desc: second ethernet
+    descr: second ethernet
     ipv4: 192.168.2.100
-    mac:  AA:BB:CC:DD:FF:00
     ipv6: None
+    mac: AA:BB:CC:DD:FF:00
 
-
+---
 - aid: bbb
   name: raspberrypi
-  desc: my raspberry pi
+  descr: my raspberry pi
 
   interfaces:
 
   - ifid: eth0
-    desc: first ethernet
+    descr: first ethernet
     ipv4: 192.168.1.101
-    mac:  AA:BB:CC:DD:EE:11
     ipv6: None
+    mac: AA:BB:CC:DD:EE:11
 
   - ifid: eth1
-    desc: second ethernet
+    descr: second ethernet
     ipv4: 192.168.2.101
-    mac:  AA:BB:CC:DD:FF:11
     ipv6: None
+    mac: AA:BB:CC:DD:FF:11
 
 ---
 - aid: ccc
   name: laptop
-  desc: my laptop pc
+  descr: my laptop pc
 
   interfaces:
 
   - ifid: eth0
-    desc: first ethernet
+    descr: first ethernet
     ipv4: 192.168.2.102
-    mac:  AA:BB:CC:DD:EE:22
     ipv6: None
+    mac: AA:BB:CC:DD:EE:22
 

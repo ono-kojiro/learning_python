@@ -23,29 +23,39 @@ def read_yaml(filepath):
 
 def insert_asset(conn, item):
     table = 'assets_table'
-    sql = 'INSERT INTO {0} VALUES ( NULL, ?, ? );'.format(table)
+    ph = ', ?' * 3
+    sql = 'INSERT INTO {0} VALUES ( NULL{1} );'.format(table, ph)
     c = conn.cursor()
     record = [
         item['aid'],
-        item['desc'],
+        item['name'],
+        item['descr'],
     ]
     c.execute(sql, record)
     
     table = 'interfaces_table'
-    ph = ', ?' * 6
+    ph = ', ?' * 4
     sql = 'INSERT INTO {0} VALUES ( NULL{1});'.format(table, ph)
+        
+    aid = item['aid']
 
     for iface in item['interfaces']:
-        record = [
-            item['aid'],
-            iface['ifid'],
-            iface['desc'],
-            iface['ipv4'],
-            iface['mac'],
-            iface['ipv6'],
-        ]
+        ifid = iface['ifid']
 
-        c.execute(sql, record)
+        for prop in iface:
+            if prop == 'ifid':
+                continue
+
+            val = iface[prop]
+
+            record = [
+                aid,
+                ifid,
+                prop,
+                val,
+            ]
+
+            c.execute(sql, record)
 
 def main() :
     ret = 0
@@ -93,7 +103,7 @@ def main() :
         items = read_yaml(filepath)
         for item in items :
             aid = item['aid']
-            desc = item['desc']
+            descr = item['descr']
 
             insert_asset(conn, item)
 

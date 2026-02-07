@@ -40,6 +40,40 @@ def create_table(conn, config) :
 
     c.execute(sql)
 
+def create_ifaces_view(conn, view):
+    sql = 'DROP VIEW IF EXISTS {0};'.format(view)
+    c = conn.cursor()
+    c.execute(sql)
+    
+    c = conn.cursor()
+    sql = 'CREATE VIEW {0} AS '.format(view)
+    sql += 'SELECT '
+    sql += ' interfaces_table.*, assets_table.* '
+    sql += 'FROM interfaces_table '
+    sql += 'LEFT OUTER JOIN assets_table '
+    sql += '  ON interfaces_table.aid = assets_table.aid '
+    sql += 'ORDER BY aid, ifid '
+    sql += ';'
+
+    c.execute(sql)
+
+def create_assets_view(conn, view) :
+    sql = 'DROP VIEW IF EXISTS {0};'.format(view)
+    c = conn.cursor()
+    c.execute(sql)
+    
+    c = conn.cursor()
+    sql = 'CREATE VIEW {0} AS '.format(view)
+    sql += 'SELECT DISTINCT aid FROM interfaces_table '
+    sql += 'GROUP BY ifid '
+    sql += 'ORDER BY aid'
+    sql += ';'
+    c.execute(sql)
+
+def create_views(conn) :
+    create_assets_view(conn, 'assets_view')
+    create_ifaces_view(conn, 'interfaces_view')
+
 def main() :
     ret = 0
 
@@ -92,6 +126,8 @@ def main() :
             table = config['name']
             print('{0}'.format(table))
             create_table(conn, config)
+            
+    create_views(conn)
 
     #if output is not None:
     #    fp.close()

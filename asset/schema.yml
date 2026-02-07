@@ -3,7 +3,9 @@
   columns:
   - name: aid
     type: TEXT
-  - name: desc
+  - name: name
+    type: TEXT
+  - name: descr
     type: TEXT
 
 - name: interfaces_table
@@ -12,12 +14,8 @@
     type: TEXT
   - name: ifid
     type: TEXT
-  - name: desc
+  - name: prop
     type: TEXT
-  - name: ipv4
-    type: TEXT
-  - name: mac
-    type: TEXT
-  - name: ipv6
+  - name: val
     type: TEXT
 
