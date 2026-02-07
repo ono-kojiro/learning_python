@@ -1,0 +1,23 @@
+---
+- name: assets_table 
+  columns:
+  - name: aid
+    type: TEXT
+  - name: desc
+    type: TEXT
+
+- name: interfaces_table
+  columns:
+  - name: aid
+    type: TEXT
+  - name: ifid
+    type: TEXT
+  - name: desc
+    type: TEXT
+  - name: ipv4
+    type: TEXT
+  - name: mac
+    type: TEXT
+  - name: ipv6
+    type: TEXT
+
