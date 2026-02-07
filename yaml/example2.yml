@@ -1,0 +1,43 @@
+---
+- id: None
+  name: desktop
+  desc: my desktop pc
+  interfaces:
+    - name:
+      desc: None
+      ipv4: 192.168.1.100
+      mac:  AA:BB:CC:DD:EE:00
+      ipv6: None
+    - name:
+      desc: None
+      ipv4: 192.168.2.100
+      mac:  AA:BB:CC:DD:FF:00
+      ipv6: None
+
+
+- id: None
+  name: raspberrypi
+  desc: my raspberry pi
+  interfaces:
+    - name:
+      desc: None
+      ipv4: 192.168.1.101
+      mac:  AA:BB:CC:DD:EE:11
+      ipv6: None
+    - name:
+      desc: None
+      ipv4: 192.168.2.101
+      mac:  AA:BB:CC:DD:FF:11
+      ipv6: None
+
+---
+- id: None
+  name: laptop
+  desc: my laptop pc
+  interfaces:
+    - name:
+      desc: None
+      ipv4: 192.168.2.102
+      mac:  AA:BB:CC:DD:EE:22
+      ipv6: None
+
