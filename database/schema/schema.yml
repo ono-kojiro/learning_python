@@ -1,0 +1,29 @@
+---
+assets_table:
+- name: asset_id
+  type: TEXT
+- name: prop
+  type: TEXT
+- name: value
+  type: TEXT
+
+interfaces_table:
+- name: asset_id
+  type: TEXT
+- name: iface_id
+  type: TEXT
+- name: prop
+  type: TEXT
+- name: value
+  type: TEXT
+
+applications_table:
+- name: asset_id
+  type: TEXT
+- name: appl_id
+  type: TEXT
+- name: prop
+  type: TEXT
+- name: value
+  type: TEXT
+

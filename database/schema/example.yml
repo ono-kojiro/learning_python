@@ -1,0 +1,52 @@
+---
+- name: desktop
+  descr: my desktop pc
+
+  interfaces:
+  - descr: "first ethernet"
+    ipv4: 192.168.1.100
+    ipv6: None
+    mac: AA:BB:CC:DD:EE:00
+
+  - descr: "second ethernet"
+    ipv4: 192.168.2.100
+    ipv6: None
+    mac: AA:BB:CC:DD:FF:00
+  
+  applications:
+  - name: bash
+    descr: default shell
+    version: 5.2.21
+  - name: tmux
+    descr: terminal multiplexer
+    version: 3.4
+
+---
+- name: raspberrypi
+  descr: my raspberry pi
+ 
+  interfaces: 
+  - descr: first ethernet
+    ipv4: 192.168.1.101
+    ipv6: None
+    mac: AA:BB:CC:DD:EE:11
+
+  - descr: second ethernet
+    ipv4: 192.168.2.101
+    ipv6: None
+    mac: AA:BB:CC:DD:FF:11
+
+- name: laptop
+  descr: my laptop pc
+  
+  interfaces:
+  - mac: AA:BB:CC:DD:EE:22
+    descr: first ethernet
+    ipv4: 192.168.2.102
+    ipv6: None
+  
+  applications:
+  - name: bc
+    descr: An arbitrary precision calculator language
+    version: 1.07.1
+
