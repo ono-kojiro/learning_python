@@ -6,6 +6,20 @@ cd $top_dir
 project="asset_manager"
 app="asset"
 
+prepare()
+{
+  python3 -m venv myenv
+  . myenv/bin/activate
+  python3 -m pip install -r requirements.txt
+  python3 -m pip install --upgrade pip
+}
+
+if [ ! -e "myenv/bin/activate" ]; then
+  prepare
+fi
+
+. ./myenv/bin/activate
+
 help()
 {
   usage
@@ -27,13 +41,6 @@ usage : $0 [options] target1 target2 ...
 EOS
 }
 
-prepare()
-{
-  python3 -m venv myenv
-  . myenv/bin/activate
-  python3 -m pip install -r requirements.txt
-}
-
 all()
 {
   project
@@ -44,6 +51,9 @@ all()
   migrate
   mod2
   mod3
+
+  mod4
+  mod5
 }
 
 startproject()
