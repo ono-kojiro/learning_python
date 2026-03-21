@@ -1,0 +1,9 @@
+<h1>Add Device</h1>
+
+<form method="POST">
+    {% csrf_token %}
+    <p>Name: <input type="text" name="name"></p>
+    <p>Serial: <input type="text" name="serial_number"></p>
+    <button type="submit">Save</button>
+</form>
+

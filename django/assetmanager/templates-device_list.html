@@ -1,0 +1,13 @@
+<h1>Device List</h1>
+
+<a href="{% url 'device_add' %}">Add Device</a>
+
+<ul>
+    {% for d in devices %}
+        <li>
+            {{ d.name }} ({{ d.serial_number }})
+            <a href="{% url 'device_delete' d.pk %}">Delete</a>
+        </li>
+    {% endfor %}
+</ul>
+

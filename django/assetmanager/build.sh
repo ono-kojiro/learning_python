@@ -117,6 +117,29 @@ mod3()
   cd $top_dir
 }
 
+mod4()
+{
+  cd $project
+  cp -f $top_dir/asset-urls.py asset/urls.py
+  urls_py="asset_manager/urls.py"
+
+  sed -i -e "s|from django.urls import path$|from django.urls import path, include|" $urls_py
+  sed -i -e "\|path('admin/', admin.site.urls),|a \ \ \ \ path('', include('asset.urls'))," $urls_py
+  #sed -i -e "/'django.contrib.staticfiles',/a \ \ \ \ 'django_extensions'," $settings_py
+  cd $top_dir
+}
+
+mod5()
+{
+  cd $project
+  mkdir -p asset/templates/
+  cp -f $top_dir/asset-views.py asset/views.py
+  cp -f $top_dir/templates-index.html asset/templates/index.html
+  cp -f $top_dir/templates-device_list.html asset/templates/device_list.html
+  cp -f $top_dir/templates-device_add.html  asset/templates/device_add.html
+  cd $top_dir
+}
+
 runserver()
 {
   cd $project
