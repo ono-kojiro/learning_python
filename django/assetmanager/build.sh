@@ -181,6 +181,16 @@ mod6()
   cd $top_dir
 }
 
+mod7()
+{
+  cd $project
+  rm -f ${appname}/tests.py
+  mkdir -p ${appname}/tests/
+  touch ${appname}/tests/__init__.py
+  cp -f $top_dir/test_device_api.py ${appname}/tests/
+  cd $top_dir
+}
+
 runserver()
 {
   cd $project
@@ -210,7 +220,17 @@ start()
 
 test()
 {
-  sh test-simple.sh
+  #sh test-simple.sh
+  cd $project
+  pwd
+  python manage.py test
+  pwd
+  cd $top_dir
+}
+
+prove()
+{
+  command prove test-simple.sh
 }
 
 stop()
