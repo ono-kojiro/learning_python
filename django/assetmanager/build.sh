@@ -254,6 +254,15 @@ test()
   cd $top_dir
 }
 
+pytest()
+{
+  cd $project
+  cp -f $top_dir/pytest.ini .
+  cp -f $top_dir/test_integ_*.py .
+  command pytest -v --reuse-db
+  cd $top_dir
+}
+
 dbshell()
 {
   cd $project
