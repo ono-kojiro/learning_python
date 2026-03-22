@@ -64,6 +64,8 @@ all()
   mod4
   echo "INFO: mod5"
   mod5
+  echo "INFO: mod6"
+  mod6
 }
 
 startproject()
@@ -196,6 +198,26 @@ runserver_plus()
 run()
 {
   runserver_plus
+}
+
+start()
+{
+  cd $project
+  nohup python manage.py runserver_plus \
+    --cert-file $top_dir/luna2.pem 0.0.0.0:8000 &
+  cd $top_dir
+}
+
+test()
+{
+  sh test-simple.sh
+}
+
+stop()
+{
+  cd $project
+  pkill -f 'python manage.py runserver_plus'
+  cd $top_dir
 }
 
 mclean()
