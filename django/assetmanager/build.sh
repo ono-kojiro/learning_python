@@ -238,6 +238,14 @@ dbshell()
   cd $top_dir
 }
 
+check()
+{
+  cd $project
+  cp -f $top_dir/check_db.py .
+  python3 check_db.py
+  cd $top_dir
+}
+
 
 prove()
 {
