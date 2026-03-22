@@ -1,0 +1,7 @@
+---
+nics:
+- name: eth0
+  description: uplink
+- name: eth1
+  description: backup
+

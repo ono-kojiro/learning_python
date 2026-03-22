@@ -259,6 +259,9 @@ pytest()
   cd $project
   cp -f $top_dir/pytest.ini .
   cp -f $top_dir/test_integ_*.py .
+  mkdir -p data/
+  cp -f $top_dir/devices.yml data/
+  cp -f $top_dir/nics.yml data/
   command pytest -v --reuse-db
   cd $top_dir
 }

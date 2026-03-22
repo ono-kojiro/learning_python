@@ -1,0 +1,11 @@
+---
+devices:
+- name: mydevice01
+  serial_number: ABC123
+- name: mydevice02
+  serial_number: XYZ456
+- name: mydevice03
+  serial_number: OPQ789
+
+
+
