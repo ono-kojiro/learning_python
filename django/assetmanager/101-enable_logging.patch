@@ -1,0 +1,25 @@
+*** settings.py	2026-03-22 15:54:30.811180693 +0900
+--- settings.py.mod	2026-03-22 16:02:30.945248512 +0900
+*************** USE_TZ = True
+*** 122,124 ****
+--- 122,141 ----
+  # https://docs.djangoproject.com/en/6.0/howto/static-files/
+  
+  STATIC_URL = 'static/'
++ 
++ LOGGING = {
++     'version': 1,
++     'disable_existing_loggers': False,
++     'handlers': {
++         'console': {
++             'class': 'logging.StreamHandler',
++         },
++     },
++     'loggers': {
++         'django.db.backends': {
++             'handlers': ['console'],
++             'level': 'DEBUG',
++         },
++     },
++ }
++ 

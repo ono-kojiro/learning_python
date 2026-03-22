@@ -204,9 +204,14 @@ mod7()
 
 mod8()
 {
-  patchfile="$top_dir/100-enable_test_db_name.patch"
   cd $project
+  
+  patchfile="$top_dir/100-enable_test_db_name.patch"
   patch -d ${project} -p0 --forward -i $patchfile
+  
+  patchfile="$top_dir/101-enable_logging.patch"
+  patch -d ${project} -p0 --forward -i $patchfile
+
   cd $top_dir
 
 }
@@ -245,7 +250,7 @@ test()
   cd $project
   #python manage.py test --keepdb
   export TEST_DB_NAME="test_db.sqlite3"
-  python manage.py test --keepdb -v 2
+  python manage.py test --keepdb -v 3 --debug-mode
   cd $top_dir
 }
 
