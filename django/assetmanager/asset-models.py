@@ -20,5 +20,8 @@ class NIC(models.Model):
     description = models.CharField(max_length=200, blank=True, null=True)
 
     def __str__(self):
-        return f"{self.device.name} - {self.name}"
+        if self.device:
+            return f"{self.device.name} - {self.name}"
+        else :
+            return f"(no device) - {self.name}"
 

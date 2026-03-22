@@ -14,4 +14,10 @@ class DeviceAdmin(admin.ModelAdmin):
 class NICAdmin(admin.ModelAdmin):
     list_display = ('device', 'name', 'description')
 
+    def device_display(self, obj):
+        if obj.device:
+            return obj.device.name
+        else :
+            return "(no device)"
 
+    device_display.short_description = "Device"
