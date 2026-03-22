@@ -4,7 +4,7 @@ top_dir="$( cd "$( dirname "$0" )" >/dev/null 2>&1 && pwd )"
 cd $top_dir
 
 project="asset_manager"
-app="asset"
+appname="asset"
 
 prepare()
 {
@@ -44,9 +44,9 @@ EOS
 all()
 {
   echo "INFO: create project"
-  project
+  startproject
   echo "INFO: create app"
-  app
+  startapp
   
   echo "INFO: add"
   add
@@ -73,38 +73,32 @@ startproject()
   fi
 }
 
-project()
-{
-  startproject
-}
-
 startapp()
 {
   cd $project
-  if [ ! -d "$app" ]; then
-    python manage.py startapp $app
+  if [ ! -d "$appname" ]; then
+    python manage.py startapp $appname
   fi
   cd $top_dir
-}
-
-app()
-{
-  startapp
 }
 
 add_app()
 {
   cd $project
   settings_py="asset_manager/settings.py"
-  cat $settings_py | grep "'$app'"
-  if [ "$?" -ne 0 ]; then
-    sed -i -e "/'django.contrib.staticfiles',/a \ \ \ \ '$app'," $settings_py
-  fi
+  line="django.contrib.staticfiles"
 
-  cat $settings_py | grep "'django_extensions'"
-  if [ "$?" -ne 0 ]; then
-    sed -i -e "/'django.contrib.staticfiles',/a \ \ \ \ 'django_extensions'," $settings_py
-  fi
+  apps=""
+  apps="$apps $appname"
+  apps="$apps django_extensions"
+  apps="$apps rest_framework"
+
+  for app in $apps; do
+    cat $settings_py | grep "'${app}'"
+    if [ "$?" -ne 0 ]; then
+      sed -i -e "/'${line}',/a \ \ \ \ '${app}'," $settings_py
+    fi
+  done
 
   cd $top_dir
 }
@@ -117,7 +111,7 @@ add()
 mod()
 {
   cd $project
-  cp -f $top_dir/${app}-models.py ${app}/models.py
+  cp -f $top_dir/${appname}-models.py ${appname}/models.py
   cd $top_dir
 }
 
@@ -139,7 +133,7 @@ migrate()
 mod2()
 {
   cd $project
-  cp -f $top_dir/${app}-admin.py ${app}/admin.py
+  cp -f $top_dir/${appname}-admin.py ${appname}/admin.py
   cd $top_dir
 }
 
