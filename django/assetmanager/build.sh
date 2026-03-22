@@ -153,7 +153,6 @@ mod4()
 
   sed -i -e "s|from django.urls import path$|from django.urls import path, include|" $urls_py
   sed -i -e "\|path('admin/', admin.site.urls),|a \ \ \ \ path('', include('asset.urls'))," $urls_py
-  #sed -i -e "/'django.contrib.staticfiles',/a \ \ \ \ 'django_extensions'," $settings_py
   cd $top_dir
 }
 
@@ -165,6 +164,18 @@ mod5()
   cp -f $top_dir/templates-index.html asset/templates/index.html
   cp -f $top_dir/templates-device_list.html asset/templates/device_list.html
   cp -f $top_dir/templates-device_add.html  asset/templates/device_add.html
+  cd $top_dir
+}
+
+mod6()
+{
+  cd $project
+  cp -f $top_dir/${appname}-serializers.py ${appname}/serializers.py
+  cp -f $top_dir/${appname}-views_api.py   ${appname}/views_api.py
+  cp -f $top_dir/${appname}-urls_api.py   ${appname}/urls_api.py
+  
+  urls_py="asset_manager/urls.py"
+  sed -i -e "\|urlpatterns = \[|a \ \ \ \ path('api/', include('asset.urls_api'))," $urls_py
   cd $top_dir
 }
 
