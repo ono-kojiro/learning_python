@@ -1,0 +1,24 @@
+*** settings.py	2026-03-22 15:53:00.538117431 +0900
+--- settings.py.mod	2026-03-22 15:54:01.207514252 +0900
+*************** For the full list of settings and their
+*** 10,15 ****
+--- 10,16 ----
+  https://docs.djangoproject.com/en/6.0/ref/settings/
+  """
+  
++ import os
+  from pathlib import Path
+  
+  # Build paths inside the project like this: BASE_DIR / 'subdir'.
+*************** DATABASES = {
+*** 79,84 ****
+--- 80,88 ----
+      'default': {
+          'ENGINE': 'django.db.backends.sqlite3',
+          'NAME': BASE_DIR / 'db.sqlite3',
++         'TEST': {
++             'NAME': os.environ.get('TEST_DB_NAME', None),
++         },
+      }
+  }
+  

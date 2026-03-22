@@ -103,6 +103,14 @@ add_app()
       sed -i -e "/'${line}',/a \ \ \ \ '${app}'," $settings_py
     fi
   done
+}
+
+rename_db()
+{
+  cd $project
+  settings_py="asset_manager/settings.py"
+
+  sed -i -e "s|'NAME': BASE_DIR / 'db.sqlite3',|'NAME': BASE_DIR / 'test_db.sqlite3',|" $settings_py
 
   cd $top_dir
 }
@@ -194,6 +202,16 @@ mod7()
   cd $top_dir
 }
 
+mod8()
+{
+  patchfile="$top_dir/100-enable_test_db_name.patch"
+  cd $project
+  patch -d ${project} -p0 --forward -i $patchfile
+  cd $top_dir
+
+}
+
+
 runserver()
 {
   cd $project
@@ -225,9 +243,9 @@ test()
 {
   #sh test-simple.sh
   cd $project
-  pwd
-  python manage.py test --keepdb
-  pwd
+  #python manage.py test --keepdb
+  export TEST_DB_NAME="test_db.sqlite3"
+  python manage.py test --keepdb -v 2
   cd $top_dir
 }
 
