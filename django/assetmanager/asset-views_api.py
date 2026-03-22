@@ -2,6 +2,9 @@ from rest_framework import generics
 from .models import Device
 from .serializers import DeviceSerializer
 
+from .models import NIC
+from .serializers import NICSerializer
+
 class DeviceListCreateAPIView(generics.ListCreateAPIView):
     queryset = Device.objects.all()
     serializer_class = DeviceSerializer
@@ -9,4 +12,13 @@ class DeviceListCreateAPIView(generics.ListCreateAPIView):
 class DeviceDeleteAPIView(generics.DestroyAPIView):
     queryset = Device.objects.all()
     serializer_class = DeviceSerializer
+
+class NICListCreateAPIView(generics.ListCreateAPIView):
+    queryset = NIC.objects.all()
+    serializer_class = NICSerializer
+
+class NICDeleteAPIView(generics.DestroyAPIView):
+    queryset = NIC.objects.all()
+    serializer_class = NICSerializer
+
 

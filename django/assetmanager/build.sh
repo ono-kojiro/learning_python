@@ -66,6 +66,8 @@ all()
   mod5
   echo "INFO: mod6"
   mod6
+  echo "INFO: mod7"
+  mod7
 }
 
 startproject()
@@ -188,6 +190,7 @@ mod7()
   mkdir -p ${appname}/tests/
   touch ${appname}/tests/__init__.py
   cp -f $top_dir/test_device_api.py ${appname}/tests/
+  cp -f $top_dir/test_nic_api.py ${appname}/tests/
   cd $top_dir
 }
 
@@ -223,10 +226,18 @@ test()
   #sh test-simple.sh
   cd $project
   pwd
-  python manage.py test
+  python manage.py test --keepdb
   pwd
   cd $top_dir
 }
+
+dbshell()
+{
+  cd $project
+  python manage.py dbshell --database=default
+  cd $top_dir
+}
+
 
 prove()
 {
