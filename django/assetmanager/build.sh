@@ -43,22 +43,34 @@ EOS
 
 all()
 {
+  echo "INFO: create project"
   project
+  echo "INFO: create app"
   app
+  
+  echo "INFO: add"
   add
 
+  echo "INFO: mod"
   mod
+  echo "INFO: migrate"
   migrate
+  echo "INFO: mod2"
   mod2
+  echo "INFO: mod3"
   mod3
 
+  echo "INFO: mod4"
   mod4
+  echo "INFO: mod5"
   mod5
 }
 
 startproject()
 {
-  django-admin startproject $project
+  if [ ! -d "$project" ]; then
+    django-admin startproject $project
+  fi
 }
 
 project()
@@ -69,7 +81,9 @@ project()
 startapp()
 {
   cd $project
-  python manage.py startapp $app
+  if [ ! -d "$app" ]; then
+    python manage.py startapp $app
+  fi
   cd $top_dir
 }
 
@@ -82,8 +96,16 @@ add_app()
 {
   cd $project
   settings_py="asset_manager/settings.py"
-  sed -i -e "/'django.contrib.staticfiles',/a \ \ \ \ '$app'," $settings_py
-  sed -i -e "/'django.contrib.staticfiles',/a \ \ \ \ 'django_extensions'," $settings_py
+  cat $settings_py | grep "'$app'"
+  if [ "$?" -ne 0 ]; then
+    sed -i -e "/'django.contrib.staticfiles',/a \ \ \ \ '$app'," $settings_py
+  fi
+
+  cat $settings_py | grep "'django_extensions'"
+  if [ "$?" -ne 0 ]; then
+    sed -i -e "/'django.contrib.staticfiles',/a \ \ \ \ 'django_extensions'," $settings_py
+  fi
+
   cd $top_dir
 }
 
@@ -102,6 +124,8 @@ mod()
 migrate()
 {
   cd $project
+  rm -f db.sqlite3
+
   python3 manage.py makemigrations
   python3 manage.py migrate
 
@@ -157,16 +181,23 @@ runserver()
   cd $top_dir
 }
 
-runssl()
+runserver_plus()
 {
   cd $project
   python manage.py runserver_plus --cert-file $top_dir/luna2.pem 0.0.0.0:8000
   cd $top_dir
 }
 
+run()
+{
+  runserver_plus
+}
+
 mclean()
 {
   rm -rf $project
+  rm -rf myenv
+  git clean -fdx -e "*.crt" -e "*.key" -e "*.pem"
 }
 
 
