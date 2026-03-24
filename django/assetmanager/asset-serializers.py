@@ -7,9 +7,24 @@ class DeviceSerializer(serializers.ModelSerializer):
         model = Device
         fields = ['id', 'name', 'serial_number']
 
+#class NICSerializer(serializers.ModelSerializer):
+#    class Meta:
+#        model = NIC
+#        fields = ['id', 'device', 'name', 'description']
+
 class NICSerializer(serializers.ModelSerializer):
+    device_id = serializers.PrimaryKeyRelatedField(
+        source='device',
+        queryset=Device.objects.all(),
+        required=False,
+        allow_null=True
+    )
+
     class Meta:
         model = NIC
-        fields = ['id', 'device', 'name', 'description']
+        fields = ['id', 'device', 'device_id', 'name', 'description']
+
+
+
 
 

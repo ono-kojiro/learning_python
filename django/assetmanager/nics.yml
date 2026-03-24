@@ -5,3 +5,15 @@ nics:
 - name: eth1
   description: backup
 
+- name: eth2
+  description: test
+
+- name: eth3
+  description: downlink
+
+- name: eth4
+  description: test
+
+- name: eth5
+  description: test
+

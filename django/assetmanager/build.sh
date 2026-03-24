@@ -197,8 +197,7 @@ mod7()
   rm -f ${appname}/tests.py
   mkdir -p ${appname}/tests/
   touch ${appname}/tests/__init__.py
-  cp -f $top_dir/test_device_api.py ${appname}/tests/
-  cp -f $top_dir/test_nic_api.py ${appname}/tests/
+  #cp -f $top_dir/test_unit_*.py ${appname}/tests/
   cd $top_dir
 }
 
@@ -236,6 +235,14 @@ run()
   runserver_plus
 }
 
+clean()
+{
+  cd $project
+  rm -f test_db.sqlite3
+  rm -f db.sqlite3
+  cd $top_dir
+}
+
 start()
 {
   cd $project
@@ -248,6 +255,7 @@ test()
 {
   #sh test-simple.sh
   cd $project
+  cp -f $top_dir/test_unit_*.py ${appname}/tests/
   #python manage.py test --keepdb
   export TEST_DB_NAME="test_db.sqlite3"
   python manage.py test --keepdb -v 3 --debug-mode
@@ -262,6 +270,7 @@ pytest()
   mkdir -p data/
   cp -f $top_dir/devices.yml data/
   cp -f $top_dir/nics.yml data/
+  cp -f $top_dir/links.yml data/
   command pytest -v --reuse-db
   cd $top_dir
 }
