@@ -6,7 +6,7 @@ import getopt
 import json
 
 import yaml
-from scapy.all import Ether, IP, TCP, UDP, Raw, sendp, wrpcap
+from scapy.all import Ether, IP, TCP, UDP, ARP, Raw, sendp, wrpcap, srp
 
 import random
 
@@ -73,6 +73,16 @@ def random_mac():
     res += ":{0:02d}".format(o6)
     return res
 
+def resolve_mac(ip, iface):
+    res = None
+    arp = ARP(pdst=ip)
+    ether = Ether(dst="ff:ff:ff:ff:ff:ff")
+    ans, _ = srp(ether/arp, iface=iface, timeout=2, verbose=False)
+    if ans:
+        res = ans[0][1].hwsrc
+
+    return res
+
 def main():
     ret = 0
 
@@ -118,6 +128,9 @@ def main():
     #fp = open(output, mode='w', encoding='utf-8')
 	
     packets = []
+
+    #gw_mac = resolve_mac('192.168.1.1', 'enp131s0')
+    #print("DEBUG: gw_mac {0}".format(gw_mac))
 
     for ymlfile in args:
         data = read_yaml(ymlfile)
