@@ -1,0 +1,25 @@
+---
+packets:
+  - event.action: "network_traffic"
+    network.transport: "tcp"
+
+    source.ip: "172.16.1.10"
+    source.port: 12345
+
+    destination.ip: "192.168.0.42"
+    destination.port: 9999
+
+    payload.text: "Hello World"
+  
+  - event.action: "network_traffic"
+    network.transport: "tcp"
+
+    source.ip: "172.16.1.10"
+    source.port: 12345
+
+    destination.ip: "192.168.0.42"
+    destination.port: 9999
+
+    payload.text: "Hoge"
+
+
