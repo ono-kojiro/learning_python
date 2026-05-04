@@ -1,0 +1,10 @@
+{
+  "size": 5,
+  "knn": {
+    "field": "vector",
+    "query_vector": [],
+    "k": 5,
+    "num_candidates": 100
+  }
+}
+
