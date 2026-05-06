@@ -133,7 +133,7 @@ def main():
     c2  = 'tshark -T fields -e frame.time_epoch -e frame.protocols'
     c2 += ' -e ip.src -e ip.dst -e tcp.srcport -e tcp.dstport'
     c2 += ' -e udp.srcport -e udp.dstport -e tcp.flags'
-    c2 += ' -E header=n -E separator=, -E quote=d -E occurrence=f'
+    c2 += ' -E header=y -E separator=, -E quote=n -E occurrence=f'
     c2 += ' -r -'
 
     for indir in args:
@@ -176,21 +176,32 @@ def main():
             fp = open(output, mode='w', encoding='utf-8')
 
             c1 = 'xz -k -c -d {0}'.format(filepath)
-            c2 = 'tshark -T ek -r - '
 
             p1 = subprocess.Popen(shlex.split(c1), stdout=subprocess.PIPE)
             p2 = subprocess.Popen(shlex.split(c2), stdin=p1.stdout,
                                      stdout=subprocess.PIPE, text=True)
+    
+            is_first = 1
+
+            fields = None
 
             for line in p2.stdout:
                 line = re.sub(r'\r?\n?$', '', line)
-                data = json.loads(line)
-                if 'index' in data:
+                tokens = line.split(",")
+
+                if is_first :
+                    fields = tokens
+                    is_first = 0
                     continue
 
-                nested = convert_ek_recursive(data)
+                data = {}
 
-                data_str = json.dumps(nested, ensure_ascii=False)
+                for i in range(len(fields)):
+                    field = fields[i]
+                    value = tokens[i]
+                    data[field] = value
+
+                data_str = json.dumps(data, ensure_ascii=False)
 
                 fp.write('{0}\n'.format(data_str))
 
@@ -198,7 +209,6 @@ def main():
             p2.wait()
 
             fp.close()
-            break
 
 if __name__ == "__main__":
 	main()

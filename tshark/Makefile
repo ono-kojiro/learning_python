@@ -17,6 +17,6 @@ test1 :
 
 test2:
 	xz -k -c -d $(INPUT_PCAP_XZ) \
-		| tshark -Y "tcp" -T fields -e frame.time_epoch -e frame.protocols -e ip.src -e ip.dst -e tcp.srcport -e tcp.dstport -e udp.srcport -e udp.dstport -e tcp.flags -E header=n -E separator=, -E quote=d -E occurrence=f -r -
+		| tshark -Y "tcp" -T fields -e frame.time_epoch -e frame.protocols -e ip.src -e ip.dst -e tcp.srcport -e tcp.dstport -e udp.srcport -e udp.dstport -e tcp.flags -E header=y -E separator=, -E quote=d -E occurrence=f -r -
 
 
