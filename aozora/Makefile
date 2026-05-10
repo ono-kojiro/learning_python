@@ -15,18 +15,18 @@ ENCODED   = ZGxhZzhKMEI0bmtmYkpqZGx1ZFA6TWk5ZW1EblRFejdfZ1YwRUtkNWt4dw==
 
 all : json
 
-fetch:
-	for filename in $(HTMLFILES); do \
-		if [ ! -e "$${filename}" ]; then \
-			wget https://www.aozora.gr.jp/cards/001779/files/$${filename}; \
-		else \
-			echo "Skip $${filename}"; \
-		fi \
-	done
+help :
+	sh build.sh help
+
+html:
+	$(MAKE) -C html fetch
+
+fetch : html
 
 text : $(TEXTFILES)
 
-json : $(JSONFILES)
+json :
+	$(MAKE) -C json json
 
 ndjson : $(NDJSONFILE)
 
@@ -115,3 +115,5 @@ without_access:
 clean :
 	rm -f $(TEXTFILES) $(JSONFILES)
 
+.PHONY : \
+	all clean test fetch json

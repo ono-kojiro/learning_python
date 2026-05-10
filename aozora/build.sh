@@ -20,8 +20,10 @@ help()
 usage : $0 [options] target1 target2 ...
 
   target:
-    create
-    ls
+    html / json
+    device / auth / refresh / access / session
+
+    create / delete
 EOS
 
 }
@@ -118,11 +120,8 @@ EOF
 add()
 {
   token=`cat access_token.json | jq -r ".access_token"`
-  #htmlfiles=`ls -1 *.html`
-  htmlfiles=`find ./ -maxdepth 1 -name "*.html"`
-  for htmlfile in $htmlfiles; do
-    basename=`basename -s .html $htmlfile`
-    jsonfile="${basename}.json"
+  jsonfiles=`find ./json/ -name "*.json"`
+  for jsonfile in $jsonfiles; do
     echo $jsonfile
     doc=`cat $jsonfile | jq -r '.title'`
     echo $doc
