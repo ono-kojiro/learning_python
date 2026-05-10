@@ -1,8 +1,6 @@
 *~
 *.html
 *.txt
-*.ndjson
-local-model/
 device_code.json
 refresh_token.json
 access_token.json
