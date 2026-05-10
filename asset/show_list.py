@@ -8,48 +8,80 @@ import sqlite3
 
 from pprint import pprint
 
-def show_assets(conn) :
-    sql = 'SELECT aid, name, descr, ifid, prop, val '
-    sql += 'FROM interfaces_view '
-    sql += 'ORDER BY aid, ifid, prop '
+def get_assets(conn) :
+    sql = 'SELECT DISTINCT aid '
+    sql += 'FROM assets_table '
+    sql += 'ORDER BY aid '
     sql += ';'
     c = conn.cursor()
 
     rows = c.execute(sql)
 
-    last_aid = ''
-    last_ifid = ''
-
+    items = []
     for row in rows :
         aid = row['aid']
-        ifid = row['ifid']
-        prop = row['prop']
-        val  = row['val']
-        descr = row['descr']
-        name = row['name']
+        items.append(aid)
 
-        if last_aid != aid :
-            if last_aid != '' :
-                print('')
+    return items
 
-            print('---')
-            print('- aid: {0}'.format(aid))
-            print('  name: {0}'.format(name))
-            print('  descr: {0}'.format(descr))
-            print('')
-            print('  interfaces:')
-        
-        if last_ifid != ifid :
-            print('')
-            print('  - ifid: {0}'.format(ifid))
 
-        #print("{0} => {1}".format(prop, val))
-        print('    {0}: {1}'.format(prop, val))
+def get_ifaces(conn, aid) :
+    sql = 'SELECT aid, name, descr, ifid, prop, val '
+    sql += 'FROM interfaces_view '
+    sql += 'WHERE aid = ? '
+    sql += 'ORDER BY aid, ifid, prop '
+    sql += ';'
+    c = conn.cursor()
 
-        last_aid = aid
-        last_ifid = ifid
+    params = [
+        aid,
+    ]
 
-    print('')
+    rows = c.execute(sql, params)
+
+    records = []
+
+    for row in rows :
+
+        iface = {
+            'aid': row['aid'],
+            'ifid' : row['ifid'],
+            'prop' : row['prop'],
+            'val'  : row['val'],
+            'descr' : row['descr'],
+            'name' : row['name'],
+        }
+        records.append(iface)
+
+
+def get_applications(conn, aid) :
+    sql = 'SELECT aid, appid, prop, val '
+    sql += 'FROM applications_table '
+    sql += 'WHERE aid = ? '
+    sql += 'ORDER BY aid, appid, prop '
+    sql += ';'
+    c = conn.cursor()
+
+    params = [
+        aid,
+    ]
+
+    rows = c.execute(sql, params)
+
+    last_appid = ''
+
+    records = []
+    for row in rows :
+        record = {
+            'aid' : row['aid'],
+            'appid': row['appid'],
+            'prop': row['prop'],
+            'val': row['val'],
+        }
+
+        records.append(record)
+
+    return records
 
 def main() :
     ret = 0
@@ -94,7 +126,14 @@ def main() :
     for database in args :
         conn = sqlite3.connect(database)
         conn.row_factory = sqlite3.Row
-        show_assets(conn)
+
+        aids = get_assets(conn)
+        for aid in aids:
+            print('AID: {0}'.format(aid))
+            ifaces = get_ifaces(conn, aid)
+            pprint(ifaces)
+            apps = get_applications(conn, aid)
+            pprint(apps)
         conn.close()
 
     if output is not None:

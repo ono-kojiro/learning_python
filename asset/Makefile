@@ -23,7 +23,7 @@ test :
 	$(MAKE) show
 
 insert :
-	python3 yml2db.py -o $(DATABASE) -s $(SCHEMA) example.yml
+	python3 yml2db.py -o $(DATABASE) example.yml
 
 debug :
 	sqlite3 $(DATABASE) "select * from assets_view;"
@@ -31,6 +31,7 @@ debug :
 
 show :
 	python3 show_list.py $(DATABASE) > output.yml
+	cat output.yml
 
 check :
 	diff -crp example.yml output.yml

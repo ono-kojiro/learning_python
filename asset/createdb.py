@@ -9,7 +9,7 @@ import sqlite3
 
 from pprint import pprint
 
-def read_yaml(filepath):
+def read_list_from_yaml(filepath):
     fp = open(filepath, mode="r", encoding="utf-8")
     docs = yaml.load_all(fp, Loader=yaml.loader.SafeLoader)
 
@@ -21,8 +21,21 @@ def read_yaml(filepath):
     fp.close()
     return items
 
-def create_table(conn, config) :
-    table = config['name']
+def read_dict_from_yaml(filepath):
+    fp = open(filepath, mode="r", encoding="utf-8")
+    docs = yaml.load_all(fp, Loader=yaml.loader.SafeLoader)
+
+    items = {}
+    for doc in docs:
+        pprint(doc)
+        for item in doc:
+            pprint(item)
+            items[item] = doc[item]
+
+    fp.close()
+    return items
+
+def create_table(conn, table, columns) :
 
     sql = 'DROP TABLE IF EXISTS {0};'.format(table)
     c = conn.cursor()
@@ -31,7 +44,7 @@ def create_table(conn, config) :
     c = conn.cursor()
     sql = 'CREATE TABLE {0} ( '.format(table)
     sql += 'id INTEGER PRIMARY KEY'
-    for column in config['columns']:
+    for column in columns:
         name = column['name']
         ctype = column['type']
         
@@ -121,11 +134,12 @@ def main() :
     conn = sqlite3.connect(output)
 
     for filepath in args :
-        configs = read_yaml(filepath)
-        for config in configs:
-            table = config['name']
+        #schema = read_list_from_yaml(filepath)
+        schema = read_dict_from_yaml(filepath)
+        for table in schema:
+            columns = schema[table]
             print('{0}'.format(table))
-            create_table(conn, config)
+            create_table(conn, table, columns)
             
     create_views(conn)
 

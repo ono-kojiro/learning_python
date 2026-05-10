@@ -6,6 +6,7 @@ import getopt
 import yaml
 
 import sqlite3
+import uuid
 
 from pprint import pprint
 
@@ -21,9 +22,51 @@ def read_yaml(filepath):
     fp.close()
     return items
 
+def get_column_names(conn, table):
+    c = conn.cursor()
+    rows = c.execute('PRAGMA table_info({0});'.format(table))
+    cnames = []
+
+    for row in rows:
+        if row[1] != 'id' :
+            cnames.append(row[1])
+    return cnames
+
+def insert_applications(conn, item):
+    table = 'applications_table'
+    
+    cnames = get_column_names(conn, table)
+    
+    ph = ', ?' * len(cnames)
+    sql = 'INSERT INTO {0} VALUES ( NULL{1});'.format(table, ph)
+        
+    aid = item['aid']
+    apps = item['applications']
+
+    for app in apps:
+        appid = app.get('appid', '')
+        c = conn.cursor()
+
+        if appid == '':
+            appid = str(uuid.uuid4())
+
+        for prop in app:
+            val = app[prop]
+
+            record = [
+                aid,
+                appid,
+                prop,
+                val,
+            ]
+            c.execute(sql, record)
+
 def insert_interfaces(conn, item):
     table = 'interfaces_table'
-    ph = ', ?' * 4
+    
+    cnames = get_column_names(conn, table)
+    
+    ph = ', ?' * len(cnames)
     sql = 'INSERT INTO {0} VALUES ( NULL{1});'.format(table, ph)
         
     aid = item['aid']
@@ -31,10 +74,12 @@ def insert_interfaces(conn, item):
     for iface in item['interfaces']:
         c = conn.cursor()
         ifid = iface['ifid']
+
         for prop in iface:
             if prop == 'ifid':
                 continue
             val = iface[prop]
+
             record = [
                 aid,
                 ifid,
@@ -43,19 +88,21 @@ def insert_interfaces(conn, item):
             ]
             c.execute(sql, record)
 
-def insert_asset(conn, item, schema):
+def insert_asset(conn, item):
     table = 'assets_table'
-    ph = ', ?' * 3
+   
+    cnames = get_column_names(conn, table)
+
+    ph = ', ?' * len(cnames)
     sql = 'INSERT INTO {0} VALUES ( NULL{1} );'.format(table, ph)
     c = conn.cursor()
-    record = [
-        item['aid'],
-        item['name'],
-        item['descr'],
-    ]
+    record = []
+    for cname in cnames:
+        record.append(item[cname])
     c.execute(sql, record)
     
     insert_interfaces(conn, item)
+    
 
 def main() :
     ret = 0
@@ -63,12 +110,11 @@ def main() :
     try:
         options, args = getopt.getopt(
             sys.argv[1:],
-            "hvo:s:",
+            "hvo:",
             [
               "help",
               "version",
               "output=",
-              "schema=",
             ]
         )
     except getopt.GetoptError as err:
@@ -76,7 +122,6 @@ def main() :
         sys.exit(2)
 
     output = None
-    schema_yml = None
 
     for option, arg in options:
         if option in ("-v", "-h", "--help"):
@@ -84,8 +129,6 @@ def main() :
             sys.exit(0)
         elif option in ("-o", "--output"):
             output = arg
-        elif option in ("-s", "--schema"):
-            schema_yml = arg
         else:
             assert False, "unknown option"
 
@@ -98,16 +141,12 @@ def main() :
         print('ERROR: no output option')
         sys.exit(1)
 
-    if schema_yml is None :
-        print('ERROR: no schema option')
-        sys.exit(1)
-
     if ret != 0:
         sys.exit(1)
 
-    schema = read_yaml(schema_yml)
-
     conn = sqlite3.connect(output)
+
+    c = conn.cursor()
 
     for filepath in args :
         items = read_yaml(filepath)
@@ -115,7 +154,9 @@ def main() :
             aid = item['aid']
             descr = item['descr']
 
-            insert_asset(conn, item, schema)
+            insert_asset(conn, item)
+            if 'applications' in item:
+                insert_applications(conn, item)
 
     #print(data)
 

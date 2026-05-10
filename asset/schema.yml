@@ -1,32 +1,29 @@
 ---
-- name: assets_table 
-  columns:
-  - name: aid
-    type: TEXT
-  - name: name
-    type: TEXT
-  - name: descr
-    type: TEXT
+assets_table:
+- name: aid
+  type: TEXT
+- name: name
+  type: TEXT
+- name: descr
+  type: TEXT
 
-- name: interfaces_table
-  columns:
-  - name: aid
-    type: TEXT
-  - name: ifid
-    type: TEXT
-  - name: prop
-    type: TEXT
-  - name: val
-    type: TEXT
+interfaces_table:
+- name: aid
+  type: TEXT
+- name: ifid
+  type: TEXT
+- name: prop
+  type: TEXT
+- name: val
+  type: TEXT
 
-- name: applications_table
-  columns:
-  - name: aid
-    type: TEXT
-  - name: name
-    type: TEXT
-  - name: version
-    type: TEXT
-  - name: descr
-    type: TEXT
+applications_table:
+- name: aid
+  type: TEXT
+- name: appid
+  type: TEXT
+- name: prop
+  type: TEXT
+- name: val
+  type: TEXT
 

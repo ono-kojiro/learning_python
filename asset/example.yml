@@ -43,6 +43,11 @@
     ipv4: 192.168.2.101
     ipv6: None
     mac: AA:BB:CC:DD:FF:11
+  
+  applications:
+  - name: bc
+    descr: An arbitrary precision calculator language
+    version: 1.07.1
 
 ---
 - aid: ccc
@@ -56,4 +61,13 @@
     ipv4: 192.168.2.102
     ipv6: None
     mac: AA:BB:CC:DD:EE:22
+  
+  applications:
+  - name: gcc
+    descr: c compiler
+    version: 13.3.0
+  - name: make
+    descr: gnu make
+    version: 4.3
+
 
