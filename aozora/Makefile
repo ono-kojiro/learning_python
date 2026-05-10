@@ -116,4 +116,4 @@ clean :
 	rm -f $(TEXTFILES) $(JSONFILES)
 
 .PHONY : \
-	all clean test fetch json
+	all clean test fetch html json

@@ -75,29 +75,69 @@ def main() :
             rt = ruby.find("rt").get_text()
             ruby.replace_with(f"{rb}（{rt}）")
 
-        for h4 in soup.find_all("h4", class_="naka-midashi"):
-            h4.decompose()
+        #for h4 in soup.find_all("h4", class_="naka-midashi"):
+        #    h4.decompose()
 
-        title = soup.title.string.strip()
         title = soup.find("h1").get_text(strip=True)
         author = soup.find("h2").get_text(strip=True)
-
-        main = soup.find("div", class_="main_text")
-        text = main.get_text("\n")
-        text = re.sub(r'[ ]+', ' ', text)
-        text = re.sub(r'\n+', '\n', text)
-
-        paragraphs = []
-        for p in re.split(r'\n　', text):
-            p = p.strip()
-            p = re.sub(r'\s+', ' ', p).strip()
-            if p :
-                paragraphs.append(p)
-
+        
         data['title'] = title
         data['author'] = author
-        #data['text'] = text
-        data['paragraphs'] = paragraphs
+
+        main = soup.find("div", class_="main_text")
+        
+        chunks = []
+        buffer = ""
+
+        for elem in main.children:
+            if elem.name == "h4" and "naka-midashi" in elem.get("class", []):
+                if buffer != "" :
+                    text = buffer
+                    text = re.sub(r'[ ]+', ' ', text)
+                    text = re.sub(r'\n+', '\n', text)
+                    for p in re.split(r'\n　', text):
+                        p = p.strip()
+                        p = re.sub(r'\s+', ' ', p).strip()
+                        if p :
+                            chunks.append(
+                                {
+                                    "type": "paragraph",
+                                    "text": p,
+                                }
+                            )
+                    buffer = ""
+
+                heading = elem.get_text(strip=True)
+                chunks.append(
+                    {
+                        "type": "heading",
+                        "text": heading,
+                    }
+                )
+                continue
+
+            if elem.name is None:
+                text = elem.get_text("\n")
+                buffer += text
+                continue
+
+        if buffer != "" :
+            text = buffer
+            text = re.sub(r'[ ]+', ' ', text)
+            text = re.sub(r'\n+', '\n', text)
+            for p in re.split(r'\n　', text):
+                p = p.strip()
+                p = re.sub(r'\s+', ' ', p).strip()
+                if p :
+                    chunks.append(
+                        {
+                            "type": "paragraph",
+                            "text": p,
+                        }
+                    )
+                buffer = ""
+
+        data['chunks'] = chunks
 
         fp_in.close()
 
@@ -110,6 +150,7 @@ def main() :
             ensure_ascii=False,
         )
     )
+    fp.write('\n')
 
     if output is not None:
         fp.close()

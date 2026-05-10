@@ -8,7 +8,7 @@ all : json
 
 json : $(JSONFILES)
 
-$(JSONDIR)/%.json : $(HTMLDIR)/%.html
+$(JSONDIR)/%.json : $(HTMLDIR)/%.html html2json.py
 	python3 html2json.py -o $@ $<
 
 clean :
