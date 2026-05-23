@@ -36,6 +36,7 @@ usage : $0 [options] target1 target2 ...
     startproject / project
     startapp / app
 
+    init
     replace
     run
 
@@ -50,11 +51,16 @@ all()
 {
   startproject
   startapp
-  
+  init  
   replace
 
-  migrate
   allowed_hosts
+
+  add_device
+  device_admin
+
+  migrate
+  run
 }
 
 startproject()
@@ -85,6 +91,20 @@ app()
   startapp
 }
 
+init()
+{
+  mkdir -p ${project}/${application}/admin/
+  rm -f    ${project}/${application}/admin.py
+  
+  cp -f template/${application}/admin/__init__.py \
+    ${project}/${application}/admin/
+ 
+  mkdir -p ${project}/${application}/models/
+  rm    -f ${project}/${application}/models.py
+  cp -f template/${application}/models/__init__.py \
+    ${project}/${application}/models/
+}
+
 replace()
 {
   settings_py="${project}/${project}/settings.py"
@@ -102,13 +122,27 @@ replace()
   sed -i -e 's/ALLOWED_HOSTS = \[\]/ALLOWED_HOSTS = \["\*"\]/' $settings_py
 }
 
+device_admin()
+{
+  init_py="myproject/myapp/admin/__init__.py"
+  
+  cp -f template/${application}/admin/device_admin.py \
+    ${project}/${application}/admin/
+
+  line="from .device_admin import DeviceAdmin"
+  cat ${init_py} | grep -F "${line}"
+  if [ "$?" -ne 0 ]; then
+    echo "${line}" >> ${init_py}
+  fi
+}
+
 copy()
 {
   rm -f ${project}/${application}/models.py
   cp -r template/* ${project}/
 }
 
-add_device()
+device()
 {
   rm -f    ${project}/${application}/models.py
   mkdir -p ${project}/${application}/models/
@@ -122,6 +156,12 @@ add_device()
   if [ "$?" -ne 0 ]; then
     echo "${line}" >> ${init_py}
   fi
+}
+
+add_device()
+{
+  device
+  migrate
 }
 
 log()
@@ -148,10 +188,10 @@ migrate()
   python3 manage.py makemigrations
   python3 manage.py migrate
 
-  #set -a
-  #. ${top_dir}/.env
-  #python3 manage.py createsuperuser --noinput
-  #set +a
+  set -a
+  . ${top_dir}/.env
+  python3 manage.py createsuperuser --noinput
+  set +a
 
   cd $top_dir
 }
