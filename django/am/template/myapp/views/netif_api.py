@@ -58,3 +58,21 @@ def netif_delete_api(request):
 
     return JsonResponse({"status": "deleted", "id": netif_id})
 
+@csrf_exempt
+def netif_list_api(request):
+    if request.method != "GET":
+        return JsonResponse({"error": "GET only"}, status=405)
+
+    netifs = NetIf.objects.all().order_by("id")
+
+    data = []
+    for n in netifs:
+        data.append({
+            "id": n.id,
+            "name": n.name,
+            "mac_address": n.mac_address,
+            "device": n.device.id if n.device else None,
+        })
+
+    return JsonResponse({"netifs": data})
+
