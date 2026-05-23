@@ -27,3 +27,26 @@ def ipaddress_add_api(request):
         "subnet": ip.subnet,
     })
 
+@csrf_exempt
+def ipaddress_delete_api(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "POST only"}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        ip_id = data.get("id")
+    except Exception:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    if not ip_id:
+        return JsonResponse({"error": "id is required"}, status=400)
+
+    try:
+        ip = IPAddress.objects.get(id=ip_id)
+    except IPAddress.DoesNotExist:
+        return JsonResponse({"error": "IPAddress not found"}, status=404)
+
+    ip.delete()
+
+    return JsonResponse({"status": "deleted", "id": ip_id})
+

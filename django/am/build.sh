@@ -225,10 +225,12 @@ update_init()
     modules=`find *.py | grep -v '__init__'`
     for module in ${modules}; do
       echo "PYTHON: $module"
-      func=`cat $module | grep -e '^def ' | \
+      funcs=`cat $module | grep -e '^def ' | \
         sed -E 's/def ([A-Za-z0-9_]*).*/\1/'`
       module=`basename $module .py`
-      echo "from .${module} import ${func}" >> __init__.py
+      for func in $funcs; do
+        echo "from .${module} import ${func}" >> __init__.py
+      done
     done
     cd ${top_dir}
   done
@@ -242,10 +244,11 @@ update_url()
     echo "from django.urls import path"
     for f in ${app_dir}/views/*_api.py; do
       module=`basename "$f" .py`
-      model=`echo $module | sed -e 's/_api$//'`
-      func="${model}_add_api"
+      funcs=`cat "$f" | grep -e '^def ' | sed -E 's/def ([A-Za-z0-9_]*).*/\1/'`
 
-      echo "from myapp.views.${module} import ${func}"
+      for func in $funcs; do
+        echo "from myapp.views.${module} import ${func}"
+      done
     done
 
     echo ""
@@ -253,8 +256,12 @@ update_url()
     for f in ${app_dir}/views/*_api.py; do
       module=`basename "$f" .py`
       model=`echo $module | sed -e 's/_api$//'`
-      func="${model}_add_api"
-      echo "    path('api/${model}/add/', $func),"
+      funcs=`cat "$f" | grep -e '^def ' | sed -E 's/def ([A-Za-z0-9_]*).*/\1/'`
+      
+      for func in $funcs; do
+        action=`echo $func | sed -E "s/^${model}_//" | sed -E 's/_api$//'`
+        echo "    path('api/${model}/${action}/', $func),"
+      done
     done
 
     echo "]"
