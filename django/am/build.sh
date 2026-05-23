@@ -61,6 +61,7 @@ all()
 
   add_view
   add_netif
+  add_ipaddress
 
   update_init
   update_url
@@ -128,9 +129,7 @@ replace_installed_apps()
   
   name='INSTALLED_APPS'
   python3 replace_list.py -n ${name} -p ${project} ${settings_py} > settings.py
-  cp -f settings.py ${settings_py}
-  
-  sed -i -e 's/ALLOWED_HOSTS = \[\]/ALLOWED_HOSTS = \["\*"\]/' $settings_py
+  mv -f settings.py ${settings_py}
 }
 
 replace_url()
@@ -261,6 +260,21 @@ update_url()
     echo "]"
 
   } > ${app_dir}/urls.py
+}
+
+add_ipaddress()
+{
+  items="ipaddress"
+  for item in $items; do
+    cp -f template/myapp/models/${item}.py \
+      ${project}/${application}/models/
+
+    cp -f template/myapp/views/${item}_api.py \
+      ${project}/${application}/views/
+
+    cp -f template/myapp/admin/${item}_admin.py \
+      ${project}/${application}/admin/
+  done
 }
 
 add_netif()
