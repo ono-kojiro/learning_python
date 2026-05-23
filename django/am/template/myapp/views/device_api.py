@@ -49,3 +49,20 @@ def device_delete_api(request):
 
     return JsonResponse({"status": "deleted", "id": device_id})
 
+@csrf_exempt
+def device_list_api(request):
+    if request.method != "GET":
+        return JsonResponse({"error": "GET only"}, status=405)
+
+    devices = Device.objects.all().order_by("id")
+
+    data = []
+    for d in devices:
+        data.append({
+            "id": d.id,
+            "name": d.name,
+            "serial": d.serial_number,
+        })
+
+    return JsonResponse({"devices": data})
+
