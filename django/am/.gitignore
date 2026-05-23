@@ -1,4 +1,4 @@
 *.crt
 .env
-assetmanager/
+./myproject/
 

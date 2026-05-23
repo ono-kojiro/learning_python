@@ -3,8 +3,8 @@
 top_dir="$( cd "$( dirname "$0" )" >/dev/null 2>&1 && pwd )"
 cd $top_dir
 
-project="assetmanager"
-appname="assetmanager"
+project="myproject"
+application="myapp"
 
 . ./.env
 
@@ -33,11 +33,11 @@ usage()
 usage : $0 [options] target1 target2 ...
 
   target
-    startproject
-    startapp
+    startproject / project
+    startapp / app
 
-    install_apps
-    allowed_hosts
+    replace
+    run
 
     migrate
     runserver
@@ -51,7 +51,7 @@ all()
   startproject
   startapp
   
-  install_apps
+  replace
 
   migrate
   allowed_hosts
@@ -65,30 +65,36 @@ startproject()
   fi
 }
 
+project()
+{
+  startproject
+}
+
 startapp()
 {
   echo "INFO: create app"
   cd $project
-  if [ ! -d "$appname" ]; then
-    python manage.py startapp $appname
+  if [ ! -d "$application" ]; then
+    python manage.py startapp $application
   fi
   cd $top_dir
 }
 
-debug()
+app()
 {
-  settings_py="${project}/${project}/settings.py"
-  cp -f installed_apps.yml ${project}/${project}/
- 
-  cat ${settings_py} | grep -e '^import yaml$'
-  if [ "$?" -ne 0 ]; then
-    sed -i -e "/from pathlib import Path/a import yaml" $settings_py
-  fi
+  startapp
 }
 
 replace()
 {
   settings_py="${project}/${project}/settings.py"
+  cp -f template/${project}/${project}/installed_apps.yml ${project}/${project}/
+ 
+  cat ${settings_py} | grep -e '^import yaml$'
+  if [ "$?" -ne 0 ]; then
+    sed -i -e "/from pathlib import Path/a import yaml" $settings_py
+  fi
+  
   name='INSTALLED_APPS'
   python3 replace_list.py -n ${name} -p ${project} ${settings_py} > settings.py
   cp -f settings.py ${settings_py}
@@ -96,29 +102,31 @@ replace()
   sed -i -e 's/ALLOWED_HOSTS = \[\]/ALLOWED_HOSTS = \["\*"\]/' $settings_py
 }
 
-install_apps()
+copy()
 {
-  echo "INFO: install_apps"
-  cp -f installed_apps.yml ${project}/${project}/
+  rm -f ${project}/${application}/models.py
+  cp -r template/* ${project}/
+}
 
-  cd ${project}
-  settings_py="${project}/settings.py"
+add_device()
+{
+  rm -f    ${project}/${application}/models.py
+  mkdir -p ${project}/${application}/models/
+  cp -f template/myapp/models/device.py ${project}/${application}/models/
 
-  line="django.contrib.staticfiles"
+  init_py="${project}/${application}/models/__init__.py"
+  touch ${init_py}
 
-  apps=""
-  apps="$apps $appname"
-  apps="$apps django_extensions"
-  apps="$apps rest_framework"
+  line="from .device import Device"
+  cat ${init_py} | grep -F "${line}"
+  if [ "$?" -ne 0 ]; then
+    echo "${line}" >> ${init_py}
+  fi
+}
 
-  for app in $apps; do
-    cat $settings_py | grep "'${app}'"
-    if [ "$?" -ne 0 ]; then
-      sed -i -e "/'${line}',/a \ \ \ \ '${app}'," $settings_py
-    fi
-  done
-
-  cd ${top_dir}
+log()
+{
+  cat ${project}/nohup.out
 }
 
 rename_db()
@@ -140,10 +148,10 @@ migrate()
   python3 manage.py makemigrations
   python3 manage.py migrate
 
-  set -a
-  . ${top_dir}/.env
-  python3 manage.py createsuperuser --noinput
-  set +a
+  #set -a
+  #. ${top_dir}/.env
+  #python3 manage.py createsuperuser --noinput
+  #set +a
 
   cd $top_dir
 }
