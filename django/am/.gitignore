@@ -1,0 +1,4 @@
+*.crt
+.env
+assetmanager/
+
