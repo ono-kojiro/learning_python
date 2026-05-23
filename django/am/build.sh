@@ -48,28 +48,18 @@ EOS
 
 all()
 {
-  echo "INFO: create project"
   startproject
-  echo "INFO: create app"
   startapp
   
   install_apps
 
-  echo "INFO: mod"
-  mod
-  echo "INFO: migrate"
   migrate
-  echo "INFO: mod2"
-  mod2
-  echo "INFO: allowed_hosts"
   allowed_hosts
-
-  echo "INFO: mod4"
-  mod4
 }
 
 startproject()
 {
+  echo "INFO: create project"
   if [ ! -d "$project" ]; then
     django-admin startproject $project
   fi
@@ -77,6 +67,7 @@ startproject()
 
 startapp()
 {
+  echo "INFO: create app"
   cd $project
   if [ ! -d "$appname" ]; then
     python manage.py startapp $appname
@@ -87,14 +78,32 @@ startapp()
 debug()
 {
   settings_py="${project}/${project}/settings.py"
-  python3 extract_block.py $settings_py > installed_apps.yml
+  cp -f installed_apps.yml ${project}/${project}/
+ 
+  cat ${settings_py} | grep -e '^import yaml$'
+  if [ "$?" -ne 0 ]; then
+    sed -i -e "/from pathlib import Path/a import yaml" $settings_py
+  fi
+}
+
+replace()
+{
+  settings_py="${project}/${project}/settings.py"
+  name='INSTALLED_APPS'
+  python3 replace_list.py -n ${name} -p ${project} ${settings_py} > settings.py
+  cp -f settings.py ${settings_py}
+  
+  sed -i -e 's/ALLOWED_HOSTS = \[\]/ALLOWED_HOSTS = \["\*"\]/' $settings_py
 }
 
 install_apps()
 {
   echo "INFO: install_apps"
+  cp -f installed_apps.yml ${project}/${project}/
+
   cd ${project}
   settings_py="${project}/settings.py"
+
   line="django.contrib.staticfiles"
 
   apps=""
@@ -108,6 +117,8 @@ install_apps()
       sed -i -e "/'${line}',/a \ \ \ \ '${app}'," $settings_py
     fi
   done
+
+  cd ${top_dir}
 }
 
 rename_db()
@@ -122,6 +133,7 @@ rename_db()
 
 migrate()
 {
+  echo "INFO: migrate"
   cd $project
   rm -f db.sqlite3
 
@@ -138,6 +150,7 @@ migrate()
 
 allowed_hosts()
 {
+  echo "INFO: allowed_hosts"
   cd $project
   settings_py="${project}/settings.py"
   sed -i -e 's/ALLOWED_HOSTS = \[\]/ALLOWED_HOSTS = \["\*"\]/' $settings_py
@@ -178,10 +191,16 @@ stop()
   cd $top_dir
 }
 
+restart()
+{
+  stop
+  start
+}
+
 mclean()
 {
   rm -rf $project
-  rm -rf myenv
+  #rm -rf myenv
   #git clean -fdx -e "*.crt" -e "*.key"
 }
 
