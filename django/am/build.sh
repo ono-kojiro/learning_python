@@ -59,6 +59,8 @@ all()
   add_device
   device_admin
 
+  add_view
+
   migrate
   run
 }
@@ -107,6 +109,12 @@ init()
 
 replace()
 {
+  replace_installed_apps
+  replace_url
+}
+
+replace_installed_apps()
+{
   settings_py="${project}/${project}/settings.py"
   cp -f template/${project}/${project}/installed_apps.yml ${project}/${project}/
  
@@ -120,6 +128,19 @@ replace()
   cp -f settings.py ${settings_py}
   
   sed -i -e 's/ALLOWED_HOSTS = \[\]/ALLOWED_HOSTS = \["\*"\]/' $settings_py
+}
+
+replace_url()
+{
+  cp -f template/${project}/urls.py \
+     ${project}/${project}/
+
+  cp -f template/${project}/urlpatterns.yml \
+     ${project}/${project}/
+
+  cp -f template/${application}/urls.py \
+     ${project}/${application}/
+
 }
 
 device_admin()
@@ -161,7 +182,17 @@ device()
 add_device()
 {
   device
-  migrate
+}
+
+add_view()
+{
+  mkdir -p ${project}/${application}/views/
+
+  cp template/${application}/views/__init__.py \
+    ${project}/${application}/views/
+
+  cp template/${application}/views/device_api.py \
+    ${project}/${application}/views/
 }
 
 log()
