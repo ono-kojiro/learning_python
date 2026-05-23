@@ -34,3 +34,27 @@ def netif_add_api(request):
         "mac_address": netif.mac_address,
     })
 
+
+@csrf_exempt
+def netif_delete_api(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "POST only"}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        netif_id = data.get("id")
+    except Exception:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    if not netif_id:
+        return JsonResponse({"error": "id is required"}, status=400)
+
+    try:
+        netif = NetIf.objects.get(id=netif_id)
+    except NetIf.DoesNotExist:
+        return JsonResponse({"error": "NetIf not found"}, status=404)
+
+    netif.delete()
+
+    return JsonResponse({"status": "deleted", "id": netif_id})
+
