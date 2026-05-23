@@ -3,6 +3,8 @@ import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from myapp.models import Device
+from myapp.models import NetIf
+from myapp.models import MacAddress
 
 @csrf_exempt
 def device_add_api(request):
@@ -65,4 +67,49 @@ def device_list_api(request):
         })
 
     return JsonResponse({"devices": data})
+
+@csrf_exempt
+def device_tree_api(request):
+    if request.method != "GET":
+        return JsonResponse({"error": "GET only"}, status=405)
+
+    devices = Device.objects.all().order_by("id")
+
+    result = []
+
+    for d in devices:
+        device_entry = {
+            "id": d.id,
+            "name": d.name,
+            "serial_number": d.serial_number,
+            "netifs": []
+        }
+
+        # Device → NetIf
+        netifs = NetIf.objects.filter(device=d).order_by("id")
+        for n in netifs:
+            netif_entry = {
+                "id": n.id,
+                "name": n.name,
+                "mac_address": n.mac_address,
+                "mac": None,
+            }
+
+            # NetIf → MacAddress（OneToOne）
+            try:
+                mac = MacAddress.objects.get(netif=n)
+                mac_entry = {
+                    "id": mac.id,
+                    "mac": mac.mac,
+                    "ip_addresses": [str(ip) for ip in mac.ip_addresses.all()],
+                }
+                netif_entry["mac"] = mac_entry
+            except MacAddress.DoesNotExist:
+                netif_entry["mac"] = None
+
+            device_entry["netifs"].append(netif_entry)
+
+        result.append(device_entry)
+
+    return JsonResponse({"devices": result})
 
