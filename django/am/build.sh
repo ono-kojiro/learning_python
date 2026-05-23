@@ -264,7 +264,7 @@ update_url()
 
 add_ipaddress()
 {
-  items="ipaddress"
+  items="ipaddress macaddress"
   for item in $items; do
     cp -f template/myapp/models/${item}.py \
       ${project}/${application}/models/
