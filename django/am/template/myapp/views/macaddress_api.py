@@ -84,3 +84,21 @@ def macaddress_delete_api(request):
 
     return JsonResponse({"status": "deleted", "id": mac_id})
 
+@csrf_exempt
+def macaddress_list_api(request):
+    if request.method != "GET":
+        return JsonResponse({"error": "GET only"}, status=405)
+
+    macs = MacAddress.objects.all().order_by("id")
+
+    data = []
+    for mac in macs:
+        data.append({
+            "id": mac.id,
+            "mac": mac.mac,
+            "netif": mac.netif.id if mac.netif else None,
+            "ip_addresses": [str(ip) for ip in mac.ip_addresses.all()],
+        })
+
+    return JsonResponse({"macaddresses": data})
+
