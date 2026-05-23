@@ -50,3 +50,20 @@ def ipaddress_delete_api(request):
 
     return JsonResponse({"status": "deleted", "id": ip_id})
 
+@csrf_exempt
+def ipaddress_list_api(request):
+    if request.method != "GET":
+        return JsonResponse({"error": "GET only"}, status=405)
+
+    ips = IPAddress.objects.all().order_by("id")
+
+    data = []
+    for ip in ips:
+        data.append({
+            "id": ip.id,
+            "address": ip.address,
+            "subnet": ip.subnet,
+        })
+
+    return JsonResponse({"ipaddresses": data})
+
