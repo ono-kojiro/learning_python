@@ -60,7 +60,10 @@ all()
   device_admin
 
   add_view
+  add_netif
 
+  update_init
+  update_url
   migrate
   run
 }
@@ -194,6 +197,104 @@ add_view()
   cp template/${application}/views/device_api.py \
     ${project}/${application}/views/
 }
+
+update_init()
+{
+  items="models admin"
+  for item in ${items}; do
+    cd ${project}/${application}/${item}/
+    rm -f __init__.py
+
+    modules=`find *.py | grep -v '__init__'`
+    for module in ${modules}; do
+      echo "PYTHON: $module"
+      class=`cat $module | grep -e '^class ' | \
+        sed -E 's/class ([A-Za-z0-9_]*).*/\1/'`
+      module=`basename $module .py`
+      echo "CLASS: $class"
+      echo "from .${module} import ${class}" >> __init__.py
+    done
+
+    cd ${top_dir}
+  done
+
+  items="views"
+  for item in ${items}; do
+    cd ${project}/${application}/${item}/
+    rm -f __init__.py
+
+    modules=`find *.py | grep -v '__init__'`
+    for module in ${modules}; do
+      echo "PYTHON: $module"
+      func=`cat $module | grep -e '^def ' | \
+        sed -E 's/def ([A-Za-z0-9_]*).*/\1/'`
+      module=`basename $module .py`
+      echo "from .${module} import ${func}" >> __init__.py
+    done
+    cd ${top_dir}
+  done
+}
+
+update_url()
+{
+  app_dir="${project}/${application}"
+
+  {
+    echo "from django.urls import path"
+    for f in ${app_dir}/views/*_api.py; do
+      module=`basename "$f" .py`
+      model=`echo $module | sed -e 's/_api$//'`
+      func="${model}_add_api"
+
+      echo "from myapp.views.${module} import ${func}"
+    done
+
+    echo ""
+    echo "urlpatterns = ["
+    for f in ${app_dir}/views/*_api.py; do
+      module=`basename "$f" .py`
+      model=`echo $module | sed -e 's/_api$//'`
+      func="${model}_add_api"
+      echo "    path('api/${model}/add/', $func),"
+    done
+
+    echo "]"
+
+  } > ${app_dir}/urls.py
+}
+
+add_netif()
+{
+  cp -f template/myapp/models/netif.py \
+    ${project}/${application}/models/
+  
+  cp -f template/myapp/models/__init__.py \
+    ${project}/${application}/models/
+  
+  cp -f template/myapp/views/netif_api.py \
+    ${project}/${application}/views/
+  cp -f template/myapp/views/__init__.py \
+    ${project}/${application}/views/
+
+  cp -f template/myapp/admin/netif_admin.py \
+    ${project}/${application}/admin/
+
+  cd ${project}/${application}/admin/
+  rm -f __init__.py
+
+  modules=`find *.py | grep -v '__init__'`
+  for module in ${modules}; do
+    echo "PYTHON: $module"
+    class=`cat $module | grep -e '^class ' | \
+      sed -E 's/class ([A-Za-z0-9_]*).*/\1/'`
+    module=`basename $module .py`
+    echo "CLASS: $class"
+    echo "from .${module} import ${class}" >> __init__.py
+  done
+
+  cd ${top_dir}
+}
+
 
 log()
 {
