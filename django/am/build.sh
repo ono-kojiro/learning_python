@@ -51,14 +51,27 @@ all()
 {
   startproject
   startapp
+
   init  
   replace
+  
   allowed_hosts
 
   copy 
 
   update_init
   update_url
+  migrate
+  run
+}
+
+minimal()
+{
+  startproject
+  startapp
+
+  replace_installed_apps
+  allowed_hosts
   migrate
   run
 }
@@ -139,8 +152,8 @@ replace_url()
 
 copy()
 {
-  mkdir -p ${project}/${application}/views/
-  cp -r template/* ${project}/
+  cp -r template/${project}/*     ${project}/${project}/
+  cp -r template/${application}/* ${project}/${application}/
 }
 
 update_init()
@@ -240,6 +253,10 @@ mclean()
   #git clean -fdx -e "*.crt" -e "*.key"
 }
 
+test()
+{
+  pytest
+}
 
 if [ "$#" -eq 0 ]; then
   usage
