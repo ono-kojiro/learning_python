@@ -62,18 +62,27 @@ def macaddress_add_api(request):
     })
 
 @csrf_exempt
-def macaddress_delete_api(request, macaddress_id):
-    if request.method != "DELETE":
-        return JsonResponse({"error": "DELETE only"}, status=405)
-
+def macaddress_detail_api(request, macaddress_id):
     try:
         mac = MacAddress.objects.get(id=macaddress_id)
     except MacAddress.DoesNotExist:
         return JsonResponse({"error": "MacAddress not found"}, status=404)
 
-    mac.delete()
-
-    return JsonResponse({"status": "deleted", "id": macaddress_id})
+    if request.method == "GET":
+        return JsonResponse(
+            {
+                "id": mac.id,
+                "mac": mac.mac,
+                "netif": mac.netif.id if mac.netif else None,
+                "ip_addresses": [str(ip) for ip in mac.ip_addresses.all()],
+            }
+        )
+    elif request.method == "DELETE":
+        mac.delete()
+        return JsonResponse({"status": "deleted", "id": macaddress_id})
+    
+    return JsonResponse({"error": "GET or DELETE only"}, status=405)
+    
 
 @csrf_exempt
 def macaddress_list_api(request):

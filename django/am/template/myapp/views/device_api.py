@@ -29,10 +29,10 @@ def device_add_api(request):
     })
 
 @csrf_exempt
-def device_delete_api(request, device_id):
-    if request.method != "DELETE":
-        return JsonResponse({"error": "DELETE only"}, status=405)
-
+def device_detail_api(request, device_id):
+    data = {}
+    status = None
+    
     if not device_id:
         return JsonResponse({"error": "device_id is required"}, status=400)
 
@@ -41,9 +41,22 @@ def device_delete_api(request, device_id):
     except Device.DoesNotExist:
         return JsonResponse({"error": "Device not found"}, status=404)
 
-    device.delete()
+    if request.method == "GET":
+        data = {
+            "id": device.id,
+            "name": device.name,
+            "serial_number": device.serial_number,
+        }
+        state = 200
+    elif request.method == "DELETE":
+        device.delete()
+        data = { "status": "deleted", "id": device_id}
+        status = 200
+    else :
+        data = {"error": "GET or DELETE only"}
+        status = 405
 
-    return JsonResponse({"status": "deleted", "id": device_id})
+    return JsonResponse(data, status=status)
 
 @csrf_exempt
 def device_list_api(request):

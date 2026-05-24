@@ -75,5 +75,14 @@ def test_list_macaddress(configs, load_json, save_json):
     exp = load_json("macaddress3.json")
     assert got == exp
 
+@pytest.mark.order(10)
+def test_list_netif(configs, load_json, save_json):
+    url = '{0}/api/netif/2/'.format(configs['base_url'])
+    res = requests.get(url)
+    assert res.status_code == 200
 
+    got = res.json()
+    save_json("netif2.json", got)
+    #exp = load_json("macaddress3.json")
+    #assert got == exp
 

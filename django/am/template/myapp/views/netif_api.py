@@ -36,18 +36,32 @@ def netif_add_api(request):
 
 
 @csrf_exempt
-def netif_delete_api(request, netif_id):
-    if request.method != "DELETE":
-        return JsonResponse({"error": "DELETE only"}, status=405)
-
+def netif_detail_api(request, netif_id):
+    status = 200
+    
     try:
         netif = NetIf.objects.get(id=netif_id)
     except NetIf.DoesNotExist:
         return JsonResponse({"error": "NetIf not found"}, status=404)
 
-    netif.delete()
+    if request.method == "GET":
+        data = {
+            "id": netif.id,
+            "name": netif.name,
+            "mac_address": netif.mac_address,
+        }
+        status = 200
+    
+    elif request.method == "DELETE":
+        netif.delete()
+        data = {"error": "DELETE only"}
+        status = 405
 
-    return JsonResponse({"status": "deleted", "id": netif_id})
+    else :
+        data = {"status": "deleted", "id": netif_id}
+        status = 200
+
+    return JsonResponse(data, status=status)
 
 @csrf_exempt
 def netif_list_api(request):
