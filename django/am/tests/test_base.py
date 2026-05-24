@@ -53,3 +53,13 @@ def test_add_ipaddress(configs):
         res = requests.post(url, json=item)
         assert res.status_code == 200
 
+@pytest.mark.order(10)
+def test_list_ipaddress(configs, load_json, save_json):
+    url = '{0}/api/ipaddress/1/'.format(configs['base_url'])
+    res = requests.get(url)
+    assert res.status_code == 200
+
+    got = res.json()
+    save_json("ipaddess.json", got)
+
+

@@ -4,6 +4,8 @@ import os
 import yaml
 import subprocess
 
+import json
+
 import pytest
 from pytest import MonkeyPatch
 import time
@@ -58,4 +60,29 @@ def wait_for_server(url, timeout=10):
 @pytest.fixture(scope="session", autouse=True)
 def wait_django_server(configs):
     wait_for_server(configs["base_url"])
+
+
+@pytest.fixture
+def load_json():
+    def _load(filename):
+        base = os.path.dirname(os.path.abspath(__file__))
+        path = os.path.join(base, "exp", filename)
+        with open(path) as f:
+            return json.load(f)
+    return _load
+
+@pytest.fixture
+def save_json():
+    def _save(filename, data):
+        base = os.path.dirname(os.path.abspath(__file__))
+        path = os.path.join(base, "got", filename)
+
+        # ディレクトリが無ければ作成
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+
+        with open(path, "w") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+
+        return path
+    return _save
 

@@ -123,7 +123,7 @@ def main():
                 print('ERROR: invalid api name, {0}'.format(api))
                 sys.exit(1)
 
-            if action == 'delete':
+            if action in ('detail', 'delete'):
                 action = '<int:{0}_id>'.format(module)
 
             fp.write("    path('api/{0}/{1}/', {2}),\n".format(module, action, api))

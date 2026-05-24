@@ -28,18 +28,28 @@ def ipaddress_add_api(request):
     })
 
 @csrf_exempt
-def ipaddress_delete_api(request, ipaddress_id):
-    if request.method != "DELETE":
-        return JsonResponse({"error": "DELETE only"}, status=405)
-
+def ipaddress_detail_api(request, ipaddress_id):
     try:
         ip = IPAddress.objects.get(id=ipaddress_id)
     except IPAddress.DoesNotExist:
         return JsonResponse({"error": "IPAddress not found"}, status=404)
+    
+    if request.method == "GET":
+        return JsonResponse(
+            {
+                "id": ip.id,
+                "address": ip.address,
+                "subnet": ip.subnet,
+            }
+        )
+    
+    if request.method == "DELETE":
+        ip.delete()
+        return JsonResponse(
+            {"status": "deleted", "id": ipaddress_id }
+        )
 
-    ip.delete()
-
-    return JsonResponse({"status": "deleted", "id": ipaddress_id})
+    return JsonResponse({"error": "GET or DELETE only"})
 
 @csrf_exempt
 def ipaddress_list_api(request):
