@@ -145,17 +145,12 @@ copy()
 
 update_init()
 {
-  ./generate_init.py \
-      -o ${project}/${application}/models/__init__.py \
-      myproject/myapp/models/
-  
-  ./generate_init.py \
-      -o ${project}/${application}/views/__init__.py \
-      myproject/myapp/views/
-  
-  ./generate_init.py \
-      -o ${project}/${application}/admin/__init__.py \
-      myproject/myapp/admin/
+  items="models views admin"
+  for item in $items; do
+    ./generate_init.py \
+      -o ${project}/${application}/${item}/__init__.py \
+      ${project}/${application}/${item}/
+  done
 }
 
 update_url()
