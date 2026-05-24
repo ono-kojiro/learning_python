@@ -82,6 +82,7 @@ def save_json():
 
         with open(path, "w") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
+            f.write('\n')
 
         return path
     return _save

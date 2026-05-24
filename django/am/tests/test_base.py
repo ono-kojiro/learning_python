@@ -60,6 +60,20 @@ def test_list_ipaddress(configs, load_json, save_json):
     assert res.status_code == 200
 
     got = res.json()
-    save_json("ipaddess.json", got)
+    save_json("ipaddress.json", got)
+    exp = load_json("ipaddress.json")
+    assert got == exp
+
+@pytest.mark.order(10)
+def test_list_macaddress(configs, load_json, save_json):
+    url = '{0}/api/macaddress/3/'.format(configs['base_url'])
+    res = requests.get(url)
+    assert res.status_code == 200
+
+    got = res.json()
+    save_json("macaddress3.json", got)
+    exp = load_json("macaddress3.json")
+    assert got == exp
+
 
 
