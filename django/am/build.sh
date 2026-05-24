@@ -62,7 +62,6 @@ all()
   update_init
   update_url
   migrate
-  run
 }
 
 minimal()
