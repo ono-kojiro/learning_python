@@ -29,27 +29,80 @@ def ipaddress_add_api(request):
 
 @csrf_exempt
 def ipaddress_detail_api(request, ipaddress_id):
+    data = {}
+    status = 200
+
     try:
         ip = IPAddress.objects.get(id=ipaddress_id)
     except IPAddress.DoesNotExist:
         return JsonResponse({"error": "IPAddress not found"}, status=404)
     
     if request.method == "GET":
-        return JsonResponse(
-            {
-                "id": ip.id,
-                "address": ip.address,
-                "subnet": ip.subnet,
-            }
-        )
-    
-    if request.method == "DELETE":
+        res = {
+            "id": ip.id,
+            "address": ip.address,
+            "subnet": ip.subnet,
+        }
+    elif request.method == "DELETE":
         ip.delete()
-        return JsonResponse(
-            {"status": "deleted", "id": ipaddress_id }
-        )
+        res = {"status": "deleted", "id": ipaddress_id }
+    elif request.method in [ "PUT", "PATCH" ]:
+        try:
+            data = json.loads(request.body)
+        except Exception:
+            res = { "error": "Invalid JSON" }
+            status = 400
+            return JsonResponse(res, status=status)
 
-    return JsonResponse({"error": "GET or DELETE only"})
+        if "address" in data:
+            ip.address = data["address"]
+
+        if "subnet" in data:
+            try:
+                ip.subnet = int(data["subnet"])
+            except ValueError:
+                res = { "error": "Invalid subnet" }
+                status = 400
+                return JsonResponse(res, status=status)
+
+        if "netif" in data:
+            if data["netif"] is None:
+                ip.netif = None
+            else :
+                try:
+                    ip.netif_id = int(data["netif"])
+                except ValueError:
+                    res = { "error": "Invalid netif id" }
+                    status = 400
+                    return JsonResponse(res, status=status)
+
+        if "macaddress" in data:
+            if data["macaddress"] is None:
+                ip.macaddress = None
+            else :
+                try:
+                    ip.macaddress_id = int(data["macaddress"])
+                except ValueError:
+                    res = { "error": "Invalid macaddress id" }
+                    status = 400
+                    return JsonResponse(res, status=status)
+
+        ip.save()
+        res = {
+            "id": ip.id,
+            "address": ip.address,
+            "subnet": ip.subnet,
+            "netif": ip.netif.id if ip.netif else None,
+            "macaddress": ip.macaddress.id if ip.macaddress else None,
+        }
+    elif request.method == "DELETE":
+        ip.delete()
+        res = { "status": "deleted", "id": ipaddress_id }
+    else :
+        res = {"error": "GET or DELETE only"}
+        status = 405
+
+    return JsonResponse(res, status=status)
 
 @csrf_exempt
 def ipaddress_list_api(request):
