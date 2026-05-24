@@ -239,34 +239,10 @@ update_init()
 update_url()
 {
   app_dir="${project}/${application}"
-
-  {
-    echo "from django.urls import path"
-    for f in ${app_dir}/views/*_api.py; do
-      module=`basename "$f" .py`
-      funcs=`cat "$f" | grep -e '^def ' | sed -E 's/def ([A-Za-z0-9_]*).*/\1/'`
-
-      for func in $funcs; do
-        echo "from myapp.views.${module} import ${func}"
-      done
-    done
-
-    echo ""
-    echo "urlpatterns = ["
-    for f in ${app_dir}/views/*_api.py; do
-      module=`basename "$f" .py`
-      model=`echo $module | sed -e 's/_api$//'`
-      funcs=`cat "$f" | grep -e '^def ' | sed -E 's/def ([A-Za-z0-9_]*).*/\1/'`
-      
-      for func in $funcs; do
-        action=`echo $func | sed -E "s/^${model}_//" | sed -E 's/_api$//'`
-        echo "    path('api/${model}/${action}/', $func),"
-      done
-    done
-
-    echo "]"
-
-  } > ${app_dir}/urls.py
+  urls_py="${app_dir}/urls.py"
+  echo "INFO: generate ${urls_py}"
+  ./generate_urls.py -o ${urls_py} ${app_dir}/views/
+  cat ${urls_py}
 }
 
 add_ipaddress()

@@ -62,27 +62,18 @@ def macaddress_add_api(request):
     })
 
 @csrf_exempt
-def macaddress_delete_api(request):
-    if request.method != "POST":
-        return JsonResponse({"error": "POST only"}, status=405)
+def macaddress_delete_api(request, macaddress_id):
+    if request.method != "DELETE":
+        return JsonResponse({"error": "DELETE only"}, status=405)
 
     try:
-        data = json.loads(request.body)
-        mac_id = data.get("id")
-    except Exception:
-        return JsonResponse({"error": "Invalid JSON"}, status=400)
-
-    if not mac_id:
-        return JsonResponse({"error": "id is required"}, status=400)
-
-    try:
-        mac = MacAddress.objects.get(id=mac_id)
+        mac = MacAddress.objects.get(id=macaddress_id)
     except MacAddress.DoesNotExist:
         return JsonResponse({"error": "MacAddress not found"}, status=404)
 
     mac.delete()
 
-    return JsonResponse({"status": "deleted", "id": mac_id})
+    return JsonResponse({"status": "deleted", "id": macaddress_id})
 
 @csrf_exempt
 def macaddress_list_api(request):

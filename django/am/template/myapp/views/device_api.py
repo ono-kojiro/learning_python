@@ -29,18 +29,12 @@ def device_add_api(request):
     })
 
 @csrf_exempt
-def device_delete_api(request):
-    if request.method != "POST":
-        return JsonResponse({"error": "POST only"}, status=405)
-
-    try:
-        data = json.loads(request.body)
-        device_id = data.get("id")
-    except Exception:
-        return JsonResponse({"error": "Invalid JSON"}, status=400)
+def device_delete_api(request, device_id):
+    if request.method != "DELETE":
+        return JsonResponse({"error": "DELETE only"}, status=405)
 
     if not device_id:
-        return JsonResponse({"error": "id is required"}, status=400)
+        return JsonResponse({"error": "device_id is required"}, status=400)
 
     try:
         device = Device.objects.get(id=device_id)

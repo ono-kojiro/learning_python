@@ -36,18 +36,9 @@ def netif_add_api(request):
 
 
 @csrf_exempt
-def netif_delete_api(request):
-    if request.method != "POST":
-        return JsonResponse({"error": "POST only"}, status=405)
-
-    try:
-        data = json.loads(request.body)
-        netif_id = data.get("id")
-    except Exception:
-        return JsonResponse({"error": "Invalid JSON"}, status=400)
-
-    if not netif_id:
-        return JsonResponse({"error": "id is required"}, status=400)
+def netif_delete_api(request, netif_id):
+    if request.method != "DELETE":
+        return JsonResponse({"error": "DELETE only"}, status=405)
 
     try:
         netif = NetIf.objects.get(id=netif_id)
