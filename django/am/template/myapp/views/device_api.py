@@ -35,14 +35,14 @@ def device_detail_api(request, device_id):
     
     if not device_id:
         return JsonResponse({"error": "device_id is required"}, status=400)
-
+    
     try:
         device = Device.objects.get(id=device_id)
     except Device.DoesNotExist:
         return JsonResponse({"error": "Device not found"}, status=404)
-
+    
     if request.method == "GET":
-        data = {
+        res = {
             "id": device.id,
             "name": device.name,
             "serial_number": device.serial_number,
@@ -50,10 +50,31 @@ def device_detail_api(request, device_id):
         state = 200
     elif request.method == "DELETE":
         device.delete()
-        data = { "status": "deleted", "id": device_id}
+        res = { "status": "deleted", "id": device_id}
+        status = 200
+    elif request.method in [ "PUT", "PATCH" ]:
+        try:
+            data = json.loads(request.body)
+        except Exception:
+            res = { "error": "Invalid JSON" }
+            status = 400
+
+        if "name" in data:
+            device.name = data["name"]
+
+        if "serial_number" in data:
+            device.serial_number = data["serial_number"]
+
+        device.save()
+
+        data = {
+            "id": device.id,
+            "name": device.name,
+            "serial_number": device.serial_number,
+        }
         status = 200
     else :
-        data = {"error": "GET or DELETE only"}
+        data = {"error": "GET, PUT, PATCH, DELETE only"}
         status = 405
 
     return JsonResponse(data, status=status)
