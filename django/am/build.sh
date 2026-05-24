@@ -53,15 +53,9 @@ all()
   startapp
   init  
   replace
-
   allowed_hosts
 
-  add_device
-  device_admin
-
-  add_view
-  add_netif
-  add_ipaddress
+  copy 
 
   update_init
   update_url
@@ -102,13 +96,11 @@ init()
   mkdir -p ${project}/${application}/admin/
   rm -f    ${project}/${application}/admin.py
   
-  cp -f template/${application}/admin/__init__.py \
-    ${project}/${application}/admin/
- 
   mkdir -p ${project}/${application}/models/
   rm    -f ${project}/${application}/models.py
-  cp -f template/${application}/models/__init__.py \
-    ${project}/${application}/models/
+  
+  mkdir -p ${project}/${application}/views/
+  rm    -f ${project}/${application}/views.py
 }
 
 replace()
@@ -145,56 +137,10 @@ replace_url()
 
 }
 
-device_admin()
-{
-  init_py="myproject/myapp/admin/__init__.py"
-  
-  cp -f template/${application}/admin/device_admin.py \
-    ${project}/${application}/admin/
-
-  line="from .device_admin import DeviceAdmin"
-  cat ${init_py} | grep -F "${line}"
-  if [ "$?" -ne 0 ]; then
-    echo "${line}" >> ${init_py}
-  fi
-}
-
 copy()
 {
-  rm -f ${project}/${application}/models.py
-  cp -r template/* ${project}/
-}
-
-device()
-{
-  rm -f    ${project}/${application}/models.py
-  mkdir -p ${project}/${application}/models/
-  cp -f template/myapp/models/device.py ${project}/${application}/models/
-
-  init_py="${project}/${application}/models/__init__.py"
-  touch ${init_py}
-
-  line="from .device import Device"
-  cat ${init_py} | grep -F "${line}"
-  if [ "$?" -ne 0 ]; then
-    echo "${line}" >> ${init_py}
-  fi
-}
-
-add_device()
-{
-  device
-}
-
-add_view()
-{
   mkdir -p ${project}/${application}/views/
-
-  cp template/${application}/views/__init__.py \
-    ${project}/${application}/views/
-
-  cp template/${application}/views/device_api.py \
-    ${project}/${application}/views/
+  cp -r template/* ${project}/
 }
 
 update_init()
@@ -221,67 +167,9 @@ update_url()
   cat ${urls_py}
 }
 
-add_ipaddress()
-{
-  items="ipaddress macaddress"
-  for item in $items; do
-    cp -f template/myapp/models/${item}.py \
-      ${project}/${application}/models/
-
-    cp -f template/myapp/views/${item}_api.py \
-      ${project}/${application}/views/
-
-    cp -f template/myapp/admin/${item}_admin.py \
-      ${project}/${application}/admin/
-  done
-}
-
-add_netif()
-{
-  cp -f template/myapp/models/netif.py \
-    ${project}/${application}/models/
-  
-  cp -f template/myapp/models/__init__.py \
-    ${project}/${application}/models/
-  
-  cp -f template/myapp/views/netif_api.py \
-    ${project}/${application}/views/
-  cp -f template/myapp/views/__init__.py \
-    ${project}/${application}/views/
-
-  cp -f template/myapp/admin/netif_admin.py \
-    ${project}/${application}/admin/
-
-  cd ${project}/${application}/admin/
-  rm -f __init__.py
-
-  modules=`find *.py | grep -v '__init__'`
-  for module in ${modules}; do
-    echo "PYTHON: $module"
-    class=`cat $module | grep -e '^class ' | \
-      sed -E 's/class ([A-Za-z0-9_]*).*/\1/'`
-    module=`basename $module .py`
-    echo "CLASS: $class"
-    echo "from .${module} import ${class}" >> __init__.py
-  done
-
-  cd ${top_dir}
-}
-
-
 log()
 {
   cat ${project}/nohup.out
-}
-
-rename_db()
-{
-  cd $project
-  settings_py="asset_manager/settings.py"
-
-  sed -i -e "s|'NAME': BASE_DIR / 'db.sqlite3',|'NAME': BASE_DIR / 'test_db.sqlite3',|" $settings_py
-
-  cd $top_dir
 }
 
 migrate()
