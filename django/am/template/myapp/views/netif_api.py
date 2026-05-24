@@ -38,7 +38,8 @@ def netif_add_api(request):
 @csrf_exempt
 def netif_detail_api(request, netif_id):
     status = 200
-    
+    res = {}
+
     try:
         netif = NetIf.objects.get(id=netif_id)
     except NetIf.DoesNotExist:
@@ -52,14 +53,46 @@ def netif_detail_api(request, netif_id):
         }
         status = 200
     
+    elif request.method in [ "PUT", "PATCH" ]:
+        try:
+            data = json.loads(request.body)
+        except Exception:
+            res = { "error": "Invalid JSON" }
+            status = 400
+            return JsonResponse(res, status=status)
+
+        if "name" in data:
+            netif.name = data["name"]
+
+        if "device" in data:
+            if data["device"] is None:
+                netif.device = None
+            else :
+                try:
+                    netif.device_id = int(data["device"])
+                except ValueError:
+                    res = { "error": "Invalid device id" }
+                    res = 400
+                    return JsonResponse(res, status=status)
+
+        netif.save()
+        res = {
+            "id": netif.id,
+            "name": netif.name,
+            "device": netif.device.id if netif.device else None,
+            "macaddress": [ mac.id for mac in netif.macaddress_set.all()],
+            "ipaddresses": [ ip.id for ip in netif.ipaddress_set.all()],
+        }
+        status = 200
+
     elif request.method == "DELETE":
         netif.delete()
-        data = {"error": "DELETE only"}
-        status = 405
-
-    else :
         data = {"status": "deleted", "id": netif_id}
         status = 200
+
+    else :
+        data = {"error": "GET, PUT, PATCH, DELETE only"}
+        status = 405
 
     return JsonResponse(data, status=status)
 
