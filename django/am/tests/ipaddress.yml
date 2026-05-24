@@ -1,0 +1,8 @@
+---
+- address: 192.168.1.10
+  subnet:  24
+- address: 192.168.1.11
+  subnet:  24
+- address: 192.168.1.12
+  subnet: 24
+

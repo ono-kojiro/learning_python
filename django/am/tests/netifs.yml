@@ -1,0 +1,13 @@
+---
+- device_id: 1
+  name: "eth0"
+  mac_address: "aa:bb:cc:dd::ee:01"
+  
+- device_id: 1
+  name: "eth1"
+  mac_address: "aa:bb:cc:dd::ee:02"
+
+- device_id: 2
+  name: "eth2"
+  mac_address: "aa:bb:cc:dd::ee:03"
+

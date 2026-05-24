@@ -1,0 +1,11 @@
+---
+- netif_id: 1
+  mac: "aa:bb:cc:dd:ee:01"
+  ip_address_ids: [ 1 ]
+- netif_id: 2
+  mac: "aa:bb:cc:dd:ee:02"
+  ip_address_ids: [ 2 ]
+- netif_id: 3
+  mac: "aa:bb:cc:dd:ee:03"
+  ip_address_ids: [ 3 ]
+

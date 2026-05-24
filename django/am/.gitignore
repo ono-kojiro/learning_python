@@ -5,3 +5,5 @@
 *.p12
 .env
 nohup.out
+__pycache__/
+
