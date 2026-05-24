@@ -63,26 +63,62 @@ def macaddress_add_api(request):
 
 @csrf_exempt
 def macaddress_detail_api(request, macaddress_id):
+    data = {}
+    status = 200
+
     try:
         mac = MacAddress.objects.get(id=macaddress_id)
     except MacAddress.DoesNotExist:
         return JsonResponse({"error": "MacAddress not found"}, status=404)
 
     if request.method == "GET":
-        return JsonResponse(
-            {
-                "id": mac.id,
-                "mac": mac.mac,
-                "netif": mac.netif.id if mac.netif else None,
-                "ip_addresses": [str(ip) for ip in mac.ip_addresses.all()],
-            }
-        )
+        data = {
+            "id": mac.id,
+            "mac": mac.mac,
+            "netif": mac.netif.id if mac.netif else None,
+            "ip_addresses": [str(ip) for ip in mac.ip_addresses.all()],
+        }
+    elif request.method in ( "PUT", "PATCH" ):
+        try :
+            data = json.loads(request.body)
+        except Exception:
+            data = { "error": "Invalid JSON" }
+            status = 400
+            return JsonResponse(data, status=status)
+
+        if "mac" in data:
+            mac.mac = data["mac"]
+        if "netif" in data:
+            if data["netif"] is None:
+                mac.netif = None
+            else :
+                try:
+                    mac.netif_id = int(data["netif"])
+                except Exception:
+                    data = { "error": "Invalid netif id" }
+                    status = 400
+                    return JsonResponse(data, status=status)
+
+        mac.save()
+        data = {
+            "id": mac.id,
+            "mac": mac.mac,
+            "netif": mac.netif.id if mac.netif else None,
+            "ip_addresses": [ str(ip) for ip in mac.ip_addresses.all() ],
+        }
+        
     elif request.method == "DELETE":
         mac.delete()
-        return JsonResponse({"status": "deleted", "id": macaddress_id})
-    
-    return JsonResponse({"error": "GET or DELETE only"}, status=405)
-    
+        data = {
+            "status": "deleted", "id": macaddress_id,
+        }
+    else :
+        data = {
+            "status": "GET, PUT, PATCH, DELETE only"
+        }
+        status = 405
+
+    return JsonResponse(data, status=status)
 
 @csrf_exempt
 def macaddress_list_api(request):
