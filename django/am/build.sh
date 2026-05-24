@@ -199,41 +199,17 @@ add_view()
 
 update_init()
 {
-  items="models admin"
-  for item in ${items}; do
-    cd ${project}/${application}/${item}/
-    rm -f __init__.py
-
-    modules=`find *.py | grep -v '__init__'`
-    for module in ${modules}; do
-      echo "PYTHON: $module"
-      class=`cat $module | grep -e '^class ' | \
-        sed -E 's/class ([A-Za-z0-9_]*).*/\1/'`
-      module=`basename $module .py`
-      echo "CLASS: $class"
-      echo "from .${module} import ${class}" >> __init__.py
-    done
-
-    cd ${top_dir}
-  done
-
-  items="views"
-  for item in ${items}; do
-    cd ${project}/${application}/${item}/
-    rm -f __init__.py
-
-    modules=`find *.py | grep -v '__init__'`
-    for module in ${modules}; do
-      echo "PYTHON: $module"
-      funcs=`cat $module | grep -e '^def ' | \
-        sed -E 's/def ([A-Za-z0-9_]*).*/\1/'`
-      module=`basename $module .py`
-      for func in $funcs; do
-        echo "from .${module} import ${func}" >> __init__.py
-      done
-    done
-    cd ${top_dir}
-  done
+  ./generate_init.py \
+      -o ${project}/${application}/models/__init__.py \
+      myproject/myapp/models/
+  
+  ./generate_init.py \
+      -o ${project}/${application}/views/__init__.py \
+      myproject/myapp/views/
+  
+  ./generate_init.py \
+      -o ${project}/${application}/admin/__init__.py \
+      myproject/myapp/admin/
 }
 
 update_url()
