@@ -131,6 +131,76 @@ log()
   cat ${project}/nohup.out
 }
 
+generate()
+{
+  mkdir -p ${workdir}/${application}/models/
+  rm -rf   ${workdir}/${application}/models.py
+  python3 generate_model.py template/app/device.yaml \
+     > ${workdir}/${application}/models/device.py
+  
+  mkdir -p ${workdir}/${application}/admin/
+  rm -rf   ${workdir}/${application}/admin.py
+  python3 generate_admin.py template/app/device.yaml \
+     > ${workdir}/${application}/admin/device_admin.py
+
+  mkdir -p ${workdir}/${application}/views/
+  rm -rf   ${workdir}/${application}/views.py
+  python3 generate_view.py template/app/device.yaml \
+     > ${workdir}/${application}/views/device_view.py
+
+}
+
+gen()
+{
+  generate
+}
+
+update_ini()
+{
+  cd ${workdir}/${application}/models
+  {
+    echo "# auo-generated"
+    for f in *.py; do
+      if [ "$f" = "__init__.py" ]; then
+        continue
+      fi
+
+      class=`cat "$f" | grep -Eo 'class\s+\w+' | awk '{ print $2 }'`
+      module=`echo "$f" | sed -e 's/\.py$//'`
+      echo "from .${module} import ${class}"
+    done
+  } > __init__.py
+
+  cd $top_dir
+  
+  
+  cd ${workdir}/${application}/admin
+  {
+    echo "# auo-generated"
+    for f in *_admin.py; do
+      #class=`cat "$f" | grep -Eo 'register\(([^)]+)\)' \
+      #        | sed -E 's/register\(([^)]+)\)/\1/'`
+      module=`echo "$f" | sed -e 's/\.py$//'`
+      #echo "from .${module} import ${class}Admin"
+      echo "from . import ${module}"
+    done
+  } > __init__.py
+
+  cd $top_dir
+  
+  cd ${workdir}/${application}/views
+  {
+    echo "# auo-generated"
+    for f in *_view.py; do
+      class=`cat "$f" | grep -Eo 'class\s+\w+' | awk '{ print $2 }'`
+      module=`echo "$f" | sed -e 's/\.py$//'`
+      echo "from .${module} import ${class}"
+    done
+  } > __init__.py
+
+  cd $top_dir
+}
+
 migrate()
 {
   echo "INFO: migrate"
