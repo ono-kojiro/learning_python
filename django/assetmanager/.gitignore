@@ -2,5 +2,5 @@
 *.crt
 *.key
 *.pem
-asset_manager
+work/
 
