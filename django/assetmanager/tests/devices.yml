@@ -1,0 +1,14 @@
+---
+- name: TestDevice1
+  serial_number:   AAAAAAAAAAA
+- name: TestDevice2
+  serial_number:   BBBBBBBBBBB
+- name: TestDevice3
+  serial_number:   CCCCCCCCCCC
+- name: TestDevice4
+  serial_number:   DDDDDDDDDDD
+- name: TestDevice5
+  serial_number:   EEEEEEEEEEE
+- name: TestDevice6
+  serial_number:   FFFFFFFFFFF
+

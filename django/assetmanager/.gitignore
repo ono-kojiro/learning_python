@@ -3,4 +3,5 @@
 *.key
 *.pem
 work/
+__pycache__/
 

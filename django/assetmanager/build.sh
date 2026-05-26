@@ -147,7 +147,15 @@ generate()
   rm -rf   ${workdir}/${application}/views.py
   python3 generate_view.py template/app/device.yaml \
      > ${workdir}/${application}/views/device_view.py
+  
+  python3 generate_url.py -o ${workdir}/${application}/urls_api.py \
+     template/app/device.yaml
 
+  mkdir -p ${workdir}/${application}/serializers/
+  rm -rf   ${workdir}/${application}/serializers.py
+  python3 generate_serializer.py \
+    -o ${workdir}/${application}/serializers/device_serializer.py \
+    template/app/device.yaml
 }
 
 gen()
@@ -199,6 +207,31 @@ update_ini()
   } > __init__.py
 
   cd $top_dir
+  
+  cd ${workdir}/${application}/serializers
+  {
+    echo "# auo-generated"
+    for f in *_serializer.py; do
+      class=`cat "$f" | grep -Eo '^class\s+\w+' | awk '{ print $2 }'`
+      module=`echo "$f" | sed -e 's/\.py$//'`
+      echo "from .${module} import ${class}"
+    done
+  } > __init__.py
+
+  cd $top_dir
+}
+
+update_url()
+{
+  urls_py="${workdir}/${project}/urls.py"
+    
+  target="from django.urls import path, include"
+  grep -q "$target" $urls_py || \
+    sed -i "s/from django.urls import path/$target/" $urls_py
+
+  grep -q "path('api/', include('myapp.urls_api'))" $urls_py || \
+    sed -i "/^]/i\    path('api/', include('myapp.urls_api'))," $urls_py
+
 }
 
 migrate()
