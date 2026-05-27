@@ -48,6 +48,17 @@ def render_relation_field(field_def, ftype):
         args.append(render_default(k, v))
 
     return args
+        
+def generate_related_models(fp, models):
+    related = []
+    for name, model_def in models.items():
+        for fname, field_def in model_def["fields"].items():
+            ftype = field_def["type"]
+            if ftype in [ "ForeignKey", "OneToOneField" ]:
+                val = field_def["to"]
+                related.append(val)
+    return related
+
 
 def generate_model(fp, data):
     for name, model_def in data["models"].items():
@@ -114,6 +125,10 @@ def main():
     for filepath in args:
         fp_in = open(filepath, mode="r", encoding="utf-8")
         data = yaml.safe_load(fp_in)
+
+        related_models = generate_related_models(fp, data['models'])
+        for related_model in related_models:
+            fp.write('from myapp.models import {0}\n'.format(related_model))
 
         generate_model(fp, data)
         fp_in.close()

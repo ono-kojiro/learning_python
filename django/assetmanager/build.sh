@@ -129,7 +129,7 @@ generate()
     rm -rf   ${workdir}/${application}/${component}.py
   done
 
-  entities="device ipv4"
+  entities="device netif ipv4"
   for entity in ${entities}; do
     template="template/app/${entity}.yaml"
 
