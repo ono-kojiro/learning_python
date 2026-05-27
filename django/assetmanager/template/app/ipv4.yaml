@@ -1,0 +1,28 @@
+---
+models:
+  IPv4:
+    meta:
+      verbose_name: "IPv4"
+      verbose_name_plural: "IPv4"
+
+    fields:
+      method:
+        type: CharField
+        max_length: 16
+        null: false
+        blank: false
+        default: "manual"
+
+      addresses:
+        type: JSONField
+        default: list
+        help_text: "CIDR Format (ex. [ 192.168.1.72/24 ])"
+
+      gateway:
+        type: CharField
+        max_length: 64
+   
+      dns:
+        type: JSONField
+        default: list
+        help_text: "list of DNS servers" 
