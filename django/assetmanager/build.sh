@@ -122,29 +122,39 @@ log()
 
 generate()
 {
-  mkdir -p ${workdir}/${application}/models/
-  rm -rf   ${workdir}/${application}/models.py
-  python3 generate_model.py template/app/device.yaml \
-     > ${workdir}/${application}/models/device.py
-  
-  mkdir -p ${workdir}/${application}/admin/
-  rm -rf   ${workdir}/${application}/admin.py
-  python3 generate_admin.py template/app/device.yaml \
-     > ${workdir}/${application}/admin/device_admin.py
+  components="models admin views serializers"
 
-  mkdir -p ${workdir}/${application}/views/
-  rm -rf   ${workdir}/${application}/views.py
-  python3 generate_view.py template/app/device.yaml \
-     > ${workdir}/${application}/views/device_view.py
+  for component in ${components}; do
+    mkdir -p ${workdir}/${application}/${component}/
+    rm -rf   ${workdir}/${application}/${component}.py
+  done
+
+  entities="device"
+  for entity in ${entities}; do
+    template="template/app/${entity}.yaml"
+
+    python3 generate_model.py ${template} \
+      > ${workdir}/${application}/models/${entity}_model.py
   
+    python3 generate_admin.py ${template} \
+      > ${workdir}/${application}/admin/${entity}_admin.py
+
+    python3 generate_view.py ${template} \
+      > ${workdir}/${application}/views/${entity}_view.py
+  
+    python3 generate_serializer.py \
+      -o ${workdir}/${application}/serializers/${entity}_serializer.py \
+      ${template}
+  done
+
+  templates=""
+  for entity in ${entities}; do
+    templates="${templates} template/app/${entity}.yaml"
+  done
+
   python3 generate_url.py -o ${workdir}/${application}/urls_api.py \
-     template/app/device.yaml
+     ${templates}
 
-  mkdir -p ${workdir}/${application}/serializers/
-  rm -rf   ${workdir}/${application}/serializers.py
-  python3 generate_serializer.py \
-    -o ${workdir}/${application}/serializers/device_serializer.py \
-    template/app/device.yaml
 }
 
 gen()
