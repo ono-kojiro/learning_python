@@ -12,13 +12,13 @@ def usage():
 
 def render_default(k, v):
     if k == "default" and (v in [ "list", "dict" ]):
-        ret = ', default={0}'.format(v)
+        ret = 'default={0}'.format(v)
     else :
-        ret = ', {0}={1}'.format(k, repr(v))
+        ret = '{0}={1}'.format(k, repr(v))
     return ret
 
 def render_simple_field(field_def):
-    args = ''
+    args = []
 
     for k, v in field_def.items():
         if k == "type":
@@ -26,7 +26,26 @@ def render_simple_field(field_def):
         if k is None:
             k = 'null'
              
-            args += render_default(k, v)
+        args.append(render_default(k, v))
+
+    return args
+
+def render_relation_field(field_def, ftype):
+    args = []
+
+    args.append('to={0}'.format(field_def['to']))
+
+    val = field_def.get('on_delete', 'models.CASCADE')
+    args.append('on_delete={0}'.format(val))
+
+    for k, v in field_def.items():
+        if k in [ "type", "to", "on_delete" ]:
+            continue
+
+        if k is None:
+            k = 'null'
+             
+        args.append(render_default(k, v))
 
     return args
 
@@ -36,10 +55,14 @@ def generate_model(fp, data):
         
         for fname, field_def in model_def["fields"].items():
             ftype = field_def["type"]
-            args = render_simple_field(field_def)
 
-            args = re.sub(r'^, ', '', args)
-            fp.write('    {0} = models.{1}({2})\n'.format(fname, ftype, args))
+            if ftype in [ "ForeignKey", "OneToOneField" ]:
+                args = render_relation_field(field_def, ftype)
+            else :
+                args = render_simple_field(field_def)
+
+            arg_str = ", ".join(args)
+            fp.write('    {0} = models.{1}({2})\n'.format(fname, ftype, arg_str))
 
         if "meta" in model_def:
             fp.write("\n");
