@@ -2,6 +2,13 @@
 models:
   Device:
     fields:
+      asset_id:
+        type: CharField
+        max_length: 100
+        null: false
+        blank: false
+        unique: true
+
       name:
         type: CharField
         max_length: 100

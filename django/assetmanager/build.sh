@@ -55,6 +55,8 @@ all()
 
   replace
   allowed_hosts
+  generate
+  update_ini
   migrate
   run
 }
@@ -101,7 +103,7 @@ replace()
 replace_installed_apps()
 {
   settings_py="${workdir}/${project}/settings.py"
-  cp -f template/${project}/installed_apps.yml ${workdir}/${project}/
+  cp -f template/project/installed_apps.yml ${workdir}/${project}/
  
   cat ${settings_py} | grep -e '^import yaml$'
   if [ "$?" -ne 0 ]; then
@@ -111,19 +113,6 @@ replace_installed_apps()
   name='INSTALLED_APPS'
   python3 replace_list.py -n ${name} -p ${project} ${settings_py} > settings.py
   mv -f settings.py ${settings_py}
-}
-
-replace_url()
-{
-  cp -f template/${project}/urls.py \
-     ${project}/${project}/
-
-  cp -f template/${project}/urlpatterns.yml \
-     ${project}/${project}/
-
-  cp -f template/${application}/urls.py \
-     ${project}/${application}/
-
 }
 
 log()
