@@ -6,6 +6,13 @@ models:
       verbose_name_plural: "IPv4"
 
     fields:
+      ipv4_id:
+        type: CharField
+        max_length: 100
+        null: false
+        blank: false
+        unique: true
+
       method:
         type: CharField
         max_length: 16

@@ -6,6 +6,13 @@ models:
       verbose_name_plural: "NetIF"
 
     fields:
+      netif_id:
+        type: CharField
+        max_length: 100
+        null: false
+        blank: false
+        unique: true
+
       name:
         type: CharField
         max_length: 64

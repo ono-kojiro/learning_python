@@ -1,14 +1,20 @@
 ---
 - name: TestDevice1
+  device_id: ID00000001
   serial_number:   AAAAAAAAAAA
 - name: TestDevice2
+  device_id: ID00000002
   serial_number:   BBBBBBBBBBB
 - name: TestDevice3
+  device_id: ID00000003
   serial_number:   CCCCCCCCCCC
 - name: TestDevice4
+  device_id: ID00000004
   serial_number:   DDDDDDDDDDD
 - name: TestDevice5
+  device_id: ID00000005
   serial_number:   EEEEEEEEEEE
 - name: TestDevice6
+  device_id: ID00000006
   serial_number:   FFFFFFFFFFF
 

@@ -57,8 +57,9 @@ all()
   allowed_hosts
   generate
   update_ini
+  update_url
   migrate
-  run
+  start
 }
 
 startproject()

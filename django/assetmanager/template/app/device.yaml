@@ -2,7 +2,7 @@
 models:
   Device:
     fields:
-      asset_id:
+      device_id:
         type: CharField
         max_length: 100
         null: false
