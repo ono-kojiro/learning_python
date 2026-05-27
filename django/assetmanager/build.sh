@@ -164,22 +164,9 @@ gen()
 
 update_ini()
 {
-  cd ${workdir}/${application}/models
-  {
-    echo "# auo-generated"
-    for f in *.py; do
-      if [ "$f" = "__init__.py" ]; then
-        continue
-      fi
-
-      class=`cat "$f" | grep -Eo 'class\s+\w+' | awk '{ print $2 }'`
-      module=`echo "$f" | sed -e 's/\.py$//'`
-      echo "from .${module} import ${class}"
-    done
-  } > __init__.py
-
-  cd $top_dir
-  
+  ./generate_ini.py \
+     -o ${workdir}/${application}/models/__init__.py \
+        ${workdir}/${application}/models/*.py
   
   cd ${workdir}/${application}/admin
   {
@@ -195,29 +182,13 @@ update_ini()
 
   cd $top_dir
   
-  cd ${workdir}/${application}/views
-  {
-    echo "# auo-generated"
-    for f in *_view.py; do
-      class=`cat "$f" | grep -Eo 'class\s+\w+' | awk '{ print $2 }'`
-      module=`echo "$f" | sed -e 's/\.py$//'`
-      echo "from .${module} import ${class}"
-    done
-  } > __init__.py
+  ./generate_ini.py \
+     -o ${workdir}/${application}/views/__init__.py \
+        ${workdir}/${application}/views/*.py
 
-  cd $top_dir
-  
-  cd ${workdir}/${application}/serializers
-  {
-    echo "# auo-generated"
-    for f in *_serializer.py; do
-      class=`cat "$f" | grep -Eo '^class\s+\w+' | awk '{ print $2 }'`
-      module=`echo "$f" | sed -e 's/\.py$//'`
-      echo "from .${module} import ${class}"
-    done
-  } > __init__.py
-
-  cd $top_dir
+  ./generate_ini.py \
+     -o ${workdir}/${application}/serializers/__init__.py \
+        ${workdir}/${application}/serializers/*.py
 }
 
 update_url()
