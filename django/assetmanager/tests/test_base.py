@@ -49,7 +49,7 @@ def test_add_netifs(configs):
         print(item, file=sys.stderr)
 
         params = {
-            "devicd": item["device"],
+            "device": item["device"],
             "name":   item["name"],
         }
         res = requests.get("{0}".format(url), params=params)

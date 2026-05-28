@@ -52,25 +52,28 @@ def main():
         
     fp.write('from rest_framework import routers\n')
 
+    models = []
+
     for filepath in args:
         fp_in = open(filepath, mode="r", encoding="utf-8")
         data = yaml.safe_load(fp_in)
 
-        model = data['name']
+        models.append(data['name'])
+        fp_in.close()
 
+    for model in models:
         fp.write('from myapp.views.{0}_view import {1}ViewSet\n'.format(
             model.lower(), model))
 
-        fp.write('\n')
-        fp.write('router = routers.DefaultRouter()\n')
-        fp.write('\n')
+    fp.write('\n')
+    fp.write('router = routers.DefaultRouter()\n')
+    fp.write('\n')
 
+    for model in models:
         fp.write('router.register(r"{0}s", {1}ViewSet)\n'.format(
             model.lower(), model))
-        fp.write('\n')
-        fp.write('urlpatterns = router.urls\n')
-        
-        fp_in.close()
+    fp.write('\n')
+    fp.write('urlpatterns = router.urls\n')
 
     if output is not None:
         fp.close()

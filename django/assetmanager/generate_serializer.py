@@ -96,11 +96,11 @@ def main():
         fp.write('class {0}Serializer(serializers.ModelSerializer):\n'.format(
             model))
 
-        for fname, field_def in data['fields'].items():
-            if field_def['type'] in [ 'ForeignKey', 'OneToOneField']:
-                to_model = field_def['to']
-                fp.write('    {0} = {1}Serializer(read_only=True)\n'.format(
-                    fname, to_model))
+#        for fname, field_def in data['fields'].items():
+#            if field_def['type'] in [ 'ForeignKey', 'OneToOneField']:
+#                to_model = field_def['to']
+#                fp.write('    {0} = {1}Serializer(read_only=True)\n'.format(
+#                    fname, to_model))
 
         fp.write('\n')
         fp.write('    class Meta:\n')
