@@ -10,20 +10,16 @@ import yaml
 def usage():
     print(f"Usage : {sys.argv[0]} -o <output> <input>...")
 
-def extract_depend(models):
+def extract_depend(data):
+    deps = []
 
-    res = {}
-    for model_name, model_def in models.items():
-        deps = []
+    fields = data.get('fields', {})
+    for field_name, field_def in fields.items():
+        ftype = field_def.get('type')
+        if ftype in ('ForeignKey', 'OneToOneField'):
+            deps.append(field_def['to'])
 
-        fields = model_def.get('fields', {})
-        for field_name, field_def in fields.items():
-            ftype = field_def.get('type')
-            if ftype in ('ForeignKey', 'OneToOneField'):
-                deps.append(field_def['to'])
-        res[model_name] = deps
-
-    return res
+    return deps
 
 def resolve_depend(target, deps, resolved=None, visited=None):
     if resolved is None:
@@ -86,14 +82,13 @@ def main():
     dep_map = {}
 
     for filepath in args:
-        #print('INFO: read {0}'.format(filepath))
         fp_in = open(filepath, mode="r", encoding="utf-8")
         data = yaml.safe_load(fp_in)
-        #print(data)
-        deps = extract_depend(data['models'])
+        deps = extract_depend(data)
 
-        dep_map.update(deps)
+        model = data['name']
 
+        dep_map[model] = deps
         fp_in.close()
 
 

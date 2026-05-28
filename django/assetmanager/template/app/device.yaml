@@ -1,21 +1,20 @@
 ---
-models:
-  Device:
-    fields:
-      device_id:
-        type: CharField
-        max_length: 100
-        null: false
-        blank: false
-        unique: true
+name: Device
+fields:
+  device_id:
+    type: CharField
+    max_length: 100
+    null: false
+    blank: false
+    unique: true
 
-      name:
-        type: CharField
-        max_length: 100
-        null: false
-        blank: false
+  name:
+    type: CharField
+    max_length: 100
+    null: false
+    blank: false
 
-      serial_number:
-        type: CharField
-        max_length: 100
-    
+  serial_number:
+    type: CharField
+    max_length: 100
+ 

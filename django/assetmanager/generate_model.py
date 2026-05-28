@@ -49,37 +49,36 @@ def render_relation_field(field_def, ftype):
 
     return args
         
-def generate_related_models(fp, models):
+def generate_related_models(fp, data):
     related = []
-    for name, model_def in models.items():
-        for fname, field_def in model_def["fields"].items():
-            ftype = field_def["type"]
-            if ftype in [ "ForeignKey", "OneToOneField" ]:
-                val = field_def["to"]
-                related.append(val)
+    for fname, field_def in data["fields"].items():
+        ftype = field_def["type"]
+        if ftype in [ "ForeignKey", "OneToOneField" ]:
+            val = field_def["to"]
+            related.append(val)
     return related
 
-
 def generate_model(fp, data):
-    for name, model_def in data["models"].items():
-        fp.write("class {0}(models.Model):\n".format(name))
-        
-        for fname, field_def in model_def["fields"].items():
-            ftype = field_def["type"]
+    name = data['name']
 
-            if ftype in [ "ForeignKey", "OneToOneField" ]:
-                args = render_relation_field(field_def, ftype)
-            else :
-                args = render_simple_field(field_def)
+    fp.write("class {0}(models.Model):\n".format(name))
+    
+    for fname, field_def in data["fields"].items():
+        ftype = field_def["type"]
 
-            arg_str = ", ".join(args)
-            fp.write('    {0} = models.{1}({2})\n'.format(fname, ftype, arg_str))
+        if ftype in [ "ForeignKey", "OneToOneField" ]:
+            args = render_relation_field(field_def, ftype)
+        else :
+            args = render_simple_field(field_def)
 
-        if "meta" in model_def:
-            fp.write("\n");
-            fp.write("    class Meta:\n")
-            for k, v in model_def["meta"].items():
-                fp.write("        {0} = {1}\n".format(k, repr(v)))
+        arg_str = ", ".join(args)
+        fp.write('    {0} = models.{1}({2})\n'.format(fname, ftype, arg_str))
+
+    if "meta" in data:
+        fp.write("\n");
+        fp.write("    class Meta:\n")
+        for k, v in data["meta"].items():
+            fp.write("        {0} = {1}\n".format(k, repr(v)))
 
 def main():
     ret = 0
@@ -126,7 +125,7 @@ def main():
         fp_in = open(filepath, mode="r", encoding="utf-8")
         data = yaml.safe_load(fp_in)
 
-        related_models = generate_related_models(fp, data['models'])
+        related_models = generate_related_models(fp, data)
         for related_model in related_models:
             fp.write('from myapp.models import {0}\n'.format(related_model))
 

@@ -121,6 +121,11 @@ log()
   cat ${project}/nohup.out
 }
 
+depend()
+{
+   python3 generate_depend.py template/app/*.yaml > depend.yaml
+}
+
 generate()
 {
   components="models admin views serializers"
@@ -145,6 +150,7 @@ generate()
   
     python3 generate_serializer.py \
       -o ${workdir}/${application}/serializers/${entity}_serializer.py \
+      -d depend.yaml \
       ${template}
   done
 

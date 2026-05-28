@@ -4,13 +4,7 @@ import sys
 import re
 
 import getopt
-
 import yaml
-
-#from django.contrib import admin
-#from myapp.models import Device
-
-#admin.register(Device)
 
 def usage():
     print(f"Usage : {sys.argv[0]} -o <output> <input>...")
@@ -56,22 +50,17 @@ def main():
 
     fp.write('from django.contrib import admin\n')
 
-    models = []
-
     for filepath in args:
         fp_in = open(filepath, mode="r", encoding="utf-8")
         data = yaml.safe_load(fp_in)
-        for model in data['models']:
-            models.append(model)
-        fp_in.close()
 
-    for model in models:
+        model = data['name']
+
         fp.write('from myapp.models import {0}\n'.format(model))
-
-    fp.write('\n')
-    
-    for model in models:
+        fp.write('\n')
         fp.write('admin.site.register({0})\n'.format(model))
+        
+        fp_in.close()
 
     if output is not None:
         fp.close()

@@ -1,35 +1,36 @@
 ---
-models:
-  IPv4:
-    meta:
-      verbose_name: "IPv4"
-      verbose_name_plural: "IPv4"
+name: IPv4
 
-    fields:
-      ipv4_id:
-        type: CharField
-        max_length: 100
-        null: false
-        blank: false
-        unique: true
+meta:
+  verbose_name: "IPv4"
+  verbose_name_plural: "IPv4"
 
-      method:
-        type: CharField
-        max_length: 16
-        null: false
-        blank: false
-        default: "manual"
+fields:
+  ipv4_id:
+    type: CharField
+    max_length: 100
+    null: false
+    blank: false
+    unique: true
 
-      addresses:
-        type: JSONField
-        default: list
-        help_text: "CIDR Format (ex. [ 192.168.1.72/24 ])"
+  method:
+    type: CharField
+    max_length: 16
+    null: false
+    blank: false
+    default: "manual"
 
-      gateway:
-        type: CharField
-        max_length: 64
-   
-      dns:
-        type: JSONField
-        default: list
-        help_text: "list of DNS servers" 
+  addresses:
+    type: JSONField
+    default: list
+    help_text: "CIDR Format (ex. [ 192.168.1.72/24 ])"
+
+  gateway:
+    type: CharField
+    max_length: 64
+
+  dns:
+    type: JSONField
+    default: list
+    help_text: "list of DNS servers"
+

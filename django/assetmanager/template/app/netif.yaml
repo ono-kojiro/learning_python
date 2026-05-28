@@ -1,33 +1,32 @@
 ---
-models:
-  NetIF:
-    meta:
-      verbose_name: "NetIF"
-      verbose_name_plural: "NetIF"
+name: NetIF
+meta:
+  verbose_name: "NetIF"
+  verbose_name_plural: "NetIF"
 
-    fields:
-      netif_id:
-        type: CharField
-        max_length: 100
-        null: false
-        blank: false
-        unique: true
+fields:
+  netif_id:
+    type: CharField
+    max_length: 100
+    null: false
+    blank: false
+    unique: true
 
-      name:
-        type: CharField
-        max_length: 64
-        help_text: "Interface name (ex. eth0)"
+  name:
+    type: CharField
+    max_length: 64
+    help_text: "Interface name (ex. eth0)"
 
-      device:
-        type: ForeignKey
-        to: Device
-        on_delete: models.CASCADE
-        related_name: "netifs"
+  device:
+    type: ForeignKey
+    to: Device
+    on_delete: models.CASCADE
+    related_name: "netifs"
 
-      ipv4:
-        type: OneToOneField
-        to: IPv4
-        on_delete: models.SET_NULL
-        null: true
-        blank: true
+  ipv4:
+    type: OneToOneField
+    to: IPv4
+    on_delete: models.SET_NULL
+    null: true
+    blank: true
 
