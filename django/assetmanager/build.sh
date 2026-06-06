@@ -249,6 +249,27 @@ runserver()
 
 runserver_plus()
 {
+  if [ -z "${SERVER_CRT}" ]; then
+    echo "ERROR: no SERVER_CRT variable" 1>&2
+    exit 1
+  fi
+  
+  if [ -z "${SERVER_KEY}" ]; then
+    echo "ERROR: no SERVER_KEY variable" 1>&2
+    exit 1
+  fi
+  
+  if [ ! -f "${SERVER_CRT}" ]; then
+    echo "ERROR: ${SERVER_CRT} not found" 1>&2
+    exit 1
+  fi
+  
+  if [ ! -f "${SERVER_KEY}" ]; then
+    echo "ERROR: ${SERVER_KEY} not found" 1>&2
+    exit 1
+  fi
+  
+
   if [ ! -e "${CERTFILE}" ]; then
     cat ${SERVER_CRT} ${SERVER_KEY} > ${CERTFILE}
   fi
