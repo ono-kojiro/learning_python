@@ -55,6 +55,9 @@ all()
 
   replace
   allowed_hosts
+
+  depend
+
   generate
   update_ini
   update_url
