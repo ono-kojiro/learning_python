@@ -66,6 +66,16 @@ def main():
         fp.write('    queryset = {0}.objects.all()\n'.format(model))
         fp.write('    serializer_class = {0}\n'.format(serializer))
 
+        # lookup_field を自動設定
+        lookup_field = None
+        for fname in data["fields"].keys():
+            if fname.endswith("_id") and fname != "id":
+                lookup_field = fname
+                break
+
+        if lookup_field:
+            fp.write(f'    lookup_field = "{lookup_field}"\n')
+            
         fp_in.close()
 
     if output is not None:

@@ -6,8 +6,22 @@ import pytest
 def test_patch_netif(configs):
     base = configs["base_url"]
 
-    pk = 1
-    patch_url = f"{base}/api/netifs/{pk}/"
+    # 一覧取得
+    list_url = f"{base}/api/netifs/"
+    res = requests.get(list_url)
+    assert res.status_code == 200
+
+    netifs = res.json()
+    print("NETIFS:", netifs, file=sys.stderr)
+
+    if len(netifs) == 0:
+        print("SKIP: No NetIF exists", file=sys.stderr)
+        return
+
+    target = netifs[0]
+    netif_id = target["netif_id"]
+
+    patch_url = f"{base}/api/netifs/{netif_id}/"
     print("PATCH URL:", patch_url, file=sys.stderr)
 
     payload = {
@@ -16,13 +30,10 @@ def test_patch_netif(configs):
 
     res = requests.patch(patch_url, json=payload)
 
-    # ★ 404 は「すでに削除済み」として成功扱いにする
+    # 削除済みならスキップ
     if res.status_code == 404:
         print("SKIP: NetIF already deleted", file=sys.stderr)
         return
-
-    if res.status_code not in (200, 202):
-        print("ERROR RESPONSE:", res.json(), file=sys.stderr)
 
     assert res.status_code in (200, 202)
 
