@@ -24,7 +24,7 @@ fields:
     related_name: "netifs"
 
   ipv4:
-    type: OneToOneField
+    type: ForeignKey
     to: IPv4
     on_delete: SET_NULL
     null: true

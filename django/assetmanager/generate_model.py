@@ -91,6 +91,14 @@ def generate_model(fp, data):
     fp.write("\n")
     fp.write("    def __str__(self):\n")
 
+    # IPv4 モデルだけ特別扱い
+    if name == "IPv4":
+        fp.write("        # IPv4: addresses(JSONField) を優先表示\n")
+        fp.write("        if self.addresses and len(self.addresses) > 0:\n")
+        fp.write("            return f\"{self.ipv4_id}: {self.addresses[0]}\"\n")
+        fp.write("        return f\"{self.ipv4_id} (no IP address)\"\n")
+        return
+
     id_field = None
     name_field = None
     address_field = None

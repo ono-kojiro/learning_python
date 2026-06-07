@@ -65,6 +65,9 @@ all()
   update_ini
   update_url
   migrate
+
+  loaddata
+
   start
 }
 
@@ -177,6 +180,12 @@ generate()
       -o ${workdir}/${application}/serializers/${entity}_serializer.py \
       -d depend.yaml \
       ${template}
+    
+    echo "INFO: generate fixture for $entity"
+    mkdir -p tests/data/
+    python3 generate_fixture.py \
+      -o tests/data/test_${entity}-fixtures.yaml \
+      ${template}
   done
 
   templates=""
@@ -250,6 +259,15 @@ migrate()
   python3 manage.py createsuperuser --noinput
   set +a
 
+  cd $top_dir
+}
+
+loaddata()
+{
+  echo "INFO: loaddata"
+  cd ${workdir}
+  ls ${top_dir}/tests/data/test_*.yaml
+  python3 manage.py loaddata ${top_dir}/tests/data/test_*.yaml
   cd $top_dir
 }
 
