@@ -97,7 +97,6 @@ def generate_model(fp, data):
         fp.write("        if self.addresses and len(self.addresses) > 0:\n")
         fp.write("            return f\"{self.ipv4_id}: {self.addresses[0]}\"\n")
         fp.write("        return f\"{self.ipv4_id} (no IP address)\"\n")
-        return
 
     id_field = None
     name_field = None
