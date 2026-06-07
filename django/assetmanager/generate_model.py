@@ -87,6 +87,41 @@ def generate_model(fp, data):
         arg_str = ", ".join(args)
         fp.write('    {0} = models.{1}({2})\n'.format(fname, ftype, arg_str))
 
+    # __str__ の自動生成
+    fp.write("\n")
+    fp.write("    def __str__(self):\n")
+
+    id_field = None
+    name_field = None
+    address_field = None
+    first_field = None
+
+    for fname in data["fields"].keys():
+        if first_field is None:
+            first_field = fname
+        if fname.endswith("_id"):
+            id_field = fname
+        if fname == "name":
+            name_field = fname
+        if fname == "address":
+            address_field = fname
+
+    # 優先順位: id + (name or address) → name → address → first_field
+    if id_field:
+        if name_field:
+            fp.write(f'        return f"{{self.{id_field}}}: {{self.{name_field}}}"\n')
+        elif address_field:
+            fp.write(f'        return f"{{self.{id_field}}}: {{self.{address_field}}}"\n')
+        else:
+            fp.write(f'        return f"{{self.{id_field}}} (no IP address)"\n')
+    elif name_field:
+        fp.write(f'        return f"{{self.{name_field}}}"\n')
+    elif address_field:
+        fp.write(f'        return f"{{self.{address_field}}}"\n')
+    else:
+        fp.write(f'        return f"{{self.{first_field}}}"\n')
+
+
     if "meta" in data:
         fp.write("\n");
         fp.write("    class Meta:\n")
