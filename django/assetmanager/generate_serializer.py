@@ -124,7 +124,7 @@ def main():
             model))
         
         write_fields = []
-        model_fields = []
+        model_fields = [ 'id' ]
 
         for fname, field_def in data['fields'].items():
             pprint(field_def)
