@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 top_dir="$( cd "$( dirname "$0" )" >/dev/null 2>&1 && pwd )"
 cd $top_dir
 
@@ -57,6 +59,7 @@ all()
   allowed_hosts
 
   depend
+  merge_models
 
   generate
   update_ini
@@ -106,11 +109,12 @@ replace()
 
 replace_installed_apps()
 {
+  echo "INFO: replace_installed_apps"
   settings_py="${workdir}/${project}/settings.py"
   cp -f template/project/installed_apps.yml ${workdir}/${project}/
  
-  cat ${settings_py} | grep -e '^import yaml$'
-  if [ "$?" -ne 0 ]; then
+  num=`cat ${settings_py} | grep -e '^import yaml$' | wc -l`
+  if [ "$num" -eq 0 ]; then
     sed -i -e "/from pathlib import Path/a import yaml" $settings_py
   fi
   
@@ -126,7 +130,21 @@ log()
 
 depend()
 {
-   python3 generate_depend.py template/app/*.yaml > depend.yaml
+   cmd="python3 generate_depend.py -o depend.yaml template/app/*.yaml"
+   echo $cmd
+   $cmd
+}
+
+merge_models()
+{
+   all_models_yaml="all-models.yaml"
+   model_yamls=`find ./template/app/ -name "*.yaml"`
+   {
+     for model_yaml in $model_yamls; do
+       cat ${model_yaml}
+     done
+
+   } > ${all_models_yaml}
 }
 
 generate()
@@ -142,15 +160,19 @@ generate()
   for entity in ${entities}; do
     template="template/app/${entity}.yaml"
 
-    python3 generate_model.py ${template} \
+    echo "INFO: generate model for $entity"
+    python3 generate_model.py -d depend.yaml ${template} \
       > ${workdir}/${application}/models/${entity}_model.py
   
+    echo "INFO: generate admin for $entity"
     python3 generate_admin.py ${template} \
       > ${workdir}/${application}/admin/${entity}_admin.py
 
+    echo "INFO: generate view for $entity"
     python3 generate_view.py ${template} \
       > ${workdir}/${application}/views/${entity}_view.py
   
+    echo "INFO: generate serializer for $entity"
     python3 generate_serializer.py \
       -o ${workdir}/${application}/serializers/${entity}_serializer.py \
       -d depend.yaml \

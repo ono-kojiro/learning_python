@@ -7,12 +7,22 @@ import getopt
 
 import yaml
 
+from pprint import pprint
+
 def usage():
     print(f"Usage : {sys.argv[0]} -o <output> <input>...")
+
+def read_yaml(filepath):
+    fp = open(filepath, mode="r", encoding="utf-8")
+    data = yaml.safe_load(fp)
+    fp.close()
+    return data
 
 def render_default(k, v):
     if k == "default" and (v in [ "list", "dict" ]):
         ret = 'default={0}'.format(v)
+    elif k == "on_delete":
+        ret = '{0}=models.{1}'.format(k, v)
     else :
         ret = '{0}={1}'.format(k, repr(v))
     return ret
@@ -33,11 +43,14 @@ def render_simple_field(field_def):
 def render_relation_field(field_def, ftype):
     args = []
 
-    args.append('to={0}'.format(field_def['to']))
+    args.append('to={0}'.format(repr(field_def['to'])))
 
-    val = field_def.get('on_delete', 'models.CASCADE')
-    args.append('on_delete={0}'.format(val))
-
+    val = field_def.get('on_delete', 'CASCADE')
+    if val.startswith("models."):
+        args.append('on_delete={0}'.format(val))
+    else :
+        args.append('on_delete=models.{0}'.format(val))
+            
     for k, v in field_def.items():
         if k in [ "type", "to", "on_delete" ]:
             continue
@@ -86,11 +99,12 @@ def main():
     try:
         options, args = getopt.getopt(
             sys.argv[1:],
-            "hvo:",
+            "hvo:d:",
             [
                 "help",
                 "version",
                 "output=",
+                "depend=",
             ],
         )
     except getopt.GetoptError as err:
@@ -98,6 +112,7 @@ def main():
         sys.exit(1)
 
     output = None
+    depend_yaml = None
 
     for option, optarg in options:
         if option == "-v":
@@ -108,6 +123,8 @@ def main():
             sys.exit(1)
         elif option in ("-o", "--output"):
             output = optarg
+        elif option in ("-d", "--depend"):
+            depend_yaml = optarg
         else:
             assert False, "unknown option"
 
@@ -116,8 +133,14 @@ def main():
     else :
         fp = sys.stdout
 
+    if depend_yaml is None:
+        print('ERROR: no depend option', file=sys.stderr)
+        sys.exit(1)
+
     if ret != 0:
         sys.exit(ret)
+
+    depend_map = read_yaml(depend_yaml)['dependencies']
 
     fp.write('from django.db import models\n\n')
 
@@ -125,9 +148,17 @@ def main():
         fp_in = open(filepath, mode="r", encoding="utf-8")
         data = yaml.safe_load(fp_in)
 
-        related_models = generate_related_models(fp, data)
-        for related_model in related_models:
-            fp.write('from myapp.models import {0}\n'.format(related_model))
+        print(data, file=sys.stderr)
+
+        name = data['name']
+        deps = depend_map[name]
+
+        #related_models = generate_related_models(fp, data)
+        #for related_model in related_models:
+        #    fp.write('from myapp.models import {0}\n'.format(related_model))
+
+        for dep in deps:
+            fp.write('from myapp.models import {0}\n'.format(dep))
 
         generate_model(fp, data)
         fp_in.close()

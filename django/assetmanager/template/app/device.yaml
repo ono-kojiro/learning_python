@@ -17,4 +17,6 @@ fields:
   serial_number:
     type: CharField
     max_length: 100
+    null: false
+    blank: false
  

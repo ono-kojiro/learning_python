@@ -20,13 +20,13 @@ fields:
   device:
     type: ForeignKey
     to: Device
-    on_delete: models.CASCADE
+    on_delete: CASCADE
     related_name: "netifs"
 
   ipv4:
     type: OneToOneField
     to: IPv4
-    on_delete: models.SET_NULL
+    on_delete: SET_NULL
     null: true
     blank: true
 
