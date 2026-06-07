@@ -50,4 +50,3 @@ def save_json():
 
         return path
     return _save
-

@@ -123,10 +123,14 @@ def main():
         fp.write('class {0}Serializer(serializers.ModelSerializer):\n'.format(
             model))
         
+        write_fields = []
+        model_fields = []
+
         for fname, field_def in data['fields'].items():
             pprint(field_def)
             if field_def['type'] in [ 'ForeignKey', 'OneToOneField']:
                 to_model = field_def['to']
+
                 fp.write('    # for read\n')
                 fp.write('    {0} = {1}Serializer(read_only=True)\n'.format(
                     fname, to_model))
@@ -135,6 +139,7 @@ def main():
                 fp.write('    {0}_id = serializers.PrimaryKeyRelatedField(\n'.format(fname))
                 fp.write('        queryset={0}.objects.all(),\n'.format(to_model))
                 fp.write('        write_only=True,\n')
+                fp.write('        source="{0}",\n'.format(fname))
 
                 null_allowed = field_def.get("null", field_def.get(None, False))
                 blank_allowed = field_def.get("blank", False)
@@ -147,11 +152,17 @@ def main():
                 fp.write('    )\n')
                 fp.write('\n')
 
+                model_fields.append("{0}".format(fname))
+                model_fields.append("{0}_id".format(fname))
+            else :
+                model_fields.append(fname)
+
         fp.write('\n')
         fp.write('    class Meta:\n')
         fp.write('        model = {0}\n'.format(model))
-        fp.write('        fields = "__all__"\n')
-        fp.write('\n')
+
+        all_fields = list(dict.fromkeys(model_fields + write_fields))
+        fp.write('        fields = {0}\n'.format(all_fields))
         
         fp_in.close()
 

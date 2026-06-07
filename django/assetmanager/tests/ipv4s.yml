@@ -1,9 +1,3 @@
 ---
-- method: manual
-  ipv4_id: IP00000001
-  addresses:
-  - "192.168.1.100/24"
-  gateway: "192.168.1.1"
-  dns:
-  - "8.8.8.8"
-
+- ipv4_id: 1
+  address: "192.168.1.10"
