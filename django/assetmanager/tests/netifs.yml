@@ -1,5 +1,5 @@
 ---
-- name: eth0
-  netif_id: N00000001
-  device: 1
+- netif_id: "N0001"
+  name: "eth0"
+  device_id: 1
   ipv4: 1
