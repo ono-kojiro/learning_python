@@ -247,7 +247,7 @@ runserver()
   cd $top_dir
 }
 
-runserver_plus()
+generate_cert()
 {
   if [ -z "${SERVER_CRT}" ]; then
     echo "ERROR: no SERVER_CRT variable" 1>&2
@@ -269,10 +269,19 @@ runserver_plus()
     exit 1
   fi
   
-
-  if [ ! -e "${CERTFILE}" ]; then
-    cat ${SERVER_CRT} ${SERVER_KEY} > ${CERTFILE}
+  rm -rf ${CERTFILE} 
+  cat ${SERVER_CRT} ${SERVER_KEY} > ${CERTFILE}
+  num=`wc -c < ${CERTFILE}`
+  if [ "$num" -eq 0 ]; then
+    echo "EEROR: empty certfile, ${CERTFILE}" 1>&2
+    exit 1
   fi
+}
+
+runserver_plus()
+{
+  generate_cert
+
   cd ${workdir}
   python manage.py runserver_plus --cert-file ${CERTFILE} ${SERVER_ADDR_PORT}
   cd $top_dir
@@ -285,7 +294,9 @@ run()
 
 start()
 {
-  cd ${workdir}
+  generate_cert
+
+  cd ${workdir}  
   rm -f nohup.out
   nohup python manage.py runserver_plus \
     --cert-file ${CERTFILE} ${SERVER_ADDR_PORT} &
