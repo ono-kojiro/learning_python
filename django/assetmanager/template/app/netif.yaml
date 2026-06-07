@@ -22,11 +22,3 @@ fields:
     to: Device
     on_delete: CASCADE
     related_name: "netifs"
-
-  ipv4:
-    type: ForeignKey
-    to: IPv4
-    on_delete: SET_NULL
-    null: true
-    blank: true
-

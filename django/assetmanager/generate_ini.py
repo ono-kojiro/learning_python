@@ -11,17 +11,41 @@ import yaml
 def usage():
     print(f"Usage : {sys.argv[0]} -o <output> <input>...")
 
+def read_yaml(filepath):
+    fp = open(filepath, mode="r", encoding="utf-8")
+    data = yaml.safe_load(fp)
+    fp.close()
+    return data
+
+def topo_sort(depend_map):
+    visited = set()
+    order = []
+
+    def visit(model):
+        if model in visited:
+            return
+        visited.add(model)
+        for parent in depend_map.get(model, []):
+            visit(parent)
+        order.append(model)
+
+    for model in depend_map.keys():
+        visit(model)
+
+    return order
+
 def main():
     ret = 0
 
     try:
         options, args = getopt.getopt(
             sys.argv[1:],
-            "hvo:",
+            "hvo:d:",
             [
                 "help",
                 "version",
                 "output=",
+                "depend=",
             ],
         )
     except getopt.GetoptError as err:
@@ -29,6 +53,7 @@ def main():
         sys.exit(1)
 
     output = None
+    depend_yaml = None
 
     for option, optarg in options:
         if option == "-v":
@@ -39,15 +64,28 @@ def main():
             sys.exit(1)
         elif option in ("-o", "--output"):
             output = optarg
+        elif option in ("-d", "--depend"):
+            depend_yaml = optarg
         else:
             assert False, "unknown option"
+
+    print(sys.argv)
+
+    if depend_yaml is None:
+        print('ERROR: no depend option', file=sys.stderr)
+        ret += 1
 
     if ret != 0:
         sys.exit(ret)
 
-    items = []
+    depend_map = read_yaml(depend_yaml)["dependencies"]
+    # トポロジカルソート（依存関係順）
+    order = topo_sort(depend_map)
+
+    module_map = {}
 
     for filepath in args:
+
         filename = os.path.basename(filepath)
         if filename == '__init__.py' :
             continue
@@ -63,12 +101,12 @@ def main():
             line = re.sub(r'\r?\n?$', '', line)
             m = re.search(r'^class\s+(\w+)', line)
             if m :
-                name = m.group(1)
-                item = {
-                    'module': module,
-                    'class': name,
-                }
-                items.append(item)
+                cls = m.group(1)
+                if cls.endswith("Serializer"):
+                    model = re.sub(r'Serializer$', '', cls)
+                else :
+                    model = cls
+                module_map[model] = (module, cls)
 
         fp_in.close()
     
@@ -77,10 +115,10 @@ def main():
     else :
         fp = sys.stdout
 
-    for item in sorted(items, key=lambda d: d['class']):
-        module = item['module']
-        name   = item['class']
-        fp.write('from .{0} import {1}\n'.format(module, name))
+    for model in order:
+        if model in module_map:
+            module, cls = module_map[model]
+            fp.write(f"from .{module} import {cls}\n")
 
     if output is not None:
         fp.close()

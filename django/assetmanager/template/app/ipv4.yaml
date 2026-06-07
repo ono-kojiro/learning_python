@@ -34,3 +34,10 @@ fields:
     default: list
     help_text: "list of DNS servers"
 
+  netif:
+    type: ForeignKey
+    to: NetIF
+    on_delete: SET_NULL
+    null: true
+    blank: true
+

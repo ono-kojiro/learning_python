@@ -168,7 +168,7 @@ generate()
       > ${workdir}/${application}/models/${entity}_model.py
   
     echo "INFO: generate admin for $entity"
-    python3 generate_admin.py ${template} \
+    python3 generate_admin.py -d depend.yaml ${template} \
       > ${workdir}/${application}/admin/${entity}_admin.py
 
     echo "INFO: generate view for $entity"
@@ -205,7 +205,9 @@ gen()
 
 update_ini()
 {
-  ./generate_ini.py \
+  pwd
+  python3 generate_ini.py \
+     -d depend.yaml \
      -o ${workdir}/${application}/models/__init__.py \
         ${workdir}/${application}/models/*.py
   
@@ -223,11 +225,13 @@ update_ini()
 
   cd $top_dir
   
-  ./generate_ini.py \
+  python3 generate_ini.py \
+     -d depend.yaml \
      -o ${workdir}/${application}/views/__init__.py \
         ${workdir}/${application}/views/*.py
 
-  ./generate_ini.py \
+  python3 generate_ini.py \
+     -d depend.yaml \
      -o ${workdir}/${application}/serializers/__init__.py \
         ${workdir}/${application}/serializers/*.py
 }

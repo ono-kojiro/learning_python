@@ -21,25 +21,6 @@ def extract_depend(data):
 
     return deps
 
-def resolve_depend(target, deps, resolved=None, visited=None):
-    if resolved is None:
-        resolved = []
-    if visited is None:
-        visited = set()
-
-    if target in visited:
-        return resolved
-
-    visited.add(target)
-
-    for dep in deps.get(target, []):
-        resolve_depend(dep, deps, resolved, visited)
-
-    if target not in resolved:
-        resolved.append(target)
-
-    return resolved
-
 def main():
     ret = 0
 
@@ -91,19 +72,11 @@ def main():
         dep_map[model] = deps
         fp_in.close()
 
-
-    resolved = {}
-
-    for target in sorted(dep_map.keys()):
-        deps = resolve_depend(target, dep_map)
-        resolved[target] = deps[:-1]
-
     fp.write('---\n')
     fp.write(
         yaml.dump(
             {
-                #'dependencies': dep_map,
-                'dependencies': resolved,
+                'dependencies': dep_map,
             },
             sort_keys=True,
             allow_unicode=True,
