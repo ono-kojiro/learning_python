@@ -33,9 +33,20 @@ def generate_jsonfield_value(field_name, field_def):
     default = field_def.get("default", None)
 
     # addresses → CIDR のリスト
-    if field_name == "addresses":
-        return [generate_random_cidr_ipv4()]
+    #if field_name == "addresses":
+    #    cidr = generate_random_cidr_ipv4()
+    #    return [cidr]
 
+    # addresses → CIDR のリスト（複数生成に対応）
+    if field_name == "addresses":
+        # 80% の確率で 1 個、20% の確率で 2〜4 個
+        if random.random() < 0.5:
+            count = 1
+        else:
+            count = random.randint(2, 4)
+
+        return [generate_random_cidr_ipv4() for _ in range(count)]
+    
     # dns → DNS のリスト
     if field_name == "dns":
         return [generate_random_dns()]
@@ -57,6 +68,14 @@ def generate_random_dns():
     """
     return f"8.8.8.{random.randint(1, 254)}"
 
+def generate_gateway_from_cidr(cidr):
+    """
+    192.168.X.Y/24 → 192.168.X.1 を返す
+    """
+    ip, prefix = cidr.split("/")
+    a, b, c, d = ip.split(".")
+    return f"{a}.{b}.{c}.1"
+
 def generate_random_value(model, field_name, field_def):
     ftype = field_def["type"]
     null_ok = field_def.get("null", False)
@@ -66,6 +85,13 @@ def generate_random_value(model, field_name, field_def):
     if ftype == "JSONField":
         return generate_jsonfield_value(field_name, field_def)
 
+    # gateway の自動生成（addresses から計算）
+    if field_name == "gateway":
+        # 直前に生成した addresses を参照する必要がある
+        # → generate_random_value では参照できないため、
+        #    gateway は後でまとめて処理する
+        return None  # 一旦 None を返す
+    
     # CharField
     if ftype == "CharField":
         prefix = f"{model.upper()}-"
@@ -148,6 +174,12 @@ def main():
             for fname, field_def in fields.items():
                 value = generate_random_value(model, fname, field_def)
                 item["fields"][fname] = value
+
+            # gateway の後処理
+            if "addresses" in item["fields"] and "gateway" in item["fields"]:
+                addrs = item["fields"]["addresses"]
+                if addrs:
+                    item["fields"]["gateway"] = generate_gateway_from_cidr(addrs[0])
 
             fixtures.append(item)
             i += 1
