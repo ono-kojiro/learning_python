@@ -1,22 +1,15 @@
----
 name: Device
+meta:
+  verbose_name: Device
+  verbose_name_plural: Devices
 fields:
   device_id:
     type: CharField
     max_length: 100
-    null: false
-    blank: false
     unique: true
-
   name:
     type: CharField
     max_length: 100
-    null: false
-    blank: false
-
   serial_number:
     type: CharField
     max_length: 100
-    null: false
-    blank: false
- 

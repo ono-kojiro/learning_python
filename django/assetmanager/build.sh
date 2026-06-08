@@ -58,6 +58,7 @@ all()
   replace
   allowed_hosts
 
+  cmp2ref
   depend
   merge_models
 
@@ -110,6 +111,18 @@ replace()
   replace_installed_apps
 }
 
+cmp2ref()
+{
+  python3 cmp2ref.py --output template/app/device_ref.yaml \
+    --name Device template/app/*_cmp.yaml
+
+  python3 cmp2ref.py --output template/app/netif_ref.yaml \
+    --name NetIF template/app/*_cmp.yaml
+  
+  python3 cmp2ref.py --output template/app/ipv4_ref.yaml \
+    --name IPv4 template/app/*_cmp.yaml
+}
+
 replace_installed_apps()
 {
   echo "INFO: replace_installed_apps"
@@ -133,7 +146,7 @@ log()
 
 depend()
 {
-   cmd="python3 generate_depend.py -o depend.yaml template/app/*.yaml"
+   cmd="python3 generate_depend.py -o depend.yaml template/app/*_ref.yaml"
    echo $cmd
    $cmd
 }
@@ -161,7 +174,7 @@ generate()
 
   entities="device netif ipv4"
   for entity in ${entities}; do
-    template="template/app/${entity}.yaml"
+    template="template/app/${entity}_ref.yaml"
 
     echo "INFO: generate model for $entity"
     python3 generate_model.py -d depend.yaml ${template} \
