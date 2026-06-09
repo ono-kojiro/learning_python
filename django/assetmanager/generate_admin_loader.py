@@ -1,58 +1,42 @@
 #!/usr/bin/env python3
-
 import sys
-import getopt
 import yaml
-import os
-
+import getopt
 
 def usage():
-    print(f"Usage : {sys.argv[0]} -o <output> <model_yaml>...")
-
+    print(f"Usage: {sys.argv[0]} -o <output> <yaml files>")
+    sys.exit(1)
 
 def main():
     try:
-        options, args = getopt.getopt(
-            sys.argv[1:], "hvo:", ["help", "version", "output="]
-        )
-    except getopt.GetoptError as err:
-        print(str(err))
-        sys.exit(1)
+        opts, args = getopt.getopt(sys.argv[1:], "ho:", ["help", "output="])
+    except getopt.GetoptError as e:
+        print(str(e))
+        usage()
 
     output = None
 
-    for option, optarg in options:
-        if option == "-v":
+    for opt, val in opts:
+        if opt in ("-h", "--help"):
             usage()
-            sys.exit(0)
-        elif option in ("-h", "--help"):
-            usage()
-            sys.exit(0)
-        elif option in ("-o", "--output"):
-            output = optarg
+        elif opt in ("-o", "--output"):
+            output = val
 
-    if output is None:
-        print("ERROR: -o <output> is required", file=sys.stderr)
-        sys.exit(1)
+    if not output or not args:
+        usage()
 
-    if not args:
-        print("ERROR: model YAML files must be specified", file=sys.stderr)
-        sys.exit(1)
-
-    # admin.py を生成
+    # admin_loader.py を生成
     with open(output, "w", encoding="utf-8") as fp:
         fp.write("# auto-generated admin loader\n")
 
-        for filepath in args:
-            with open(filepath, "r", encoding="utf-8") as fp_in:
-                data = yaml.safe_load(fp_in)
+        for yaml_file in args:
+            with open(yaml_file, "r", encoding="utf-8") as yf:
+                data = yaml.safe_load(yf)
 
-            model = data["name"]
-            model_lower = model.lower()
+            name = data["name"]
+            lower = name.lower()
 
-            # admin/<model>_admin.py を import
-            fp.write(f"from .admin.{model_lower}_admin import *\n")
-
+            fp.write(f"from .admin.{lower}_admin import *\n")
 
 if __name__ == "__main__":
     main()

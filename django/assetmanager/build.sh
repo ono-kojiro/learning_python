@@ -215,8 +215,11 @@ generate()
 
   echo "INFO: generate admin loader"
   python3 generate_admin_loader.py \
-      -o ${workdir}/${application}/admin.py \
+      -o ${workdir}/${application}/admin_loader.py \
       ${templates}
+
+  echo "INFO: generate apps.py"
+  python3 generate_apps.py -n ${application} -o ${workdir}/${application}/apps.py
 
   rm -f ${workdir}/${application}/admin/__init__.py
 }
