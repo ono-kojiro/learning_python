@@ -21,6 +21,24 @@ def read_yaml(filepath):
 def random_string(prefix, length=6):
     return prefix + ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
 
+def random_human_name():
+    first_names = [
+        "Alice", "Bob", "Charlie", "Diana", "Eve",
+        "Frank", "Grace", "Hank", "Ivy", "Jack",
+        "Karen", "Leo", "Mia", "Nina", "Oscar",
+        "Paul", "Quinn", "Rose", "Sam", "Tina",
+        "Uma", "Vince", "Wendy", "Xavier", "Yuki", "Zoe"
+    ]
+
+    last_names = [
+        "Smith", "Johnson", "Williams", "Brown", "Jones",
+        "Miller", "Davis", "Garcia", "Rodriguez", "Wilson",
+        "Anderson", "Thomas", "Taylor", "Moore", "Jackson",
+        "Martin", "Lee", "Perez", "Thompson", "White"
+    ]
+
+    return random.choice(first_names) + " " + random.choice(last_names)
+
 def generate_random_cidr_ipv4(prefix=24):
     """
     192.168.X.Y/prefix の形式でランダム IPv4 CIDR を生成する
@@ -81,6 +99,9 @@ def generate_random_value(model, field_name, field_def):
     null_ok = field_def.get("null", False)
     default = field_def.get("default", None)
 
+    if model == "Manager" and field_name == "name":
+        return random_human_name()
+
     # JSONField は専用関数に委譲
     if ftype == "JSONField":
         return generate_jsonfield_value(field_name, field_def)
@@ -100,6 +121,13 @@ def generate_random_value(model, field_name, field_def):
     # GenericIPAddressField
     if ftype == "GenericIPAddressField":
         return f"192.168.{random.randint(0,255)}.{random.randint(1,254)}"
+
+    # ManyToManyField → 整数のリストを返す
+    if ftype == "ManyToManyField":
+        # 最低1つの関連オブジェクトを作る
+        # ここでは pk=1〜5 の中からランダムに選ぶ
+        count = random.randint(1, 3)  # 1〜3個の関連を作る
+        return [random.randint(1, 5) for _ in range(count)]
 
     # ForeignKey
     if ftype == "ForeignKey":

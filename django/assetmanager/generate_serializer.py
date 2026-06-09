@@ -1,53 +1,22 @@
 #!/usr/bin/env python3
 
 import sys
-import re
-
 import getopt
-
 import yaml
 
-from pprint import pprint
-
-def usage():
-    print(f"Usage : {sys.argv[0]} -o <output> <input>...")
-
-def read_yaml_list(filepath):
-    with open(filepath, mode="r", encoding="utf-8") as fp:
-        docs = list(yaml.safe_load_all(fp))
-    return docs
 
 def read_yaml_dict(filepath):
-    fp = open(filepath, mode="r", encoding="utf-8")
-    data = yaml.safe_load(fp)
-    fp.close()
-    return data
+    with open(filepath, mode="r", encoding="utf-8") as fp:
+        return yaml.safe_load(fp)
 
-def get_related_models(model_defs):
-    related = {}
-    for name, model_def in model_defs.items():
-        rels = []
-        for fname, field_def in model_def["fields"].items():
-            if field_def["type"] in ["ForeignKey", "OneToOneField"]:
-                rels.append(field_def["to"])
-        related[name] = rels
-    return related
 
 def main():
-    ret = 0
-
+    # ---------------------------------------------------------
+    # Parse options
+    # ---------------------------------------------------------
     try:
         options, args = getopt.getopt(
-            sys.argv[1:],
-            "hvo:d:",
-            [
-                "help",
-                "version",
-                "output=",
-                "depend=",
-                #"all-models=",
-                #"model=",
-            ],
+            sys.argv[1:], "hvo:d:", ["help", "version", "output=", "depend="]
         )
     except getopt.GetoptError as err:
         print(str(err))
@@ -55,120 +24,149 @@ def main():
 
     output = None
     depend_yml = None
-    all_models_yaml = None
-    #model = None
 
     for option, optarg in options:
-        if option == "-v":
-            usage()
-            sys.exit(1)
-        elif option in ("-h", "--help"):
-            usage()
-            sys.exit(1)
+        if option in ("-h", "--help"):
+            print(f"Usage: {sys.argv[0]} -o <output> -d depend.yaml <model_yaml>...")
+            sys.exit(0)
         elif option in ("-o", "--output"):
             output = optarg
         elif option in ("-d", "--depend"):
             depend_yml = optarg
-        #elif option in ("-a", "--all-models"):
-        #    all_models_yaml = optarg
-        #elif option in ("-m", "--model"):
-        #    model = optarg
-        else:
-            assert False, "unknown option"
-
-    if output is not None :
-        fp = open(output, mode="w", encoding="utf-8")
-    else :
-        fp = sys.stdout
 
     if depend_yml is None:
-        print('ERROR: no depend option', file=sys.stderr)
-        ret += 1
-    #if all_models_yaml is None:
-    #    print('ERROR: no all-models option', file=sys.stderr)
-    #    ret += 1
-    #if model is None:
-    #    print('ERROR: no model option', file=sys.stderr)
-    #    ret += 1
+        print("ERROR: no depend option", file=sys.stderr)
+        sys.exit(1)
 
-    if ret != 0:
-        sys.exit(ret)
+    if not args:
+        print("ERROR: no model YAML files", file=sys.stderr)
+        sys.exit(1)
 
-    #docs = read_yaml_list(all_models_yaml)
-    #model_map = { doc["name"]: doc for doc in docs }
-
+    # ---------------------------------------------------------
+    # Load depend.yaml
+    # ---------------------------------------------------------
     deps = read_yaml_dict(depend_yml)
-    pprint(deps)
+    dependencies = deps["dependencies"]
+    reverse_dependencies = deps["reverse_dependencies"]
 
-    model_defs = {}
+    # ---------------------------------------------------------
+    # Output file
+    # ---------------------------------------------------------
+    if output:
+        fp = open(output, "w", encoding="utf-8")
+    else:
+        fp = sys.stdout
 
-    fp.write('from rest_framework import serializers\n')
+    fp.write("from rest_framework import serializers\n")
 
+    # ---------------------------------------------------------
+    # Generate serializers
+    # ---------------------------------------------------------
     for filepath in args:
-        fp_in = open(filepath, mode="r", encoding="utf-8")
-        data = yaml.safe_load(fp_in)
-        
-        model = data['name']
+        with open(filepath, mode="r", encoding="utf-8") as fp_in:
+            data = yaml.safe_load(fp_in)
 
-        for dep in deps['dependencies'][model]:
-            fp.write('from myapp.models import {0}\n'.format(dep))
-        fp.write('from myapp.models import {0}\n'.format(model))
+        model = data["name"]
 
-        fp.write('\n')
+        # import models
+        for dep in dependencies[model]:
+            fp.write(f"from myapp.models import {dep}\n")
+        fp.write(f"from myapp.models import {model}\n\n")
 
-        for dep in deps['dependencies'][model]:
-            fp.write('from myapp.serializers import {0}Serializer\n'.format(dep))
+        # import dependent serializers
+        for dep in dependencies[model]:
+            fp.write(f"from myapp.serializers import {dep}Serializer\n")
+        fp.write("\n")
 
-        fp.write('\n')
-        fp.write('class {0}Serializer(serializers.ModelSerializer):\n'.format(
-            model))
-        
-        write_fields = []
-        model_fields = [ 'id' ]
+        # Serializer class
+        fp.write(f"class {model}Serializer(serializers.ModelSerializer):\n")
 
-        for fname, field_def in data['fields'].items():
-            pprint(field_def)
-            if field_def['type'] in [ 'ForeignKey', 'OneToOneField']:
-                to_model = field_def['to']
+        model_fields = ["id"]
 
-                fp.write('    # for read\n')
-                fp.write('    {0} = {1}Serializer(read_only=True)\n'.format(
-                    fname, to_model))
-                fp.write('\n')
-                fp.write('    # for write\n')
-                fp.write('    {0}_id = serializers.PrimaryKeyRelatedField(\n'.format(fname))
-                fp.write('        queryset={0}.objects.all(),\n'.format(to_model))
-                fp.write('        write_only=True,\n')
-                fp.write('        source="{0}",\n'.format(fname))
+        # ---------------------------------------------------------
+        # 自分のフィールド
+        # ---------------------------------------------------------
+        for fname, field_def in data["fields"].items():
+            ftype = field_def["type"]
 
-                null_allowed = field_def.get("null", field_def.get(None, False))
+            # ForeignKey / OneToOne
+            if ftype in ("ForeignKey", "OneToOneField"):
+                to_model = field_def["to"]
+
+                fp.write(f"    # for read\n")
+                fp.write(f"    {fname} = {to_model}Serializer(read_only=True)\n\n")
+
+                fp.write(f"    # for write\n")
+                fp.write(f"    {fname}_id = serializers.PrimaryKeyRelatedField(\n")
+                fp.write(f"        queryset={to_model}.objects.all(),\n")
+                fp.write(f"        write_only=True,\n")
+                fp.write(f"        source=\"{fname}\",\n")
+
+                null_allowed = field_def.get("null", False)
                 blank_allowed = field_def.get("blank", False)
 
-                allow_null = "True" if null_allowed else "False"
-                required = "False" if (null_allowed or blank_allowed) else "True"
+                fp.write(f"        allow_null={'True' if null_allowed else 'False'},\n")
+                fp.write(f"        required={'False' if (null_allowed or blank_allowed) else 'True'},\n")
+                fp.write("    )\n\n")
 
-                fp.write('        allow_null={0},\n'.format(allow_null))
-                fp.write('        required={0},\n'.format(required))
-                fp.write('    )\n')
-                fp.write('\n')
+                model_fields.append(fname)
+                model_fields.append(f"{fname}_id")
 
-                model_fields.append("{0}".format(fname))
-                model_fields.append("{0}_id".format(fname))
-            else :
+            # ManyToMany
+            elif ftype == "ManyToManyField":
+                to_model = field_def["to"]
+
+                fp.write(f"    {fname} = serializers.PrimaryKeyRelatedField(\n")
+                fp.write("        many=True,\n")
+                fp.write(f"        queryset={to_model}.objects.all(),\n")
+                fp.write("    )\n\n")
+
                 model_fields.append(fname)
 
-        fp.write('\n')
-        fp.write('    class Meta:\n')
-        fp.write('        model = {0}\n'.format(model))
+            # 普通のフィールド
+            else:
+                model_fields.append(fname)
 
-        all_fields = list(dict.fromkeys(model_fields + write_fields))
-        fp.write('        fields = {0}\n'.format(all_fields))
-        
-        fp_in.close()
+        # ---------------------------------------------------------
+        # 逆向き依存フィールド（Meta の前に必ず出力）
+        # ---------------------------------------------------------
+        for other_model in reverse_dependencies.get(model, []):
+            # 他モデルの YAML を探す
+            for other_filepath in args:
+                with open(other_filepath, mode="r", encoding="utf-8") as fp_other:
+                    other_data = yaml.safe_load(fp_other)
 
-    if output is not None:
+                if other_data["name"] != other_model:
+                    continue
+
+                for ofname, ofdef in other_data["fields"].items():
+                    if ofdef.get("to") != model:
+                        continue
+
+                    # ManyToMany の逆側
+                    if ofdef["type"] == "ManyToManyField":
+                        reverse_field = f"{other_model.lower()}s"
+                        fp.write(f"    {reverse_field} = serializers.PrimaryKeyRelatedField(many=True, read_only=True)\n\n")
+                        model_fields.append(reverse_field)
+
+                    # ForeignKey / OneToOne の逆側
+                    elif ofdef["type"] in ("ForeignKey", "OneToOneField"):
+                        reverse_field = f"{other_model.lower()}s"
+                        fp.write(f"    {reverse_field} = serializers.PrimaryKeyRelatedField(many=True, read_only=True)\n\n")
+                        model_fields.append(reverse_field)
+
+        # ---------------------------------------------------------
+        # Meta クラス（最後）
+        # ---------------------------------------------------------
+        fp.write("    class Meta:\n")
+        fp.write(f"        model = {model}\n")
+
+        all_fields = list(dict.fromkeys(model_fields))
+        fp.write(f"        fields = {all_fields}\n\n")
+
+    if output:
         fp.close()
+
 
 if __name__ == "__main__":
     main()
-

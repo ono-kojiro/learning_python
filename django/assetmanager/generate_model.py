@@ -185,7 +185,7 @@ def main():
     depend_map = read_yaml(depend_yaml)['dependencies']
 
     fp.write('from django.db import models\n\n')
-
+    
     for filepath in args:
         fp_in = open(filepath, mode="r", encoding="utf-8")
         data = yaml.safe_load(fp_in)
@@ -199,8 +199,9 @@ def main():
         #for related_model in related_models:
         #    fp.write('from myapp.models import {0}\n'.format(related_model))
 
-        for dep in deps:
-            fp.write('from myapp.models import {0}\n'.format(dep))
+        #for dep in deps:
+        #    dep_lower = dep.lower()
+        #    fp.write(f'from myapp.models.{dep_lower}_model import {dep}\n')
 
         generate_model(fp, data)
         fp_in.close()

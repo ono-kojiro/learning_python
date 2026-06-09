@@ -1,33 +1,26 @@
 #!/usr/bin/env python3
 
 import sys
-import re
-
 import getopt
 import yaml
 
+
 def usage():
-    print(f"Usage : {sys.argv[0]} -o <output> <input>...")
+    print(f"Usage : {sys.argv[0]} -o <output> -d depend.yaml <model_yaml>...")
+
 
 def read_yaml(filepath):
-    fp = open(filepath, mode="r", encoding="utf-8")
-    data = yaml.safe_load(fp)
-    fp.close()
-    return data
+    with open(filepath, mode="r", encoding="utf-8") as fp:
+        return yaml.safe_load(fp)
+
 
 def main():
-    ret = 0
-
+    # ---------------------------------------------------------
+    # Parse options
+    # ---------------------------------------------------------
     try:
         options, args = getopt.getopt(
-            sys.argv[1:],
-            "hvo:d:",
-            [
-                "help",
-                "version",
-                "output=",
-                "depend=",
-            ],
+            sys.argv[1:], "hvo:d:", ["help", "version", "output=", "depend="]
         )
     except getopt.GetoptError as err:
         print(str(err))
@@ -37,78 +30,121 @@ def main():
     depend_yaml = None
 
     for option, optarg in options:
-        if option == "-v":
+        if option in ("-h", "--help"):
             usage()
-            sys.exit(1)
-        elif option in ("-h", "--help"):
-            usage()
-            sys.exit(1)
+            sys.exit(0)
         elif option in ("-o", "--output"):
             output = optarg
         elif option in ("-d", "--depend"):
             depend_yaml = optarg
-        else:
-            assert False, "unknown option"
-
-    if output is not None :
-        fp = open(output, mode="w", encoding="utf-8")
-    else :
-        fp = sys.stdout
 
     if depend_yaml is None:
-        print('ERROR: no depend option', file=sys.stderr)
-        ret += 1
+        print("ERROR: depend.yaml is required", file=sys.stderr)
+        sys.exit(1)
 
-    if ret != 0:
-        sys.exit(ret)
+    if not args:
+        print("ERROR: model YAML files must be specified", file=sys.stderr)
+        sys.exit(1)
 
+    # ---------------------------------------------------------
+    # Load depend.yaml
+    # ---------------------------------------------------------
     depend_map = read_yaml(depend_yaml)["dependencies"]
 
-    # 逆依存関係（親 → 子）を構築
+    # Build reverse dependency map (parent → children)
     children = {model: [] for model in depend_map}
     for model, deps in depend_map.items():
         for parent in deps:
             children[parent].append(model)
 
-    fp.write('from django.contrib import admin\n')
-    fp.write("from myapp import models\n")
-
+    # ---------------------------------------------------------
+    # Load all model YAMLs first
+    # ---------------------------------------------------------
+    model_defs = {}
     for filepath in args:
-        fp_in = open(filepath, mode="r", encoding="utf-8")
-        data = yaml.safe_load(fp_in)
+        data = read_yaml(filepath)
+        model_defs[data["name"]] = data
 
-        model = data['name']
+    # ---------------------------------------------------------
+    # Output file
+    # ---------------------------------------------------------
+    if output:
+        fp = open(output, "w", encoding="utf-8")
+    else:
+        fp = sys.stdout
 
-        # このモデルの子モデルを取得
-        child_models = children.get(model, [])
+    # ファイル冒頭
+    fp.write("from django.contrib import admin\n")
+    fp.write("from myapp import models\n\n")
+    # ---------------------------------------------------------
+    # Generate Admin classes
+    # ---------------------------------------------------------
+    for model, data in model_defs.items():
 
-        fp.write('from myapp.models import {0}\n'.format(model))
-        fp.write('\n')
+        model_lower = model.lower()
+        model_import_path = f"myapp.models.{model_lower}_model"
 
-        # Inline クラスを生成
-        for child in child_models:
-            fp.write(f"class {child}Inline(admin.TabularInline):\n")
-            fp.write(f"    model = models.{child}\n")
-            fp.write("    extra = 0\n")
-            fp.write("    show_change_link = True\n\n")
+        inline_classes = []
 
-        # Admin クラスを生成
-        fp.write(f"@admin.register(models.{model})\n")
+        # 子モデルを取得
+        for child in children.get(model, []):
+            child_def = model_defs.get(child)
+            if not child_def:
+                continue
+
+            fields = child_def.get("fields", {})
+
+            inline_model_expr = None
+            inline_class_name = None
+
+            child_lower = child.lower()
+            child_import_path = f"myapp.models.{child_lower}_model"
+
+            # 子モデルのフィールドを調べて、親モデルを参照しているものを探す
+            for fname, fdef in fields.items():
+                if fdef.get("to") != model:
+                    continue
+
+                ftype = fdef.get("type")
+
+                # ForeignKey / OneToOne → Inline
+                if ftype in ("ForeignKey", "OneToOneField"):
+                    inline_model_expr = f"{child}"
+                    inline_class_name = f"{child}Inline"
+                    break
+
+                # ManyToMany → through モデルを Inline
+                if ftype == "ManyToManyField":
+                    inline_model_expr = f"{child}.{fname}.through"
+                    inline_class_name = f"{child}{fname.capitalize()}Inline"
+                    break
+
+            if inline_model_expr:
+                fp.write(f"from {child_import_path} import {child}\n")
+                fp.write(f"class {inline_class_name}(admin.TabularInline):\n")
+                fp.write(f"    model = {inline_model_expr}\n")
+                fp.write("    extra = 0\n")
+                fp.write("    show_change_link = True\n\n")
+                inline_classes.append(inline_class_name)
+
+        # Admin class
         fp.write(f"class {model}Admin(admin.ModelAdmin):\n")
-
-        if child_models:
-            inline_list = ", ".join([f"{child}Inline" for child in child_models])
-            fp.write(f"    inlines = [{inline_list}]\n")
+        if inline_classes:
+            fp.write(f"    inlines = [{', '.join(inline_classes)}]\n")
         else:
             fp.write("    pass\n")
+        fp.write("\n")
 
-        #fp.write('admin.site.register({0})\n'.format(model))
-        
-        fp_in.close()
+        # モデルを正しいパスで import
+        #fp.write(f"from {model_import_path} import {model}\n")
+        #fp.write(f"admin.site.register({model}, {model}Admin)\n\n")
+        # Admin class の後
+        fp.write(f"admin.site.register(models.{model}, {model}Admin)\n\n")
 
-    if output is not None:
+
+    if output:
         fp.close()
+
 
 if __name__ == "__main__":
     main()
-

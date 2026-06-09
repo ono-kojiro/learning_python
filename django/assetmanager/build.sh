@@ -11,7 +11,9 @@ project="myproject"
 application="myapp"
 
 workdir="work"
-
+  
+entities="Device NetIF IPv4 Manager"
+  
 prepare()
 {
   python3 -m venv myenv
@@ -113,14 +115,12 @@ replace()
 
 cmp2ref()
 {
-  python3 cmp2ref.py --output template/app/device_ref.yaml \
-    --name Device template/app/*_cmp.yaml
 
-  python3 cmp2ref.py --output template/app/netif_ref.yaml \
-    --name NetIF template/app/*_cmp.yaml
-  
-  python3 cmp2ref.py --output template/app/ipv4_ref.yaml \
-    --name IPv4 template/app/*_cmp.yaml
+  for entity in ${entities}; do
+    basename=`echo $entity | tr '[:upper:]' '[:lower:]'`
+    python3 cmp2ref.py --output template/app/${basename}_ref.yaml \
+      --name ${entity} template/app/*_cmp.yaml
+  done
 }
 
 replace_installed_apps()
@@ -172,14 +172,17 @@ generate()
     rm -rf   ${workdir}/${application}/${component}.py
   done
 
-  entities="device netif ipv4"
   for entity in ${entities}; do
+    entity=`echo $entity | tr '[:upper:]' '[:lower:]'`
+    
     template="template/app/${entity}_ref.yaml"
 
     echo "INFO: generate model for $entity"
-    python3 generate_model.py -d depend.yaml ${template} \
-      > ${workdir}/${application}/models/${entity}_model.py
-  
+    python3 generate_model.py \
+      -d depend.yaml \
+      -o ${workdir}/${application}/models/${entity}_model.py \
+      ${template}
+
     echo "INFO: generate admin for $entity"
     python3 generate_admin.py -d depend.yaml ${template} \
       > ${workdir}/${application}/admin/${entity}_admin.py
@@ -203,12 +206,19 @@ generate()
 
   templates=""
   for entity in ${entities}; do
-    templates="${templates} template/app/${entity}.yaml"
+    entity=`echo $entity | tr '[:upper:]' '[:lower:]'`
+    templates="${templates} template/app/${entity}_ref.yaml"
   done
 
   python3 generate_url.py -o ${workdir}/${application}/urls_api.py \
      ${templates}
 
+  echo "INFO: generate admin loader"
+  python3 generate_admin_loader.py \
+      -o ${workdir}/${application}/admin.py \
+      ${templates}
+
+  rm -f ${workdir}/${application}/admin/__init__.py
 }
 
 gen()
@@ -218,35 +228,16 @@ gen()
 
 update_ini()
 {
-  pwd
-  python3 generate_ini.py \
-     -d depend.yaml \
-     -o ${workdir}/${application}/models/__init__.py \
-        ${workdir}/${application}/models/*.py
-  
-  cd ${workdir}/${application}/admin
-  {
-    echo "# auo-generated"
-    for f in *_admin.py; do
-      #class=`cat "$f" | grep -Eo 'register\(([^)]+)\)' \
-      #        | sed -E 's/register\(([^)]+)\)/\1/'`
-      module=`echo "$f" | sed -e 's/\.py$//'`
-      #echo "from .${module} import ${class}Admin"
-      echo "from . import ${module}"
-    done
-  } > __init__.py
-
-  cd $top_dir
-  
-  python3 generate_ini.py \
-     -d depend.yaml \
-     -o ${workdir}/${application}/views/__init__.py \
-        ${workdir}/${application}/views/*.py
+  echo "INFO: generate models/__init__.py"
 
   python3 generate_ini.py \
-     -d depend.yaml \
-     -o ${workdir}/${application}/serializers/__init__.py \
-        ${workdir}/${application}/serializers/*.py
+    -o ${workdir}/${application}/models/__init__.py \
+    template/app/*_ref.yaml
+
+  echo "" > ${workdir}/${application}/admin/__init__.py
+  echo "" > ${workdir}/${application}/views/__init__.py
+  echo "" > ${workdir}/${application}/serializers/__init__.py
+
 }
 
 update_url()
@@ -282,9 +273,15 @@ migrate()
 loaddata()
 {
   echo "INFO: loaddata"
+  models=`yq -r '.load_order[]' depend.yaml`
+
   cd ${workdir}
-  ls ${top_dir}/tests/data/test_*.yaml
-  python3 manage.py loaddata ${top_dir}/tests/data/test_*.yaml
+  for model in ${models}; do
+     m=`echo $model | tr '[:upper:]' '[:lower:]'`
+     file="${top_dir}/tests/data/test_${m}-fixtures.yaml"
+     python3 manage.py loaddata ${file}
+  done
+
   cd $top_dir
 }
 
@@ -347,6 +344,13 @@ runserver_plus()
 run()
 {
   runserver_plus
+}
+
+shell()
+{
+  cd ${workdir}
+  python manage.py shell
+  cd $top_dir
 }
 
 start()

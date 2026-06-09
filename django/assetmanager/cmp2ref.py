@@ -59,27 +59,46 @@ def build_reference_model(models, target_model):
     if target_model not in models:
         raise ValueError(f"Model {target_model} not found")
 
-    # ★ name を必ず target_model にする（--name の値）
     out = {
         "name": target_model,
         "meta": models[target_model].get("meta", {}),
         "fields": {}
     }
 
-    # プリミティブ型
+    # プリミティブ型 + ManyToMany を処理
     for fname, fdef in models[target_model]["fields"].items():
         ftype = fdef["type"]
 
+        # プリミティブ型
         if ftype in ["String", "Text", "Int", "Float", "Bool", "ID"] or ftype.startswith("List"):
             out["fields"][fname] = convert_primitive_field(fdef)
 
-        elif ftype in ["OneToMany", "OneToOne", "ManyToMany"]:
+        # ManyToMany（所有モデル側にそのまま生成）
+        elif ftype == "ManyToMany":
+            out["fields"][fname] = {
+                "type": "ManyToManyField",
+                "to": fdef["to"]
+            }
+
+
+        # OneToMany / OneToOne は逆方向で処理するためスキップ
+        elif ftype in ["OneToMany", "OneToOne"]:
             continue
 
         else:
             raise ValueError(f"Unknown type: {ftype}")
 
-    # 逆方向参照
+    # ManyToMany の逆側を追加
+    for model_name, model_def in models.items():
+        for fname, fdef in model_def["fields"].items():
+            if fdef["type"] == "ManyToMany" and fdef["to"] == target_model:
+                reverse_field = model_name.lower() + "s"
+                out["fields"][reverse_field] = {
+                    "type": "ManyToManyField",
+                    "to": model_name
+                }
+
+    # 逆方向参照（OneToMany / OneToOne のみ）
     for model_name, model_def in models.items():
         for fname, fdef in model_def["fields"].items():
             ftype = fdef["type"]

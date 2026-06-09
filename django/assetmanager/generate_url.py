@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 
 import sys
-import re
-
 import getopt
-
 import yaml
+
 
 def usage():
     print(f"Usage : {sys.argv[0]} -o <output> <input>...")
+
 
 def main():
     ret = 0
@@ -38,46 +37,41 @@ def main():
             sys.exit(1)
         elif option in ("-o", "--output"):
             output = optarg
-        else:
-            assert False, "unknown option"
 
-    if output is not None :
+    if output:
         fp = open(output, mode="w", encoding="utf-8")
-    else :
+    else:
         fp = sys.stdout
 
-    if ret != 0:
-        sys.exit(ret)
-
-        
-    fp.write('from rest_framework import routers\n')
+    fp.write("from rest_framework import routers\n")
 
     models = []
 
+    # Load model names
     for filepath in args:
-        fp_in = open(filepath, mode="r", encoding="utf-8")
-        data = yaml.safe_load(fp_in)
+        with open(filepath, mode="r", encoding="utf-8") as fp_in:
+            data = yaml.safe_load(fp_in)
+            models.append(data["name"])
 
-        models.append(data['name'])
-        fp_in.close()
-
+    # Import ViewSets
     for model in models:
-        fp.write('from myapp.views.{0}_view import {1}ViewSet\n'.format(
-            model.lower(), model))
+        fp.write(f"from myapp.views.{model.lower()}_view import {model}ViewSet\n")
 
-    fp.write('\n')
-    fp.write('router = routers.DefaultRouter()\n')
-    fp.write('\n')
+    fp.write("\n")
+    fp.write("router = routers.DefaultRouter()\n\n")
 
+    # Register with basename
     for model in models:
-        fp.write('router.register(r"{0}s", {1}ViewSet)\n'.format(
-            model.lower(), model))
-    fp.write('\n')
-    fp.write('urlpatterns = router.urls\n')
+        basename = model.lower()
+        fp.write(
+            f'router.register(r"{basename}s", {model}ViewSet, basename="{basename}")\n'
+        )
 
-    if output is not None:
+    fp.write("\nurlpatterns = router.urls\n")
+
+    if output:
         fp.close()
+
 
 if __name__ == "__main__":
     main()
-

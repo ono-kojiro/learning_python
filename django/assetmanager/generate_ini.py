@@ -1,128 +1,51 @@
 #!/usr/bin/env python3
 
-import os
 import sys
-import re
-
 import getopt
-
 import yaml
+import os
 
 def usage():
-    print(f"Usage : {sys.argv[0]} -o <output> <input>...")
+    print(f"Usage: {sys.argv[0]} -o <output> <model_yaml>...")
 
-def read_yaml(filepath):
-    fp = open(filepath, mode="r", encoding="utf-8")
-    data = yaml.safe_load(fp)
-    fp.close()
-    return data
-
-def topo_sort(depend_map):
-    visited = set()
-    order = []
-
-    def visit(model):
-        if model in visited:
-            return
-        visited.add(model)
-        for parent in depend_map.get(model, []):
-            visit(parent)
-        order.append(model)
-
-    for model in depend_map.keys():
-        visit(model)
-
-    return order
+def read_yaml(path):
+    with open(path, "r", encoding="utf-8") as fp:
+        return yaml.safe_load(fp)
 
 def main():
-    ret = 0
-
     try:
-        options, args = getopt.getopt(
-            sys.argv[1:],
-            "hvo:d:",
-            [
-                "help",
-                "version",
-                "output=",
-                "depend=",
-            ],
-        )
-    except getopt.GetoptError as err:
-        print(str(err))
+        opts, args = getopt.getopt(sys.argv[1:], "ho:", ["help", "output="])
+    except getopt.GetoptError as e:
+        print(str(e), file=sys.stderr)
+        usage()
         sys.exit(1)
 
     output = None
-    depend_yaml = None
 
-    for option, optarg in options:
-        if option == "-v":
+    for opt, val in opts:
+        if opt in ("-h", "--help"):
             usage()
-            sys.exit(1)
-        elif option in ("-h", "--help"):
-            usage()
-            sys.exit(1)
-        elif option in ("-o", "--output"):
-            output = optarg
-        elif option in ("-d", "--depend"):
-            depend_yaml = optarg
-        else:
-            assert False, "unknown option"
+            sys.exit(0)
+        elif opt in ("-o", "--output"):
+            output = val
 
-    print(sys.argv)
+    if output is None:
+        print("ERROR: -o <output> is required", file=sys.stderr)
+        sys.exit(1)
 
-    if depend_yaml is None:
-        print('ERROR: no depend option', file=sys.stderr)
-        ret += 1
+    if not args:
+        print("ERROR: model YAML files must be specified", file=sys.stderr)
+        sys.exit(1)
 
-    if ret != 0:
-        sys.exit(ret)
+    # 出力ファイルを開く
+    with open(output, "w", encoding="utf-8") as fp:
+        for yaml_path in args:
+            data = read_yaml(yaml_path)
+            class_name = data["name"]  # 正しいクラス名
+            base = os.path.basename(yaml_path).replace("_ref.yaml", "")
+            module = f"{base}_model"
 
-    depend_map = read_yaml(depend_yaml)["dependencies"]
-    # トポロジカルソート（依存関係順）
-    order = topo_sort(depend_map)
-
-    module_map = {}
-
-    for filepath in args:
-
-        filename = os.path.basename(filepath)
-        if filename == '__init__.py' :
-            continue
-
-        module = re.sub(r'\.py$', '', filename)
-
-        fp_in = open(filepath, mode="r", encoding="utf-8")
-        while 1:
-            line = fp_in.readline()
-            if not line:
-                break
-
-            line = re.sub(r'\r?\n?$', '', line)
-            m = re.search(r'^class\s+(\w+)', line)
-            if m :
-                cls = m.group(1)
-                if cls.endswith("Serializer"):
-                    model = re.sub(r'Serializer$', '', cls)
-                else :
-                    model = cls
-                module_map[model] = (module, cls)
-
-        fp_in.close()
-    
-    if output is not None :
-        fp = open(output, mode="w", encoding="utf-8")
-    else :
-        fp = sys.stdout
-
-    for model in order:
-        if model in module_map:
-            module, cls = module_map[model]
-            fp.write(f"from .{module} import {cls}\n")
-
-    if output is not None:
-        fp.close()
+            fp.write(f"from .{module} import {class_name}\n")
 
 if __name__ == "__main__":
     main()
-
