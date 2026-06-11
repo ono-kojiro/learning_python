@@ -1,7 +1,7 @@
 import os
 import pytest
 from dotenv import load_dotenv
-from opnsense_python import OPNsenseClient, FirewallAPI
+from opnsense.python import OPNsenseClient, FirewallAPI
 
 
 # プロジェクトルートの .env を読み込む

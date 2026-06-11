@@ -1,4 +1,4 @@
-from opnsense_python import VirtualIPAPI
+from opnsense.python import VirtualIPAPI
 from utils import extract_vip_list   # 共通関数として import する想定
 
 

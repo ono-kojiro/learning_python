@@ -1,4 +1,4 @@
-from opnsense_python import OPNsenseClient, FirewallAPI
+from opnsense.python import OPNsenseClient, FirewallAPI
 
 
 def test_list_rules(firewall):

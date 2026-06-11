@@ -1,6 +1,6 @@
 import uuid
 import pytest
-from opnsense_python import VirtualIPAPI
+from opnsense.python import VirtualIPAPI
 
 
 def extract_vip_list(data):
