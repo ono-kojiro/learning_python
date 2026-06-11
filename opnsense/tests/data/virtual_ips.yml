@@ -1,0 +1,15 @@
+---
+- interface: "opt1"
+  mode: "ipalias"
+  address: "192.168.30.51/24"
+  subnet: "192.168.30.51"
+  subnet_bits: "24"
+  descr: "yaml-vip-1"
+
+- interface: "opt1"
+  mode: "ipalias"
+  address: "192.168.30.52/24"
+  subnet: "192.168.30.52"
+  subnet_bits: "24"
+  descr: "yaml-vip-2"
+
