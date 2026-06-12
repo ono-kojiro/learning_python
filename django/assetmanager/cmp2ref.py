@@ -73,9 +73,15 @@ def build_reference_model(models, target_model):
         if ftype in ["String", "Text", "Int", "Float", "Bool", "ID"] or ftype.startswith("List"):
             out["fields"][fname] = convert_primitive_field(fdef)
 
-        # ManyToMany（所有モデル側にそのまま生成）
         elif ftype == "ManyToMany":
-            out["fields"][fname] = {
+            # ManyToMany は単数形 + _ids に変換する
+            base = fname
+            if base.endswith("s"):
+                base = base[:-1]  # 複数形の s を削除
+
+            new_name = f"{base}_ids"
+
+            out["fields"][new_name] = {
                 "type": "ManyToManyField",
                 "to": fdef["to"]
             }
@@ -88,16 +94,6 @@ def build_reference_model(models, target_model):
         else:
             raise ValueError(f"Unknown type: {ftype}")
 
-    # ManyToMany の逆側を追加
-    for model_name, model_def in models.items():
-        for fname, fdef in model_def["fields"].items():
-            if fdef["type"] == "ManyToMany" and fdef["to"] == target_model:
-                reverse_field = model_name.lower() + "s"
-                out["fields"][reverse_field] = {
-                    "type": "ManyToManyField",
-                    "to": model_name
-                }
-
     # 逆方向参照（OneToMany / OneToOne のみ）
     for model_name, model_def in models.items():
         for fname, fdef in model_def["fields"].items():
@@ -107,29 +103,33 @@ def build_reference_model(models, target_model):
             if ftype == "OneToMany" and fdef["to"] == target_model:
                 nullable = fdef.get("nullable", False)
 
-                out["fields"][model_name.lower()] = {
+                field_name = f"{model_name.lower()}_id"
+
+                out["fields"][field_name] = {
                     "type": "ForeignKey",
                     "to": model_name,
                     "on_delete": "SET_NULL" if nullable else "CASCADE",
                 }
 
                 if nullable:
-                    out["fields"][model_name.lower()]["null"] = True
-                    out["fields"][model_name.lower()]["blank"] = True
+                    out["fields"][field_name]["null"] = True
+                    out["fields"][field_name]["blank"] = True
 
             # OneToOne → OneToOneField
             if ftype == "OneToOne" and fdef["to"] == target_model:
                 nullable = fdef.get("nullable", True)
 
-                out["fields"][model_name.lower()] = {
+                field_name = f"{model_name.lower()}_id"
+
+                out["fields"][field_name] = {
                     "type": "OneToOneField",
                     "to": model_name,
                     "on_delete": "SET_NULL" if nullable else "CASCADE",
                 }
 
                 if nullable:
-                    out["fields"][model_name.lower()]["null"] = True
-                    out["fields"][model_name.lower()]["blank"] = True
+                    out["fields"][field_name]["null"] = True
+                    out["fields"][field_name]["blank"] = True
 
     return out
 

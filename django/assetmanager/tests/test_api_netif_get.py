@@ -22,7 +22,7 @@ def test_get_netifs(configs):
     assert "id" in first
     assert "netif_id" in first
     assert "name" in first
-    assert "device" in first
+    assert "device_id" in first
 
     # IPv4 は NetIF に含まれない
     assert "ipv4" not in first

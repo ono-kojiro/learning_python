@@ -11,19 +11,24 @@ def usage():
 
 
 # ---------------------------------------------------------
-# 依存関係抽出（既存）
+# 依存関係抽出（参照元 → 参照先 のみ）
 # ---------------------------------------------------------
 def extract_depend(data):
     deps = []
     fields = data.get('fields', {})
+
     for field_name, field_def in fields.items():
         ftype = field_def.get('type')
+
+        # 参照元 → 参照先 のみを依存関係に入れる
         if ftype in ('ForeignKey', 'OneToOneField', 'ManyToManyField'):
             deps.append(field_def['to'])
+
     return deps
 
+
 # ---------------------------------------------------------
-# トポロジカルソート（新規追加）
+# トポロジカルソート
 # ---------------------------------------------------------
 def topo_sort(dep_map):
     graph = defaultdict(list)
@@ -81,7 +86,7 @@ def main():
 
     dep_map = {}
 
-    # 依存関係抽出
+    # 依存関係抽出（参照元 → 参照先）
     for filepath in args:
         with open(filepath, "r", encoding="utf-8") as fp_in:
             data = yaml.safe_load(fp_in)
@@ -92,7 +97,7 @@ def main():
     # トポロジカルソートで loaddata 順を決定
     load_order = topo_sort(dep_map)
 
-    # 逆向き依存を生成
+    # 逆向き依存を生成（参照先 → 参照元）
     reverse_map = {model: [] for model in dep_map}
 
     for model, parents in dep_map.items():

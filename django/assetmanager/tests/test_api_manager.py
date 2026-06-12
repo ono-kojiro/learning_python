@@ -26,9 +26,9 @@ def test_get_managers(configs):
     assert "manager_id" in first
     assert "name" in first
     assert "email" in first
-    assert "devices" in first
+    assert "device_ids" in first
 
-    assert isinstance(first["devices"], list)
+    assert isinstance(first["device_ids"], list)
 
 
 # ---------------------------------------------------------

@@ -11,9 +11,6 @@ def read_yaml_dict(filepath):
 
 
 def main():
-    # ---------------------------------------------------------
-    # Parse options
-    # ---------------------------------------------------------
     try:
         options, args = getopt.getopt(
             sys.argv[1:], "hvo:d:", ["help", "version", "output=", "depend="]
@@ -42,127 +39,130 @@ def main():
         print("ERROR: no model YAML files", file=sys.stderr)
         sys.exit(1)
 
-    # ---------------------------------------------------------
-    # Load depend.yaml
-    # ---------------------------------------------------------
     deps = read_yaml_dict(depend_yml)
     dependencies = deps["dependencies"]
     reverse_dependencies = deps["reverse_dependencies"]
 
-    # ---------------------------------------------------------
-    # Output file
-    # ---------------------------------------------------------
     if output:
         fp = open(output, "w", encoding="utf-8")
     else:
         fp = sys.stdout
 
     fp.write("from rest_framework import serializers\n")
+    fp.write("from myapp.models import *\n\n")
 
-    # ---------------------------------------------------------
-    # Generate serializers
-    # ---------------------------------------------------------
     for filepath in args:
         with open(filepath, mode="r", encoding="utf-8") as fp_in:
             data = yaml.safe_load(fp_in)
 
         model = data["name"]
 
-        # import models
+        # import models only
         for dep in dependencies[model]:
             fp.write(f"from myapp.models import {dep}\n")
         fp.write(f"from myapp.models import {model}\n\n")
 
-        # import dependent serializers
-        for dep in dependencies[model]:
-            fp.write(f"from myapp.serializers import {dep}Serializer\n")
-        fp.write("\n")
-
-        # Serializer class
         fp.write(f"class {model}Serializer(serializers.ModelSerializer):\n")
 
         model_fields = ["id"]
 
-        # ---------------------------------------------------------
-        # 自分のフィールド
-        # ---------------------------------------------------------
         for fname, field_def in data["fields"].items():
             ftype = field_def["type"]
 
-            # ForeignKey / OneToOne
+            # ForeignKey / OneToOneField
             if ftype in ("ForeignKey", "OneToOneField"):
                 to_model = field_def["to"]
-
-                fp.write(f"    # for read\n")
-                fp.write(f"    {fname} = {to_model}Serializer(read_only=True)\n\n")
-
-                fp.write(f"    # for write\n")
-                fp.write(f"    {fname}_id = serializers.PrimaryKeyRelatedField(\n")
-                fp.write(f"        queryset={to_model}.objects.all(),\n")
-                fp.write(f"        write_only=True,\n")
-                fp.write(f"        source=\"{fname}\",\n")
-
                 null_allowed = field_def.get("null", False)
                 blank_allowed = field_def.get("blank", False)
 
+                fp.write(f"    {fname} = serializers.PrimaryKeyRelatedField(\n")
+                fp.write(f"        queryset={to_model}.objects.all(),\n")
+
+                required_flag = "False" if (null_allowed or blank_allowed) else "True"
+
+                fp.write(f"        required={required_flag},\n")
                 fp.write(f"        allow_null={'True' if null_allowed else 'False'},\n")
-                fp.write(f"        required={'False' if (null_allowed or blank_allowed) else 'True'},\n")
                 fp.write("    )\n\n")
 
                 model_fields.append(fname)
-                model_fields.append(f"{fname}_id")
 
-            # ManyToMany
+            # ManyToManyField
             elif ftype == "ManyToManyField":
                 to_model = field_def["to"]
 
                 fp.write(f"    {fname} = serializers.PrimaryKeyRelatedField(\n")
                 fp.write("        many=True,\n")
                 fp.write(f"        queryset={to_model}.objects.all(),\n")
+                fp.write("        required=False,\n")
                 fp.write("    )\n\n")
 
                 model_fields.append(fname)
 
-            # 普通のフィールド
-            else:
+            # JSONField
+            elif ftype == "JSONField":
+                fp.write(f"    {fname} = serializers.ListField(\n")
+                fp.write("        child=serializers.CharField(),\n")
+                fp.write("        required=False,\n")
+                fp.write("        default=list,\n")
+                fp.write("    )\n\n")
+
                 model_fields.append(fname)
 
-        # ---------------------------------------------------------
-        # 逆向き依存フィールド（Meta の前に必ず出力）
-        # ---------------------------------------------------------
+            # CharField / その他
+            else:
+                is_id = field_def.get("id_field", False)
+
+                if is_id:
+                    fp.write(f"    {fname} = serializers.CharField(required=True)\n\n")
+                else:
+                    fp.write(f"    {fname} = serializers.CharField(required=False)\n\n")
+
+                model_fields.append(fname)
+
+        # reverse dependencies（read-only）
         for other_model in reverse_dependencies.get(model, []):
-            # 他モデルの YAML を探す
-            for other_filepath in args:
-                with open(other_filepath, mode="r", encoding="utf-8") as fp_other:
-                    other_data = yaml.safe_load(fp_other)
+            reverse_field = f"{other_model.lower()}s"
+            fp.write(
+                f"    {reverse_field} = serializers.PrimaryKeyRelatedField(many=True, read_only=True)\n\n"
+            )
+            model_fields.append(reverse_field)
 
-                if other_data["name"] != other_model:
-                    continue
+        # ★ DeviceSerializer の特別処理
+        if model == "Device":
+            # GET 用 managers
+            fp.write(
+                "    managers = serializers.PrimaryKeyRelatedField(\n"
+                "        many=True,\n"
+                "        read_only=True,\n"
+                "        source='manager_set'\n"
+                "    )\n\n"
+            )
+            model_fields.append("managers")
 
-                for ofname, ofdef in other_data["fields"].items():
-                    if ofdef.get("to") != model:
-                        continue
+            # PATCH 用 managers
+            fp.write(
+                "    managers = serializers.PrimaryKeyRelatedField(\n"
+                "        many=True,\n"
+                "        queryset=Manager.objects.all(),\n"
+                "        write_only=True,\n"
+                "        required=False,\n"
+                "    )\n\n"
+            )
 
-                    # ManyToMany の逆側
-                    if ofdef["type"] == "ManyToManyField":
-                        reverse_field = f"{other_model.lower()}s"
-                        fp.write(f"    {reverse_field} = serializers.PrimaryKeyRelatedField(many=True, read_only=True)\n\n")
-                        model_fields.append(reverse_field)
+            # update() で置き換え
+            fp.write(
+                "    def update(self, instance, validated_data):\n"
+                "        managers = validated_data.pop('managers', None)\n"
+                "        instance = super().update(instance, validated_data)\n"
+                "        if managers is not None:\n"
+                "            instance.manager_set.set(managers)\n"
+                "        return instance\n\n"
+            )
 
-                    # ForeignKey / OneToOne の逆側
-                    elif ofdef["type"] in ("ForeignKey", "OneToOneField"):
-                        reverse_field = f"{other_model.lower()}s"
-                        fp.write(f"    {reverse_field} = serializers.PrimaryKeyRelatedField(many=True, read_only=True)\n\n")
-                        model_fields.append(reverse_field)
-
-        # ---------------------------------------------------------
-        # Meta クラス（最後）
-        # ---------------------------------------------------------
+        # Meta
         fp.write("    class Meta:\n")
         fp.write(f"        model = {model}\n")
-
-        all_fields = list(dict.fromkeys(model_fields))
-        fp.write(f"        fields = {all_fields}\n\n")
+        fp.write(f"        fields = {list(dict.fromkeys(model_fields))}\n\n")
 
     if output:
         fp.close()

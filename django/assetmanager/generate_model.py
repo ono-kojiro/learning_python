@@ -2,108 +2,108 @@
 
 import sys
 import re
-
 import getopt
-
 import yaml
-
 from pprint import pprint
+
 
 def usage():
     print(f"Usage : {sys.argv[0]} -o <output> <input>...")
 
+
 def read_yaml(filepath):
-    fp = open(filepath, mode="r", encoding="utf-8")
-    data = yaml.safe_load(fp)
-    fp.close()
-    return data
+    with open(filepath, mode="r", encoding="utf-8") as fp:
+        return yaml.safe_load(fp)
+
 
 def render_default(k, v):
-    if k == "default" and (v in [ "list", "dict" ]):
-        ret = 'default={0}'.format(v)
+    if k == "default" and (v in ["list", "dict"]):
+        return f"default={v}"
     elif k == "on_delete":
-        ret = '{0}=models.{1}'.format(k, v)
-    else :
-        ret = '{0}={1}'.format(k, repr(v))
-    return ret
+        return f"{k}=models.{v}"
+    else:
+        return f"{k}={repr(v)}"
+
 
 def render_simple_field(field_def):
     args = []
-
     for k, v in field_def.items():
         if k == "type":
             continue
         if k is None:
-            k = 'null'
-             
+            k = "null"
         args.append(render_default(k, v))
-
     return args
+
 
 def render_relation_field(field_def, ftype):
     args = []
 
-    args.append('to={0}'.format(repr(field_def['to'])))
+    # to=
+    args.append(f"to={repr(field_def['to'])}")
 
-    val = field_def.get('on_delete', 'CASCADE')
+    # on_delete=
+    val = field_def.get("on_delete", "CASCADE")
     if val.startswith("models."):
-        args.append('on_delete={0}'.format(val))
-    else :
-        args.append('on_delete=models.{0}'.format(val))
-            
-    for k, v in field_def.items():
-        if k in [ "type", "to", "on_delete" ]:
-            continue
+        args.append(f"on_delete={val}")
+    else:
+        args.append(f"on_delete=models.{val}")
 
+    # その他の属性
+    for k, v in field_def.items():
+        if k in ["type", "to", "on_delete"]:
+            continue
         if k is None:
-            k = 'null'
-             
+            k = "null"
         args.append(render_default(k, v))
 
     return args
-        
-def generate_related_models(fp, data):
-    related = []
-    for fname, field_def in data["fields"].items():
-        ftype = field_def["type"]
-        if ftype in [ "ForeignKey", "OneToOneField" ]:
-            val = field_def["to"]
-            related.append(val)
-    return related
+
 
 def generate_model(fp, data):
-    name = data['name']
+    name = data["name"]
 
-    fp.write("class {0}(models.Model):\n".format(name))
-    
+    fp.write(f"class {name}(models.Model):\n")
+
+    # YAML の fields をそのままモデル化
     for fname, field_def in data["fields"].items():
         ftype = field_def["type"]
 
-        if ftype in [ "ForeignKey", "OneToOneField" ]:
+        if ftype in ["ForeignKey", "OneToOneField"]:
             args = render_relation_field(field_def, ftype)
-        else :
+        else:
             args = render_simple_field(field_def)
 
         arg_str = ", ".join(args)
-        fp.write('    {0} = models.{1}({2})\n'.format(fname, ftype, arg_str))
+        fp.write(f"    {fname} = models.{ftype}({arg_str})\n")
 
-    # __str__ の自動生成
+    # IPv4 の address フィールドは特別扱い
+    if name == "IPv4" and "address" not in data["fields"]:
+        fp.write(
+            "    address = models.CharField(max_length=255, null=True, blank=True)\n"
+        )
+
+    # __str__ の生成
     fp.write("\n")
     fp.write("    def __str__(self):\n")
 
-    # IPv4 モデルだけ特別扱い
+    # IPv4 の特別処理
     if name == "IPv4":
-        fp.write("        # IPv4: addresses(JSONField) を優先表示\n")
         fp.write("        if self.addresses and len(self.addresses) > 0:\n")
-        fp.write("            return f\"{self.ipv4_id}: {self.addresses[0]}\"\n")
-        fp.write("        return f\"{self.ipv4_id} (no IP address)\"\n")
+        fp.write('            return f"{self.ipv4_id}: {self.addresses[0]}"\n')
+        fp.write('        return f"{self.ipv4_id} (no IP address)"\n')
+        return
 
     id_field = None
     name_field = None
     address_field = None
     first_field = None
 
-    for fname in data["fields"].keys():
+    all_fields = list(data["fields"].keys())
+    if name == "IPv4" and "address" not in all_fields:
+        all_fields.append("address")
+
+    for fname in all_fields:
         if first_field is None:
             first_field = fname
         if fname.endswith("_id"):
@@ -113,14 +113,13 @@ def generate_model(fp, data):
         if fname == "address":
             address_field = fname
 
-    # 優先順位: id + (name or address) → name → address → first_field
     if id_field:
         if name_field:
             fp.write(f'        return f"{{self.{id_field}}}: {{self.{name_field}}}"\n')
         elif address_field:
             fp.write(f'        return f"{{self.{id_field}}}: {{self.{address_field}}}"\n')
         else:
-            fp.write(f'        return f"{{self.{id_field}}} (no IP address)"\n')
+            fp.write(f'        return f"{{self.{id_field}}}"\n')
     elif name_field:
         fp.write(f'        return f"{{self.{name_field}}}"\n')
     elif address_field:
@@ -128,26 +127,18 @@ def generate_model(fp, data):
     else:
         fp.write(f'        return f"{{self.{first_field}}}"\n')
 
-
+    # Meta
     if "meta" in data:
-        fp.write("\n");
+        fp.write("\n")
         fp.write("    class Meta:\n")
         for k, v in data["meta"].items():
-            fp.write("        {0} = {1}\n".format(k, repr(v)))
+            fp.write(f"        {k} = {repr(v)}\n")
+
 
 def main():
-    ret = 0
-
     try:
         options, args = getopt.getopt(
-            sys.argv[1:],
-            "hvo:d:",
-            [
-                "help",
-                "version",
-                "output=",
-                "depend=",
-            ],
+            sys.argv[1:], "hvo:d:", ["help", "version", "output=", "depend="]
         )
     except getopt.GetoptError as err:
         print(str(err))
@@ -167,48 +158,27 @@ def main():
             output = optarg
         elif option in ("-d", "--depend"):
             depend_yaml = optarg
-        else:
-            assert False, "unknown option"
-
-    if output is not None :
-        fp = open(output, mode="w", encoding="utf-8")
-    else :
-        fp = sys.stdout
 
     if depend_yaml is None:
-        print('ERROR: no depend option', file=sys.stderr)
+        print("ERROR: no depend option", file=sys.stderr)
         sys.exit(1)
 
-    if ret != 0:
-        sys.exit(ret)
+    depend_map = read_yaml(depend_yaml)["dependencies"]
 
-    depend_map = read_yaml(depend_yaml)['dependencies']
+    if output:
+        fp = open(output, mode="w", encoding="utf-8")
+    else:
+        fp = sys.stdout
 
-    fp.write('from django.db import models\n\n')
-    
+    fp.write("from django.db import models\n\n")
+
     for filepath in args:
-        fp_in = open(filepath, mode="r", encoding="utf-8")
-        data = yaml.safe_load(fp_in)
-
-        print(data, file=sys.stderr)
-
-        name = data['name']
-        deps = depend_map[name]
-
-        #related_models = generate_related_models(fp, data)
-        #for related_model in related_models:
-        #    fp.write('from myapp.models import {0}\n'.format(related_model))
-
-        #for dep in deps:
-        #    dep_lower = dep.lower()
-        #    fp.write(f'from myapp.models.{dep_lower}_model import {dep}\n')
-
+        data = read_yaml(filepath)
         generate_model(fp, data)
-        fp_in.close()
 
-    if output is not None:
+    if output:
         fp.close()
+
 
 if __name__ == "__main__":
     main()
-

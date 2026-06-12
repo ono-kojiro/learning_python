@@ -239,8 +239,10 @@ update_ini()
 
   echo "" > ${workdir}/${application}/admin/__init__.py
   echo "" > ${workdir}/${application}/views/__init__.py
-  echo "" > ${workdir}/${application}/serializers/__init__.py
-
+  #echo "" > ${workdir}/${application}/serializers/__init__.py
+  python3 generate_serializer_init.py \
+    -o ${workdir}/${application}/serializers/__init__.py \
+    template/app/*_ref.yaml
 }
 
 update_url()
