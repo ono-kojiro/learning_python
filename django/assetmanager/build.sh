@@ -404,6 +404,9 @@ mclean()
 
 test()
 {
+  python3 generate_test.py -c category.yaml -o tests/test_device.py \
+    template/app/device_ref.yaml
+
   pytest
 }
 
