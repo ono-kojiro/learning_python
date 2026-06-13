@@ -10,8 +10,6 @@ def usage():
 
 
 def main():
-    ret = 0
-
     try:
         options, args = getopt.getopt(
             sys.argv[1:], "hvo:", ["help", "version", "output="]
@@ -50,21 +48,33 @@ def main():
 
         fp.write(f"class {model}ViewSet(viewsets.ModelViewSet):\n")
 
-        # Router が basename を自動決定できるようにする
         fp.write("    queryset = None\n\n")
 
-        # get_queryset
         fp.write("    def get_queryset(self):\n")
         fp.write(f"        Model = apps.get_model('myapp', '{model}')\n")
         fp.write("        return Model.objects.all()\n\n")
 
-        # get_serializer_class
         fp.write("    def get_serializer_class(self):\n")
         fp.write(f"        from myapp.serializers.{model_lower}_serializer import {serializer}\n")
         fp.write(f"        return {serializer}\n\n")
 
-        # ★ lookup_field はすべて id に統一
-        fp.write('    lookup_field = "id"\n\n')
+        # ★ lookup_field の特別ルール
+        if model == "Device":
+            fp.write('    lookup_field = "device_id"\n\n')
+        elif model == "Manager":
+            fp.write('    lookup_field = "id"\n\n')
+        else:
+            # *_id を探す
+            id_field = None
+            for fname in data["fields"].keys():
+                if fname.endswith("_id"):
+                    id_field = fname
+                    break
+
+            if id_field:
+                fp.write(f'    lookup_field = "{id_field}"\n\n')
+            else:
+                fp.write('    lookup_field = "id"\n\n')
 
     if output:
         fp.close()

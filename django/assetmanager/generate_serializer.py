@@ -30,9 +30,10 @@ def generate_serializer(fp, data, dependencies, reverse_dependencies):
     fp.write(f"class {model}Serializer(serializers.ModelSerializer):\n")
 
     # ============================================================
-    # Device の特別処理
+    # Device の特別処理（PATCH + 昇順ソート）
     # ============================================================
     if model == "Device":
+        # PATCH 用：PrimaryKeyRelatedField
         fp.write(
             "    managers = serializers.PrimaryKeyRelatedField(\n"
             "        many=True,\n"
@@ -41,12 +42,32 @@ def generate_serializer(fp, data, dependencies, reverse_dependencies):
             "    )\n\n"
         )
 
+        # GET 用：netifs
         fp.write(
             "    netifs = serializers.PrimaryKeyRelatedField(\n"
             "        many=True,\n"
             "        read_only=True,\n"
             "        source='netif_set'\n"
             "    )\n\n"
+        )
+
+        # ★ PATCH で managers を置き換える update()
+        fp.write(
+            "    def update(self, instance, validated_data):\n"
+            "        managers = validated_data.pop('managers', None)\n"
+            "        instance = super().update(instance, validated_data)\n"
+            "        if managers is not None:\n"
+            "            instance.managers.set(managers)\n"
+            "        return instance\n\n"
+        )
+
+        # ★ GET 時は昇順ソートして返す
+        fp.write(
+            "    def to_representation(self, instance):\n"
+            "        rep = super().to_representation(instance)\n"
+            "        if 'managers' in rep:\n"
+            "            rep['managers'] = sorted(rep['managers'])\n"
+            "        return rep\n\n"
         )
 
         fp.write("    class Meta:\n")
@@ -64,7 +85,7 @@ def generate_serializer(fp, data, dependencies, reverse_dependencies):
         return
 
     # ============================================================
-    # Manager の特別処理
+    # Manager の特別処理（device_ids + devices）
     # ============================================================
     if model == "Manager":
         fp.write(
@@ -153,7 +174,6 @@ def generate_serializer(fp, data, dependencies, reverse_dependencies):
 
         # CharField / その他
         else:
-            # *_id は PK ではないので read_only=True
             if fname.endswith("_id"):
                 fp.write(f"    {fname} = serializers.CharField(read_only=True)\n\n")
             else:
