@@ -64,14 +64,10 @@ def main():
         fp.write(f"        return {serializer}\n\n")
 
         # lookup_field
-        lookup_field = None
-        for fname in data["fields"].keys():
-            if fname.endswith("_id") and fname != "id":
-                lookup_field = fname
-                break
-
-        if lookup_field:
-            fp.write(f'    lookup_field = "{lookup_field}"\n')
+        if model == "Device":
+            fp.write('    lookup_field = "device_id"\n')
+        else:
+            fp.write('    lookup_field = "id"\n')
 
         fp.write("\n")
 
