@@ -13,7 +13,11 @@ def test_add_ipv4s(configs):
         print(item, file=sys.stderr)
 
         # すでに存在するかチェック
-        params = { "address": item["address"] }
+        # addresses が存在し、かつ最初の要素で検索する
+        params = {}
+        if "addresses" in item and item["addresses"]:
+            params["addresses"] = item["addresses"]
+
         res = requests.get(url, params=params)
 
         if res.status_code == 200 and len(res.json()) > 0:

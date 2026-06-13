@@ -89,7 +89,6 @@ def generate_model(fp, data):
 
         # ForeignKey / OneToOne / OneToOneField
         if ("ForeignKey" in ftype) or ("OneToOne" in ftype):
-            # DSL の OneToOne は Django の OneToOneField にマッピング
             model_ftype = "OneToOneField" if ftype == "OneToOne" else ftype
             args = render_relation_field(field_def, model_ftype)
             arg_str = ", ".join(args)
@@ -110,57 +109,40 @@ def generate_model(fp, data):
             arg_str = ", ".join(args)
             fp.write(f"    {fname} = models.{ftype}({arg_str})\n")
 
-    # IPv4: address フィールドを追加
-    if name == "IPv4" and "address" not in fields:
-        fp.write(
-            "    address = models.CharField(max_length=255, null=True, blank=True)\n"
-        )
-
     # __str__
     fp.write("\n")
     fp.write("    def __str__(self):\n")
 
-    if name == "IPv4":
-        fp.write("        if self.addresses and len(self.addresses) > 0:\n")
-        fp.write('            return f"{self.ipv4_id}: {self.addresses[0]}"\n')
-        fp.write('        return f"{self.ipv4_id} (no IP address)"\n')
-    else:
-        id_field = None
-        name_field = None
-        address_field = None
-        first_field = None
+    id_field = None
+    name_field = None
+    address_field = None
+    first_field = None
 
-        all_fields = list(fields.keys())
-        if name == "IPv4" and "address" not in all_fields:
-            all_fields.append("address")
+    all_fields = list(fields.keys())
 
-        for fname in all_fields:
-            if first_field is None:
-                first_field = fname
-            if fname.endswith("_id"):
-                id_field = fname
-            if fname == "name":
-                name_field = fname
-            if fname == "address":
-                address_field = fname
+    for fname in all_fields:
+        if first_field is None:
+            first_field = fname
+        if fname.endswith("_id"):
+            id_field = fname
+        if fname == "name":
+            name_field = fname
+        if fname == "address":
+            address_field = fname
 
-        if id_field:
-            if name_field:
-                fp.write(
-                    f'        return f"{{self.{id_field}}}: {{self.{name_field}}}"\n'
-                )
-            elif address_field:
-                fp.write(
-                    f'        return f"{{self.{id_field}}}: {{self.{address_field}}}"\n'
-                )
-            else:
-                fp.write(f'        return f"{{self.{id_field}}}"\n')
-        elif name_field:
-            fp.write(f'        return f"{{self.{name_field}}}"\n')
+    if id_field:
+        if name_field:
+            fp.write(f'        return f"{{self.{id_field}}}: {{self.{name_field}}}"\n')
         elif address_field:
-            fp.write(f'        return f"{{self.{address_field}}}"\n')
+            fp.write(f'        return f"{{self.{id_field}}}: {{self.{address_field}}}"\n')
         else:
-            fp.write(f'        return f"{{self.{first_field}}}"\n')
+            fp.write(f'        return f"{{self.{id_field}}}"\n')
+    elif name_field:
+        fp.write(f'        return f"{{self.{name_field}}}"\n')
+    elif address_field:
+        fp.write(f'        return f"{{self.{address_field}}}"\n')
+    else:
+        fp.write(f'        return f"{{self.{first_field}}}"\n')
 
     # Meta
     if "meta" in data:
