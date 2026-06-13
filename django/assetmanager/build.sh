@@ -12,7 +12,7 @@ application="myapp"
 
 workdir="work"
   
-entities="Device NetIF IPv4 Manager"
+entities="Device NetIF IPv4 Manager Comment"
   
 prepare()
 {
@@ -297,7 +297,8 @@ loaddata()
   for model in ${models}; do
      m=`echo $model | tr '[:upper:]' '[:lower:]'`
      file="${top_dir}/tests/data/test_${m}-fixtures.yaml"
-     python3 manage.py loaddata ${file}
+     echo "DEBUG: generate ${file} ..."
+     python3 manage.py loaddata ${file} --verbosity 3
   done
 
   cd $top_dir

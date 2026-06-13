@@ -63,13 +63,8 @@ def main():
         fp.write(f"        from myapp.serializers.{model_lower}_serializer import {serializer}\n")
         fp.write(f"        return {serializer}\n\n")
 
-        # lookup_field
-        if model == "Device":
-            fp.write('    lookup_field = "device_id"\n')
-        else:
-            fp.write('    lookup_field = "id"\n')
-
-        fp.write("\n")
+        # ★ lookup_field はすべて id に統一
+        fp.write('    lookup_field = "id"\n\n')
 
     if output:
         fp.close()

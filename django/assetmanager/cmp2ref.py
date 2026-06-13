@@ -55,6 +55,15 @@ def convert_primitive_field(fdef):
     return out
 
 
+# 参照先モデルの PK 型を取得
+def get_pk_field(models, model_name):
+    fields = models[model_name]["fields"]
+    for fname, fdef in fields.items():
+        if fdef.get("unique") and fdef["type"] in ["String", "ID"]:
+            return fname, convert_primitive_field(fdef)
+    return None, None
+
+
 def build_reference_model(models, target_model):
     if target_model not in models:
         raise ValueError(f"Model {target_model} not found")
@@ -69,16 +78,11 @@ def build_reference_model(models, target_model):
     for fname, fdef in models[target_model]["fields"].items():
         ftype = fdef["type"]
 
-        # プリミティブ型
         if ftype in ["String", "Text", "Int", "Float", "Bool", "ID"] or ftype.startswith("List"):
             out["fields"][fname] = convert_primitive_field(fdef)
 
         elif ftype == "ManyToMany":
-            # ManyToMany は単数形 + _ids に変換する
-            base = fname
-            if base.endswith("s"):
-                base = base[:-1]  # 複数形の s を削除
-
+            base = fname[:-1] if fname.endswith("s") else fname
             new_name = f"{base}_ids"
 
             out["fields"][new_name] = {
@@ -86,23 +90,24 @@ def build_reference_model(models, target_model):
                 "to": fdef["to"]
             }
 
-
-        # OneToMany / OneToOne は逆方向で処理するためスキップ
+        # OneToMany / OneToOne は「自分側」ではスキップ（逆参照で処理）
         elif ftype in ["OneToMany", "OneToOne"]:
             continue
 
         else:
             raise ValueError(f"Unknown type: {ftype}")
 
-    # 逆方向参照（OneToMany / OneToOne のみ）
+    # 逆参照（OneToMany のみ）
     for model_name, model_def in models.items():
         for fname, fdef in model_def["fields"].items():
             ftype = fdef["type"]
 
-            # OneToMany → ForeignKey
+            # 参照元モデルの PK 型
+            pk_name, pk_field = get_pk_field(models, model_name)
+
+            # OneToMany → ForeignKey（子側に FK を生やす）
             if ftype == "OneToMany" and fdef["to"] == target_model:
                 nullable = fdef.get("nullable", False)
-
                 field_name = f"{model_name.lower()}_id"
 
                 out["fields"][field_name] = {
@@ -111,25 +116,15 @@ def build_reference_model(models, target_model):
                     "on_delete": "SET_NULL" if nullable else "CASCADE",
                 }
 
-                if nullable:
-                    out["fields"][field_name]["null"] = True
-                    out["fields"][field_name]["blank"] = True
-
-            # OneToOne → OneToOneField
-            if ftype == "OneToOne" and fdef["to"] == target_model:
-                nullable = fdef.get("nullable", True)
-
-                field_name = f"{model_name.lower()}_id"
-
-                out["fields"][field_name] = {
-                    "type": "OneToOneField",
-                    "to": model_name,
-                    "on_delete": "SET_NULL" if nullable else "CASCADE",
-                }
+                if pk_field and "max_length" in pk_field:
+                    out["fields"][field_name]["max_length"] = pk_field["max_length"]
 
                 if nullable:
                     out["fields"][field_name]["null"] = True
                     out["fields"][field_name]["blank"] = True
+
+            # ★ OneToOne の逆参照は作らない
+            # Django が自動で reverse accessor を作るので、ここでは何もしない
 
     return out
 
@@ -179,4 +174,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

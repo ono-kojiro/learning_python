@@ -97,6 +97,12 @@ def main():
     # トポロジカルソートで loaddata 順を決定
     load_order = topo_sort(dep_map)
 
+    # ---------------------------------------------------------
+    # ★ Device を最優先にする（暫定対応）
+    # ---------------------------------------------------------
+    if "Device" in load_order:
+        load_order = ["Device"] + [m for m in load_order if m != "Device"]
+
     # 逆向き依存を生成（参照先 → 参照元）
     reverse_map = {model: [] for model in dep_map}
 
