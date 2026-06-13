@@ -12,7 +12,7 @@ application="myapp"
 
 workdir="work"
   
-entities="Device NetIF IPv4 Manager Comment"
+entities="Device NetIF IPv4 Manager Comment Remark"
   
 prepare()
 {
