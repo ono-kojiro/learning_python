@@ -137,7 +137,7 @@ def generate_serializer(fp, data, dependencies, reverse_dependencies):
         ftype = field_def["type"]
 
         # ForeignKey → 整数 PK
-        if ftype in ("ForeignKey", "OneToOneField"):
+        if ftype in ("ForeignKey", "OneToOneField", "OneToOne"):
             to_model = field_def["to"]
             null_allowed = field_def.get("null", False)
             blank_allowed = field_def.get("blank", False)

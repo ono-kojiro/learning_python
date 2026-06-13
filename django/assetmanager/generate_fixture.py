@@ -65,7 +65,7 @@ def generate_gateway_from_cidr(cidr):
     return f"{a}.{b}.{c}.1"
 
 
-def generate_random_value(model, field_name, field_def, count):
+def generate_random_value(model, field_name, field_def, count, pk):
     ftype = field_def["type"]
     null_ok = field_def.get("null", False)
 
@@ -90,26 +90,24 @@ def generate_random_value(model, field_name, field_def, count):
     if ftype == "GenericIPAddressField":
         return f"192.168.{random.randint(0,255)}.{random.randint(1,254)}"
 
-    # ForeignKey → 1〜count のどれかを参照（暫定）
+    # ★ OneToOneField → pk と同じ番号を割り当てる（UNIQUE 制約を守る）
+    if ftype == "OneToOneField":
+        return pk
+
+    # ForeignKey → ランダム
     if ftype == "ForeignKey":
-        # null=True の場合だけ None を許可
         if null_ok and random.random() < 0.2:
             return None
-        # 1〜count の整数（＝参照先の pk を想定）
         return random.randint(1, count)
 
-    # ManyToManyField → 1〜count の整数リスト（暫定）
+    # ManyToManyField → ランダム
     if ftype == "ManyToManyField":
-        # 1〜3 個の関連を作る
         n = random.randint(1, min(3, count))
-        # 重複なしで選ぶ
         return random.sample(list(range(1, count + 1)), n)
 
-    # null=True の場合のみ None を許可
     if null_ok:
         return None
 
-    # その他は適当な文字列
     return random_string("VAL-")
 
 
@@ -136,19 +134,17 @@ def main():
         model = data["name"]
         fields = data["fields"]
 
-        for i in range(1, count + 1):
+        for pk in range(1, count + 1):
             item = {
                 "model": f"myapp.{model.lower()}",
-                "pk": i,          # ★ pk は単純に 1..count
+                "pk": pk,
                 "fields": {}
             }
 
-            # まず全フィールド生成
             for fname, field_def in fields.items():
-                value = generate_random_value(model, fname, field_def, count)
+                value = generate_random_value(model, fname, field_def, count, pk)
                 item["fields"][fname] = value
 
-            # gateway の後処理
             if "addresses" in item["fields"] and "gateway" in item["fields"]:
                 addrs = item["fields"]["addresses"]
                 if addrs:

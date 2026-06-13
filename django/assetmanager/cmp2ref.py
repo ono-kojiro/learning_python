@@ -55,7 +55,6 @@ def convert_primitive_field(fdef):
     return out
 
 
-# 参照先モデルの PK 型を取得
 def get_pk_field(models, model_name):
     fields = models[model_name]["fields"]
     for fname, fdef in fields.items():
@@ -74,24 +73,33 @@ def build_reference_model(models, target_model):
         "fields": {}
     }
 
-    # プリミティブ型 + ManyToMany を処理
     for fname, fdef in models[target_model]["fields"].items():
         ftype = fdef["type"]
 
+        # プリミティブ型
         if ftype in ["String", "Text", "Int", "Float", "Bool", "ID"] or ftype.startswith("List"):
             out["fields"][fname] = convert_primitive_field(fdef)
 
+        # ManyToMany
         elif ftype == "ManyToMany":
             base = fname[:-1] if fname.endswith("s") else fname
             new_name = f"{base}_ids"
-
             out["fields"][new_name] = {
                 "type": "ManyToManyField",
                 "to": fdef["to"]
             }
 
-        # OneToMany / OneToOne は「自分側」ではスキップ（逆参照で処理）
-        elif ftype in ["OneToMany", "OneToOne"]:
+        # ★ OneToOne → OneToOneField として生成
+        elif ftype == "OneToOne":
+            out["fields"][fname] = {
+                "type": "OneToOneField",
+                "to": fdef["to"],
+                "null": fdef.get("nullable", False),
+                "blank": fdef.get("nullable", False),
+            }
+
+        # OneToMany はスキップ（逆参照で処理）
+        elif ftype == "OneToMany":
             continue
 
         else:
@@ -102,10 +110,8 @@ def build_reference_model(models, target_model):
         for fname, fdef in model_def["fields"].items():
             ftype = fdef["type"]
 
-            # 参照元モデルの PK 型
             pk_name, pk_field = get_pk_field(models, model_name)
 
-            # OneToMany → ForeignKey（子側に FK を生やす）
             if ftype == "OneToMany" and fdef["to"] == target_model:
                 nullable = fdef.get("nullable", False)
                 field_name = f"{model_name.lower()}_id"
@@ -122,9 +128,6 @@ def build_reference_model(models, target_model):
                 if nullable:
                     out["fields"][field_name]["null"] = True
                     out["fields"][field_name]["blank"] = True
-
-            # ★ OneToOne の逆参照は作らない
-            # Django が自動で reverse accessor を作るので、ここでは何もしない
 
     return out
 

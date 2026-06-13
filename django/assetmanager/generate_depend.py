@@ -15,14 +15,14 @@ def usage():
 # ---------------------------------------------------------
 def extract_depend(data):
     deps = []
-    fields = data.get('fields', {})
+    fields = data.get("fields", {})
 
     for field_name, field_def in fields.items():
-        ftype = field_def.get('type')
+        ftype = field_def.get("type", "")
 
-        # 参照元 → 参照先 のみを依存関係に入れる
-        if ftype in ('ForeignKey', 'OneToOneField', 'ManyToManyField'):
-            deps.append(field_def['to'])
+        # ForeignKey / OneToOne / OneToOneField / ManyToManyField を依存として扱う
+        if ("ForeignKey" in ftype) or ("OneToOne" in ftype) or (ftype == "ManyToManyField"):
+            deps.append(field_def["to"])
 
     return deps
 
@@ -97,9 +97,7 @@ def main():
     # トポロジカルソートで loaddata 順を決定
     load_order = topo_sort(dep_map)
 
-    # ---------------------------------------------------------
     # ★ Device を最優先にする（暫定対応）
-    # ---------------------------------------------------------
     if "Device" in load_order:
         load_order = ["Device"] + [m for m in load_order if m != "Device"]
 
