@@ -60,6 +60,7 @@ all()
   replace
   allowed_hosts
 
+  category
   cmp2ref
   depend
   merge_models
@@ -142,6 +143,14 @@ replace_installed_apps()
 log()
 {
   cat ${project}/nohup.out
+}
+
+category()
+{
+   cmd="python3 categorize_entity.py -o category.yaml template/app/*_cmp.yaml"
+   echo $cmd
+   $cmd
+   cat category.yaml
 }
 
 depend()

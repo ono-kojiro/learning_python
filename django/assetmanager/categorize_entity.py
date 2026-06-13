@@ -3,11 +3,10 @@
 import sys
 import getopt
 import yaml
-import re
 
 
 def usage():
-    print(f"Usage: {sys.argv[0]} <entity_cmp.yaml> ...")
+    print(f"Usage: {sys.argv[0]} [-o category.yaml] <entity_cmp.yaml> ...")
 
 
 def read_yaml(path):
@@ -21,7 +20,10 @@ def read_yaml(path):
 def categorize_entity(entity_name, data):
     fields = data.get("fields", {})
 
-    # 1. Owner 判定
+    # ------------------------------------------------------------
+    # Owner 判定（Manager / User / Group など）
+    # ------------------------------------------------------------
+
     # ManyToManyField を持つ → Owner
     for fdef in fields.values():
         if fdef.get("type") == "ManyToManyField":
@@ -32,15 +34,17 @@ def categorize_entity(entity_name, data):
         if fname.endswith("_ids"):
             return "owner"
 
-    # 2. Attribute 判定
-    # 親への OneToOne / ForeignKey（nullable=false）
+    # ------------------------------------------------------------
+    # Attribute 判定（IPv4 など）
+    # ------------------------------------------------------------
     for fdef in fields.values():
         if fdef.get("type") in ("OneToOneField", "ForeignKey"):
             if not fdef.get("nullable", True):
                 return "attribute"
 
-    # 3. Resource 判定
-    # 固有IDを持つ（xxx_id）
+    # ------------------------------------------------------------
+    # Resource 判定（Device, NetIF など）
+    # ------------------------------------------------------------
     for fname in fields.keys():
         if fname.endswith("_id"):
             return "resource"
@@ -54,24 +58,32 @@ def categorize_entity(entity_name, data):
 # ------------------------------------------------------------
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hv", ["help", "version"])
+        opts, args = getopt.getopt(
+            sys.argv[1:], "hvo:", ["help", "version", "output="]
+        )
     except getopt.GetoptError as err:
         print(err)
         usage()
         sys.exit(1)
 
-    for opt, _ in opts:
+    output_path = None
+
+    for opt, val in opts:
         if opt in ("-h", "--help"):
             usage()
             sys.exit(0)
         elif opt in ("-v", "--version"):
             print("categorize_entity.py version 1.0")
             sys.exit(0)
+        elif opt in ("-o", "--output"):
+            output_path = val
 
     if not args:
         print("ERROR: no input YAML files", file=sys.stderr)
         usage()
         sys.exit(1)
+
+    results = {}
 
     # 各 YAML を読み込んでカテゴリ判定
     for path in args:
@@ -86,9 +98,18 @@ def main():
         entity_def = data[entity_name]
 
         category = categorize_entity(entity_name, entity_def)
+        results[entity_name] = category
+
+        # 標準出力にも表示
         print(f"{entity_name}: {category}")
+
+    # -o で category.yaml に保存
+    if output_path:
+        with open(output_path, "w", encoding="utf-8") as fp:
+            fp.write("---\n")  # YAML の開始
+            yaml.dump({"categories": results}, fp, allow_unicode=True)
+        print(f"\nSaved categories to {output_path}")
 
 
 if __name__ == "__main__":
     main()
-
