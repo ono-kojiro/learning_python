@@ -33,7 +33,6 @@ def generate_serializer(fp, data, dependencies, reverse_dependencies):
     # Device の特別処理（PATCH + 昇順ソート）
     # ============================================================
     if model == "Device":
-        # PATCH 用：PrimaryKeyRelatedField
         fp.write(
             "    managers = serializers.PrimaryKeyRelatedField(\n"
             "        many=True,\n"
@@ -42,7 +41,6 @@ def generate_serializer(fp, data, dependencies, reverse_dependencies):
             "    )\n\n"
         )
 
-        # GET 用：netifs
         fp.write(
             "    netifs = serializers.PrimaryKeyRelatedField(\n"
             "        many=True,\n"
@@ -51,7 +49,6 @@ def generate_serializer(fp, data, dependencies, reverse_dependencies):
             "    )\n\n"
         )
 
-        # ★ PATCH で managers を置き換える update()
         fp.write(
             "    def update(self, instance, validated_data):\n"
             "        managers = validated_data.pop('managers', None)\n"
@@ -61,7 +58,6 @@ def generate_serializer(fp, data, dependencies, reverse_dependencies):
             "        return instance\n\n"
         )
 
-        # ★ GET 時は昇順ソートして返す
         fp.write(
             "    def to_representation(self, instance):\n"
             "        rep = super().to_representation(instance)\n"
@@ -85,13 +81,16 @@ def generate_serializer(fp, data, dependencies, reverse_dependencies):
         return
 
     if model == "Manager":
+        # device_ids: 実体（ManyToMany）
         fp.write(
             "    device_ids = serializers.PrimaryKeyRelatedField(\n"
             "        many=True,\n"
-            "        read_only=True,\n"
+            "        queryset=Device.objects.all(),\n"
+            "        required=False,\n"
             "    )\n\n"
         )
 
+        # devices: 外部 API で使う唯一のフィールド（read/write 両対応）
         fp.write(
             "    devices = serializers.PrimaryKeyRelatedField(\n"
             "        many=True,\n"
@@ -103,10 +102,10 @@ def generate_serializer(fp, data, dependencies, reverse_dependencies):
 
         fp.write(
             "    def update(self, instance, validated_data):\n"
-            "        devices = validated_data.pop('devices', None)\n"
+            "        device_ids = validated_data.pop('device_ids', None)\n"
             "        instance = super().update(instance, validated_data)\n"
-            "        if devices is not None:\n"
-            "            instance.device_ids.set(devices)\n"
+            "        if device_ids is not None:\n"
+            "            instance.device_ids.set(device_ids)\n"
             "        return instance\n\n"
         )
 
@@ -132,7 +131,7 @@ def generate_serializer(fp, data, dependencies, reverse_dependencies):
     for fname, field_def in fields.items():
         ftype = field_def["type"]
 
-        # ForeignKey → 整数 PK
+        # ForeignKey / OneToOne → PK
         if ftype in ("ForeignKey", "OneToOneField", "OneToOne"):
             to_model = field_def["to"]
             null_allowed = field_def.get("null", False)
@@ -146,7 +145,7 @@ def generate_serializer(fp, data, dependencies, reverse_dependencies):
 
             model_fields.append(fname)
 
-        # ManyToMany → 整数 PK
+        # ManyToMany → PK list
         elif ftype == "ManyToManyField":
             to_model = field_def["to"]
 
@@ -170,11 +169,7 @@ def generate_serializer(fp, data, dependencies, reverse_dependencies):
 
         # CharField / その他
         else:
-            if fname.endswith("_id"):
-                fp.write(f"    {fname} = serializers.CharField(read_only=True)\n\n")
-            else:
-                fp.write(f"    {fname} = serializers.CharField(required=False)\n\n")
-
+            fp.write(f"    {fname} = serializers.CharField(required=False)\n\n")
             model_fields.append(fname)
 
     # reverse dependencies
