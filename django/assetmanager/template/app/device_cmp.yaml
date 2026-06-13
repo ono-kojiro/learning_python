@@ -1,4 +1,7 @@
+---
 Device:
+  category: resource   # ★ 追加
+
   meta:
     verbose_name: "Device"
     verbose_name_plural: "Devices"
@@ -22,4 +25,3 @@ Device:
       type: OneToMany
       to: NetIF
       nullable: false   # Device が消えたら NetIF も消える（CASCADE）
-
