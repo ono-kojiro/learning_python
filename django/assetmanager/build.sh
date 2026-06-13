@@ -208,6 +208,7 @@ generate()
     python3 generate_serializer.py \
       -o ${workdir}/${application}/serializers/${entity}_serializer.py \
       -d depend.yaml \
+      -c category.yaml \
       ${template}
     
     echo "INFO: generate fixture for $entity"
