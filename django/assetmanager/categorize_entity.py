@@ -6,7 +6,7 @@ import yaml
 
 
 def usage():
-    print(f"Usage: {sys.argv[0]} [-o category.yaml] <entity_cmp.yaml> ...")
+    print(f"Usage: {sys.argv[0]} [-o category.yaml] template/app/*_ref.yaml")
 
 
 def read_yaml(path):
@@ -15,41 +15,85 @@ def read_yaml(path):
 
 
 # ------------------------------------------------------------
-# カテゴリ判定ロジック
+# すべての *_ref.yaml を読み込み、逆参照情報を構築する
 # ------------------------------------------------------------
-def categorize_entity(entity_name, data):
+def load_all_entities(paths):
+    entities = {}  # { "NetIF": {...}, "IPv4": {...}, ... }
+
+    for path in paths:
+        data = read_yaml(path)
+
+        # ref YAML は name: NetIF の形式
+        if "name" not in data or "fields" not in data:
+            print(f"{path}: invalid format")
+            continue
+
+        name = data["name"]
+        entities[name] = data
+
+    return entities
+
+
+# ------------------------------------------------------------
+# カテゴリ判定ロジック（構造ベース + 逆参照）
+# ------------------------------------------------------------
+def categorize_entity(entity_name, entities):
+    data = entities[entity_name]
     fields = data.get("fields", {})
 
     # ------------------------------------------------------------
-    # Owner 判定（Manager / User / Group など）
+    # Owner 判定（ManyToMany / *_ids）
     # ------------------------------------------------------------
-
-    # ManyToManyField を持つ → Owner
     for fdef in fields.values():
         if fdef.get("type") == "ManyToManyField":
             return "owner"
 
-    # *_ids を持つ → Owner
     for fname in fields.keys():
         if fname.endswith("_ids"):
             return "owner"
 
     # ------------------------------------------------------------
-    # Attribute 判定（IPv4 など）
+    # 子を持つかどうか（OneToOne / OneToMany の親側）
     # ------------------------------------------------------------
-    for fdef in fields.values():
-        if fdef.get("type") in ("OneToOneField", "ForeignKey"):
-            if not fdef.get("nullable", True):
-                return "attribute"
+    has_children = False
+    for other_name, other_data in entities.items():
+        if other_name == entity_name:
+            continue
+
+        other_fields = other_data.get("fields", {})
+        for fdef in other_fields.values():
+            if fdef.get("to") == entity_name:
+                if fdef.get("type") in ("OneToOneField", "OneToMany"):
+                    has_children = True
 
     # ------------------------------------------------------------
-    # Resource 判定（Device, NetIF など）
+    # 親への OneToOneField / ForeignKey を持つか（自分の YAML 内）
     # ------------------------------------------------------------
-    for fname in fields.keys():
-        if fname.endswith("_id"):
-            return "resource"
+    has_one_to_one_parent = any(
+        fdef.get("type") == "OneToOneField"
+        for fdef in fields.values()
+    )
 
-    # デフォルトは resource
+    has_foreign_key_parent = any(
+        fdef.get("type") == "ForeignKey"
+        for fdef in fields.values()
+    )
+
+    # ------------------------------------------------------------
+    # Attribute 判定（親が OneToOne で、子を持たない）
+    # ------------------------------------------------------------
+    if has_one_to_one_parent and not has_children:
+        return "attribute"
+
+    # ------------------------------------------------------------
+    # Resource 判定（親が ForeignKey で、子を持つ）
+    # ------------------------------------------------------------
+    if has_foreign_key_parent and has_children:
+        return "resource"
+
+    # ------------------------------------------------------------
+    # Resource（デフォルト）
+    # ------------------------------------------------------------
     return "resource"
 
 
@@ -73,7 +117,7 @@ def main():
             usage()
             sys.exit(0)
         elif opt in ("-v", "--version"):
-            print("categorize_entity.py version 1.0")
+            print("categorize_entity.py version 3.1")
             sys.exit(0)
         elif opt in ("-o", "--output"):
             output_path = val
@@ -83,30 +127,21 @@ def main():
         usage()
         sys.exit(1)
 
+    # すべての *_ref.yaml を読み込む
+    entities = load_all_entities(args)
+
     results = {}
 
-    # 各 YAML を読み込んでカテゴリ判定
-    for path in args:
-        data = read_yaml(path)
-
-        # YAML のトップレベルキー（Entity 名）を取得
-        if len(data.keys()) != 1:
-            print(f"{path}: invalid format", file=sys.stderr)
-            continue
-
-        entity_name = list(data.keys())[0]
-        entity_def = data[entity_name]
-
-        category = categorize_entity(entity_name, entity_def)
+    # 各 Entity を分類
+    for entity_name in entities.keys():
+        category = categorize_entity(entity_name, entities)
         results[entity_name] = category
-
-        # 標準出力にも表示
         print(f"{entity_name}: {category}")
 
     # -o で category.yaml に保存
     if output_path:
         with open(output_path, "w", encoding="utf-8") as fp:
-            fp.write("---\n")  # YAML の開始
+            fp.write("---\n")
             yaml.dump({"categories": results}, fp, allow_unicode=True)
         print(f"\nSaved categories to {output_path}")
 

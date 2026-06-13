@@ -169,6 +169,8 @@ def main():
 
     if output_file:
         with open(output_file, "w") as f:
+            f.write('---\n')
+            f.write('# {0}\n'.format(output_file))
             f.write(yaml_text)
         print(f"Generated: {output_file}")
     else:

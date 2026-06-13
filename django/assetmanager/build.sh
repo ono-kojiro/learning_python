@@ -60,8 +60,8 @@ all()
   replace
   allowed_hosts
 
-  category
   cmp2ref
+  category
   depend
   merge_models
 
@@ -122,6 +122,8 @@ cmp2ref()
     python3 cmp2ref.py --output template/app/${basename}_ref.yaml \
       --name ${entity} template/app/*_cmp.yaml
   done
+
+  cat template/app/*_cmp.yaml > all_cmp.yaml
 }
 
 replace_installed_apps()
@@ -147,10 +149,12 @@ log()
 
 category()
 {
-   cmd="python3 categorize_entity.py -o category.yaml template/app/*_cmp.yaml"
+   cmd="python3 categorize_entity.py -o category.yaml template/app/*_ref.yaml"
    echo $cmd
    $cmd
    cat category.yaml
+
+   cat template/app/*_ref.yaml > all_ref.yaml
 }
 
 depend()
