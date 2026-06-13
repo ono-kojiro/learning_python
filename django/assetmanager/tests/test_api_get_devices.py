@@ -12,9 +12,9 @@ def test_get_devices(configs):
     assert len(devices) > 0
 
     device = devices[0]
-    assert "device_id" in device
+    assert "id" in device
 
-    # lookup_field = device_id に対応
-    detail_url = f"{configs['base_url']}/api/devices/{device['device_id']}/"
+    # lookup_field = id に対応
+    detail_url = f"{configs['base_url']}/api/devices/{device['id']}/"
     res2 = requests.get(detail_url)
     assert res2.status_code == 200

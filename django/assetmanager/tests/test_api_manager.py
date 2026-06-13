@@ -32,11 +32,11 @@ def test_get_managers(configs):
 
 
 # ---------------------------------------------------------
-# 2. GET /api/devices/<device_id>/ で managers を確認
+# 2. GET /api/devices/<id>/ で managers を確認
 # ---------------------------------------------------------
 @pytest.mark.order(11)
 def test_get_device_managers(configs):
-    # 一覧から device_id を取得
+    # 一覧から Device の PK を取得
     url_list = f"{configs['base_url']}/api/devices/"
     print(url_list, file=sys.stderr)
 
@@ -46,10 +46,10 @@ def test_get_device_managers(configs):
     devices = res_list.json()
     assert len(devices) > 0
 
-    device_id = devices[0]["device_id"]
+    device_pk = devices[0]["id"]
 
-    # 個別取得（lookup_field=device_id）
-    url = f"{configs['base_url']}/api/devices/{device_id}/"
+    # 個別取得（lookup_field=id）
+    url = f"{configs['base_url']}/api/devices/{device_pk}/"
     print(url, file=sys.stderr)
 
     res = requests.get(url)
@@ -63,21 +63,21 @@ def test_get_device_managers(configs):
 
 
 # ---------------------------------------------------------
-# 3. PATCH /api/devices/<device_id>/ で managers を更新
+# 3. PATCH /api/devices/<id>/ で managers を更新
 # ---------------------------------------------------------
 @pytest.mark.order(12)
 def test_patch_device_managers(configs):
-    # Device 一覧から device_id を取得
+    # Device 一覧から PK を取得
     url_list = f"{configs['base_url']}/api/devices/"
     res_list = requests.get(url_list)
     assert res_list.status_code == 200
 
     devices = res_list.json()
     assert len(devices) > 0
-    device_id = devices[0]["device_id"]
+    device_pk = devices[0]["id"]
 
     # PATCH
-    url = f"{configs['base_url']}/api/devices/{device_id}/"
+    url = f"{configs['base_url']}/api/devices/{device_pk}/"
     print(url, file=sys.stderr)
 
     payload = {
@@ -107,7 +107,7 @@ def test_patch_manager_devices(configs):
     assert len(managers) > 0
     manager_pk = managers[0]["id"]
 
-    # Device 一覧から device_id を取得
+    # Device 一覧から PK を取得
     url_dev_list = f"{configs['base_url']}/api/devices/"
     res_dev_list = requests.get(url_dev_list)
     assert res_dev_list.status_code == 200
@@ -115,14 +115,14 @@ def test_patch_manager_devices(configs):
     devices = res_dev_list.json()
     assert len(devices) >= 2
 
-    device_ids = [devices[0]["device_id"], devices[1]["device_id"]]
+    device_pks = [devices[0]["id"], devices[1]["id"]]
 
     # PATCH
     url = f"{configs['base_url']}/api/managers/{manager_pk}/"
     print(url, file=sys.stderr)
 
     payload = {
-        "devices": device_ids
+        "devices": device_pks
     }
 
     res = requests.patch(url, json=payload)
@@ -131,10 +131,10 @@ def test_patch_manager_devices(configs):
     assert res.status_code == 200
 
     data = res.json()
-    assert data["devices"] == device_ids
+    assert data["devices"] == device_pks
 
     # Device 側にも反映されているか確認
-    url2 = f"{configs['base_url']}/api/devices/{device_ids[0]}/"
+    url2 = f"{configs['base_url']}/api/devices/{device_pks[0]}/"
     res2 = requests.get(url2)
     assert res2.status_code == 200
 
@@ -146,16 +146,16 @@ def test_patch_manager_devices(configs):
 # ---------------------------------------------------------
 @pytest.mark.order(14)
 def test_device_requires_at_least_one_manager(configs):
-    # Device 一覧から device_id を取得
+    # Device 一覧から PK を取得
     url_list = f"{configs['base_url']}/api/devices/"
     res_list = requests.get(url_list)
     assert res_list.status_code == 200
 
     devices = res_list.json()
     assert len(devices) > 0
-    device_id = devices[0]["device_id"]
+    device_pk = devices[0]["id"]
 
-    url = f"{configs['base_url']}/api/devices/{device_id}/"
+    url = f"{configs['base_url']}/api/devices/{device_pk}/"
     print(url, file=sys.stderr)
 
     payload = {
@@ -166,4 +166,3 @@ def test_device_requires_at_least_one_manager(configs):
     print("PATCH RESULT:", res.json(), file=sys.stderr)
 
     assert res.status_code in (200, 400)
-

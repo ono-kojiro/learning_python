@@ -84,9 +84,6 @@ def generate_serializer(fp, data, dependencies, reverse_dependencies):
         )
         return
 
-    # ============================================================
-    # Manager の特別処理（device_ids + devices）
-    # ============================================================
     if model == "Manager":
         fp.write(
             "    device_ids = serializers.PrimaryKeyRelatedField(\n"
@@ -96,9 +93,8 @@ def generate_serializer(fp, data, dependencies, reverse_dependencies):
         )
 
         fp.write(
-            "    devices = serializers.SlugRelatedField(\n"
+            "    devices = serializers.PrimaryKeyRelatedField(\n"
             "        many=True,\n"
-            "        slug_field='device_id',\n"
             "        queryset=Device.objects.all(),\n"
             "        source='device_ids',\n"
             "        required=False,\n"
@@ -107,7 +103,7 @@ def generate_serializer(fp, data, dependencies, reverse_dependencies):
 
         fp.write(
             "    def update(self, instance, validated_data):\n"
-            "        devices = validated_data.pop('device_ids', None)\n"
+            "        devices = validated_data.pop('devices', None)\n"
             "        instance = super().update(instance, validated_data)\n"
             "        if devices is not None:\n"
             "            instance.device_ids.set(devices)\n"
