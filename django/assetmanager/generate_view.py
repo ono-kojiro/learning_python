@@ -75,7 +75,7 @@ def main():
 
         if model == "Comment":
             # Comment は comment_id を使う（テスト仕様）
-            fp.write('    lookup_field = "comment_id"\n\n')
+            fp.write('    lookup_field = "id"\n\n')
 
         elif category == "attribute":
             # attribute は自然キーがあっても id を使う

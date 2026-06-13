@@ -14,14 +14,14 @@ def test_comment_minimal(configs):
     assert len(comments) > 0
 
     c = comments[0]
-    assert "comment_id" in c
+    assert "id" in c
     assert "text" in c
     assert "device" in c
 
 
 @pytest.mark.order(21)
 def test_get_comment(configs):
-    # 一覧から comment_id を取得
+    # 一覧から id を取得
     url_list = f"{configs['base_url']}/api/comments/"
     res_list = requests.get(url_list)
     assert res_list.status_code == 200
@@ -29,21 +29,21 @@ def test_get_comment(configs):
     comments = res_list.json()
     assert len(comments) > 0
 
-    comment_id = comments[0]["comment_id"]
+    id = comments[0]["id"]
 
-    url = f"{configs['base_url']}/api/comments/{comment_id}/"
+    url = f"{configs['base_url']}/api/comments/{id}/"
     res = requests.get(url)
     assert res.status_code == 200
 
     data = res.json()
-    assert data["comment_id"] == comment_id
+    assert data["id"] == id
     assert "text" in data
     assert "device" in data
 
 
 @pytest.mark.order(22)
 def test_patch_comment(configs):
-    # 一覧から comment_id を取得
+    # 一覧から id を取得
     url_list = f"{configs['base_url']}/api/comments/"
     res_list = requests.get(url_list)
     assert res_list.status_code == 200
@@ -51,9 +51,9 @@ def test_patch_comment(configs):
     comments = res_list.json()
     assert len(comments) > 0
 
-    comment_id = comments[0]["comment_id"]
+    id = comments[0]["id"]
 
-    url = f"{configs['base_url']}/api/comments/{comment_id}/"
+    url = f"{configs['base_url']}/api/comments/{id}/"
 
     payload = {
         "text": "Updated comment text"
@@ -69,7 +69,7 @@ def test_patch_comment(configs):
 
 @pytest.mark.order(23)
 def test_delete_comment(configs):
-    # 一覧から comment_id を取得
+    # 一覧から idを取得
     url_list = f"{configs['base_url']}/api/comments/"
     res_list = requests.get(url_list)
     assert res_list.status_code == 200
@@ -77,9 +77,9 @@ def test_delete_comment(configs):
     comments = res_list.json()
     assert len(comments) > 0
 
-    comment_id = comments[0]["comment_id"]
+    id = comments[0]["id"]
 
-    url = f"{configs['base_url']}/api/comments/{comment_id}/"
+    url = f"{configs['base_url']}/api/comments/{id}/"
 
     res = requests.delete(url)
     assert res.status_code in (200, 204)
