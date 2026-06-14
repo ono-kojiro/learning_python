@@ -202,6 +202,7 @@ generate_model()
     echo "INFO: generate model for $entity"
     ./generators/generate_model.py \
       -d ${depend_yaml} \
+      -l template/app \
       -o ${workdir}/${application}/models/${entity}_model.py \
       ${ref_yaml}
   done
