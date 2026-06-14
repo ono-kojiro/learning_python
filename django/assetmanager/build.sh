@@ -215,6 +215,7 @@ generate_admin()
     ./generators/generate_admin.py \
       -o ${workdir}/${application}/admin/${entity}_admin.py \
       -d ${depend_yaml} \
+      -l template/app \
       template/app/${entity}_ref.yaml
   done
 }
