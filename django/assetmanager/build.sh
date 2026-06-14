@@ -7,6 +7,10 @@ cd $top_dir
 
 . ./.env
 
+if [ ! -d myenv ]; then
+  python3 -m venv myenv
+fi
+
 project="myproject"
 application="myapp"
 
@@ -132,7 +136,8 @@ cmp2ref()
 {
   for Entity in ${Entities}; do
     basename=`echo $Entity | tr '[:upper:]' '[:lower:]'`
-    python3 cmp2ref.py --output template/app/${basename}_ref.yaml \
+    ./generators/cmp2ref.py \
+      --output template/app/${basename}_ref.yaml \
       --name ${Entity} template/app/*_cmp.yaml
   done
 
@@ -151,7 +156,7 @@ replace_installed_apps()
   fi
   
   name='INSTALLED_APPS'
-  python3 replace_list.py -n ${name} -p ${project} ${settings_py} > settings.py
+  ./replace_list.py -n ${name} -p ${project} ${settings_py} > settings.py
   mv -f settings.py ${settings_py}
 }
 
@@ -162,7 +167,8 @@ log()
 
 category()
 {
-   cmd="python3 categorize_entity.py -o category.yaml template/app/*_ref.yaml"
+   cmd="./generators/categorize_entity.py"
+   cmd="$cmd -o category.yaml template/app/*_ref.yaml"
    echo $cmd
    $cmd
    cat category.yaml
@@ -172,14 +178,16 @@ category()
 
 depend()
 {
-   cmd="python3 generate_depend.py -o depend.yaml template/app/*_ref.yaml"
+   cmd="./generators/generate_depend.py"
+   cmd="$cmd -o depend.yaml template/app/*_ref.yaml"
    echo $cmd
    $cmd
 }
 
 meta()
 {
-   cmd="python3 generate_meta.py -o meta.yaml template/app/*_ref.yaml"
+   cmd="./generators/generate_meta.py"
+   cmd="$cmd -o meta.yaml template/app/*_ref.yaml"
    echo $cmd
    $cmd
 }
@@ -202,7 +210,7 @@ generate_model()
     ref_yaml="template/app/${entity}_ref.yaml"
 
     echo "INFO: generate model for $entity"
-    python3 generate_model.py \
+    ./generators/generate_model.py \
       -d depend.yaml \
       -o ${workdir}/${application}/models/${entity}_model.py \
       ${ref_yaml}
@@ -213,7 +221,7 @@ generate_admin()
 {
   for entity in ${entities}; do
     echo "INFO: generate admin for $entity"
-    python3 generate_admin.py \
+    ./generators/generate_admin.py \
       -o ${workdir}/${application}/admin/${entity}_admin.py \
       -d depend.yaml \
       template/app/${entity}_ref.yaml
@@ -224,7 +232,7 @@ generate_view()
 {
   for entity in ${entities}; do
     echo "INFO: generate view for $entity"
-    python3 generate_view.py \
+    ./generators/generate_view.py \
       -o ${workdir}/${application}/views/${entity}_view.py \
       -l template/app \
       -t viewset_template.j2 \
@@ -236,7 +244,7 @@ generate_serializer()
 {
   for entity in ${entities}; do
     echo "INFO: generate serializer for $entity"
-    python3 generate_serializer.py \
+    ./generators/generate_serializer.py \
       -o ${workdir}/${application}/serializers/${entity}_serializer.py \
       -d depend.yaml \
       -c category.yaml \
@@ -250,7 +258,7 @@ generate_fixture()
   for entity in ${entities}; do
     echo "INFO: generate fixture for $entity"
     mkdir -p tests/data/
-    python3 generate_fixture.py \
+    ./generators/generate_fixture.py \
       -m meta.yaml \
       -o tests/data/test_${entity}-fixtures.yaml \
       template/app/${entity}_ref.yaml
@@ -262,7 +270,7 @@ generate_fixture()
 
 generate_url()
 {
-  python3 generate_url.py -o ${workdir}/${application}/urls_api.py \
+  ./generators/generate_url.py -o ${workdir}/${application}/urls_api.py \
     -l template/app \
     -t urls_template.j2 \
      ${ref_yamls}
@@ -270,7 +278,7 @@ generate_url()
 
 generate_admin_loader()
 {
-  python3 generate_admin_loader.py \
+  ./generators/generate_admin_loader.py \
       -o ${workdir}/${application}/admin_loader.py \
       ${ref_yamls}
 }
@@ -298,7 +306,8 @@ generate()
   generate_admin_loader
 
   echo "INFO: generate apps.py"
-  python3 generate_apps.py -n ${application} -o ${workdir}/${application}/apps.py
+  ./generators/generate_apps.py \
+    -n ${application} -o ${workdir}/${application}/apps.py
 
   rm -f ${workdir}/${application}/admin/__init__.py
 }
@@ -312,14 +321,14 @@ update_ini()
 {
   echo "INFO: generate models/__init__.py"
 
-  python3 generate_ini.py \
+  ./generators/generate_ini.py \
     -o ${workdir}/${application}/models/__init__.py \
     template/app/*_ref.yaml
 
   echo "" > ${workdir}/${application}/admin/__init__.py
   echo "" > ${workdir}/${application}/views/__init__.py
   #echo "" > ${workdir}/${application}/serializers/__init__.py
-  python3 generate_serializer_init.py \
+  ./generators/generate_serializer_init.py \
     -o ${workdir}/${application}/serializers/__init__.py \
     template/app/*_ref.yaml
 }
@@ -472,7 +481,7 @@ generate_test()
 {
   mkdir -p tests/data/
   for entity in ${entities}; do
-    python3 generate_test.py -o tests/test_generated_${entity}.py \
+    ./generators/generate_test.py -o tests/test_generated_${entity}.py \
       -m meta.yaml \
       template/app/${entity}_ref.yaml
     cp -f template/app/${entity}_ref.yaml tests/data/
@@ -482,10 +491,6 @@ generate_test()
 test()
 {
   generate_test
-
-  #target="device"
-  #python3 generate_test.py -c category.yaml -o tests/test_${target}.py \
-  #  template/app/${target}_ref.yaml
   pytest
 }
 
