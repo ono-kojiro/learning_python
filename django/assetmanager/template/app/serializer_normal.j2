@@ -5,10 +5,7 @@ from myapp.models import *
 class {{ model }}Serializer(serializers.ModelSerializer):
 {%- for fname, fdef in fields.items() %}
     {%- if fdef.type in ["ForeignKey", "OneToOneField"] %}
-    {{ fname }} = serializers.PrimaryKeyRelatedField(
-        queryset={{ fdef.to }}.objects.all(),
-        required=False
-    )
+    {{ fname }} = serializers.PrimaryKeyRelatedField(queryset={{ fdef.to }}.objects.all(), required=False)
     {%- elif fdef.type == "JSONField" %}
     {{ fname }} = serializers.JSONField(required=False)
     {%- else %}
@@ -19,4 +16,3 @@ class {{ model }}Serializer(serializers.ModelSerializer):
     class Meta:
         model = {{ model }}
         fields = {{ fields_list }}
-

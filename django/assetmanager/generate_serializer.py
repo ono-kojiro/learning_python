@@ -6,13 +6,13 @@ import yaml
 from jinja2 import Environment, FileSystemLoader
 
 
+def usage():
+    print(f"Usage: {sys.argv[0]} -o <output> -l <loader.d> -d depend.yaml -c category.yaml <model_yaml>...")
+
+
 def read_yaml(path):
     with open(path, "r", encoding="utf-8") as fp:
         return yaml.safe_load(fp)
-
-
-def usage():
-    print(f"Usage: {sys.argv[0]} -o <output> -l <loader.d> -d depend.yaml -c category.yaml <model_yaml>...")
 
 
 def main():
@@ -101,9 +101,15 @@ def main():
 
         template = env.get_template(template_name)
 
-        # fields_list は Meta.fields 用
+        # fields_list の構築（Meta.fields 用）
         fields_list = ["id"] + list(fields.keys())
 
+        # reverse FK を追加（fk_parent の場合のみ）
+        rev = reverse_dependencies.get(model, [])
+        for other_model in rev:
+            fields_list.append(f"{other_model.lower()}s")
+
+        # テンプレートへ渡す
         content = template.render(
             model=model,
             fields=fields,
