@@ -197,53 +197,56 @@ generate()
   for entity in ${entities}; do
     entity=`echo $entity | tr '[:upper:]' '[:lower:]'`
     
-    template="template/app/${entity}_ref.yaml"
+    ref_yaml="template/app/${entity}_ref.yaml"
 
     echo "INFO: generate model for $entity"
     python3 generate_model.py \
       -d depend.yaml \
       -o ${workdir}/${application}/models/${entity}_model.py \
-      ${template}
+      ${ref_yaml}
 
     echo "INFO: generate admin for $entity"
-    python3 generate_admin.py -d depend.yaml ${template} \
+    python3 generate_admin.py -d depend.yaml ${ref_yaml} \
       > ${workdir}/${application}/admin/${entity}_admin.py
 
     echo "INFO: generate view for $entity"
-    python3 generate_view.py ${template} \
-      > ${workdir}/${application}/views/${entity}_view.py
+    python3 generate_view.py \
+      -o ${workdir}/${application}/views/${entity}_view.py \
+      -l template/app \
+      -t viewset_template.j2 \
+      ${ref_yaml}
   
     echo "INFO: generate serializer for $entity"
     python3 generate_serializer.py \
       -o ${workdir}/${application}/serializers/${entity}_serializer.py \
       -d depend.yaml \
       -c category.yaml \
-      ${template}
+      ${ref_yaml}
     
     echo "INFO: generate fixture for $entity"
     mkdir -p tests/data/
     python3 generate_fixture.py \
       -m meta.yaml \
       -o tests/data/test_${entity}-fixtures.yaml \
-      ${template}
+      ${ref_yaml}
   done
 
   # debug
   cat tests/data/test_*-fixtures.yaml > all-fixtures.yaml
 
-  templates=""
+  ref_yamls=""
   for entity in ${entities}; do
     entity=`echo $entity | tr '[:upper:]' '[:lower:]'`
-    templates="${templates} template/app/${entity}_ref.yaml"
+    ref_yamls="${ref_yamls} template/app/${entity}_ref.yaml"
   done
 
   python3 generate_url.py -o ${workdir}/${application}/urls_api.py \
-     ${templates}
+     ${ref_yamls}
 
   echo "INFO: generate admin loader"
   python3 generate_admin_loader.py \
       -o ${workdir}/${application}/admin_loader.py \
-      ${templates}
+      ${ref_yamls}
 
   echo "INFO: generate apps.py"
   python3 generate_apps.py -n ${application} -o ${workdir}/${application}/apps.py
