@@ -3,6 +3,10 @@
 import sys
 import getopt
 import yaml
+import json
+import os
+import random
+import string
 
 
 def read_yaml(path):
@@ -10,140 +14,125 @@ def read_yaml(path):
         return yaml.safe_load(fp)
 
 
-def generate_test_for_entity(fp, model, general_category, dependency_category):
+def random_string(prefix, length=6):
+    return prefix + ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
+
+
+def generate_test_for_model(model, fields):
+    """テストコード文字列を返す（ファイルは main で開く）"""
     model_lower = model.lower()
-    url = f"/api/{model_lower}s/"
 
-    fp.write(f"# Generated test for {model}\n")
-    fp.write("import requests\n")
-    fp.write("import pytest\n\n")
+    out = []
+    out.append(f"# Auto-generated CRUD test for {model}")
+    out.append("import requests")
+    out.append("import pytest")
+    out.append("import json\n")
 
-    fp.write("@pytest.mark.order(1)\n")
-    fp.write(f"def test_{model_lower}_basic_crud(configs):\n")
-    fp.write(f"    base = configs['base_url'] + '{url}'\n\n")
+    out.append(f"model = '{model}'")
+    out.append(f"fields = json.loads('''{json.dumps(fields)}''')\n")
 
-    # ------------------------------------------------------------
-    # no_dependency / fk_child → 単純 CRUD
-    # ------------------------------------------------------------
-    if dependency_category in ("no_dependency", "fk_child"):
-        fp.write("    # Create\n")
-        fp.write("    item = {}\n")
-        fp.write("    res = requests.post(base, json=item)\n")
-        fp.write("    assert res.status_code == 201\n\n")
+    # POST body generator
+    out.append("def _gen_body(model, fields):")
+    out.append("    body = {}")
+    out.append("    for fname, fdef in fields.items():")
+    out.append("        ftype = fdef['type']")
+    out.append("        if ftype == 'CharField':")
+    out.append("            body[fname] = model.upper() + '-TEST'")
+    out.append("            continue")
+    out.append("        if ftype == 'JSONField':")
+    out.append("            default = fdef.get('default', None)")
+    out.append("            if default == 'dict': body[fname] = {}")
+    out.append("            elif default == 'list': body[fname] = []")
+    out.append("            else: body[fname] = {}")
+    out.append("            continue")
+    out.append("        # ForeignKey / OneToOneField → 整数 ID を送る（DRF 標準）")
+    out.append("        if ftype in ('ForeignKey', 'OneToOneField'):")
+    out.append("            body[fname] = 1")
 
-        fp.write("    # List\n")
-        fp.write("    res = requests.get(base)\n")
-        fp.write("    assert res.status_code == 200\n\n")
+    #out.append("        if ftype in ('ForeignKey', 'OneToOneField'):")
+    #out.append("            # Serializer は <field>_id を受け取る")
+    #out.append("            body[fname + '_id'] = 1")
 
-        fp.write("    # Delete\n")
-        fp.write("    obj_id = res.json()[0]['id']\n")
-        fp.write("    res = requests.delete(base + f\"{obj_id}/\")\n")
-        fp.write("    assert res.status_code == 204\n\n")
-        return
+    out.append("            continue")
+    out.append("        # ManyToManyField → 整数 ID の配列（DRF 標準）")
+    out.append("        if ftype == 'ManyToManyField':")
+    out.append("            body[fname] = [1]")
+    out.append("            continue")
+    out.append("        body[fname] = None")
+    out.append("    return body\n")
 
-    # ------------------------------------------------------------
-    # fk_parent → reverse GET テスト
-    # ------------------------------------------------------------
-    if dependency_category == "fk_parent":
-        fp.write("    # Create parent\n")
-        fp.write("    parent = {}\n")
-        fp.write("    res = requests.post(base, json=parent)\n")
-        fp.write("    assert res.status_code == 201\n")
-        fp.write("    pid = res.json()['id']\n\n")
+    # CRUD test
+    out.append(f"def test_{model_lower}_crud(configs):")
+    out.append(f"    base = configs['base_url'] + '/api/{model_lower}s/'\n")
 
-        fp.write("    # GET reverse children\n")
-        fp.write("    res = requests.get(base + f\"{pid}/\")\n")
-        fp.write("    assert res.status_code == 200\n")
-        fp.write("    assert 'ipv4s' in res.json() or 'devices' in res.json()\n\n")
-        return
+    out.append("    res = requests.get(base)")
+    out.append("    assert res.status_code == 200\n")
 
-    # ------------------------------------------------------------
-    # m2m_owner → PATCH で M2M 更新
-    # ------------------------------------------------------------
-    if dependency_category == "m2m_owner":
-        fp.write("    # Create owner\n")
-        fp.write("    owner = {}\n")
-        fp.write("    res = requests.post(base, json=owner)\n")
-        fp.write("    assert res.status_code == 201\n")
-        fp.write("    oid = res.json()['id']\n\n")
+    out.append("    item = _gen_body(model, fields)")
+    out.append("    res = requests.post(base, json=item)")
+    out.append("    assert res.status_code == 201")
+    out.append("    obj = res.json()")
+    out.append("    obj_id = obj['id']\n")
 
-        fp.write("    # PATCH M2M\n")
-        fp.write("    patch = { 'device_ids': [] }\n")
-        fp.write("    res = requests.patch(base + f\"{oid}/\", json=patch)\n")
-        fp.write("    assert res.status_code == 200\n\n")
-        return
+    out.append("    res = requests.get(base + f'{obj_id}/')")
+    out.append("    assert res.status_code == 200\n")
 
-    # ------------------------------------------------------------
-    # m2m_target → reverse M2M GET
-    # ------------------------------------------------------------
-    # ------------------------------------------------------------
-    # m2m_target → reverse M2M GET
-    # ------------------------------------------------------------
-    if dependency_category == "m2m_target":
-        fp.write("    # Create target with required fields\n")
-        fp.write("    target = {\n")
-        fp.write("        'device_id': 'DEV-TEST',\n")
-        fp.write("        'name': 'Device Test',\n")
-        fp.write("        'serial_number': 'SN-TEST'\n")
-        fp.write("    }\n")
-        fp.write("    res = requests.post(base, json=target)\n")
-        fp.write("    assert res.status_code == 201\n")
-        fp.write("    tid = res.json()['id']\n\n")
+    out.append("    patch_body = {}")
+    out.append("    for fname, fdef in fields.items():")
+    out.append("        if fdef['type'] == 'CharField':")
+    out.append("            patch_body[fname] = 'UPDATED'")
+    out.append("            break")
+    out.append("    res = requests.patch(base + f'{obj_id}/', json=patch_body)")
+    out.append("    assert res.status_code in (200, 202)\n")
 
-        fp.write("    # GET reverse M2M\n")
-        fp.write("    res = requests.get(base + f\"{tid}/\")\n")
-        fp.write("    assert res.status_code == 200\n")
-        fp.write("    assert 'managers' in res.json()\n\n")
-        return
+    out.append("    res = requests.delete(base + f'{obj_id}/')")
+    out.append("    assert res.status_code == 204\n")
+
+    return "\n".join(out) + "\n"
 
 
 def main():
     options, args = getopt.getopt(
-        sys.argv[1:], "hvo:c:", ["help", "version", "output=", "category="]
+        sys.argv[1:], "ho:m:", ["help", "output=", "meta="]
     )
 
-    output = None
-    category_yaml = None
+    output_file = None
+    meta_path = None
 
-    for option, optarg in options:
-        if option in ("-o", "--output"):
-            output = optarg
-        elif option in ("-c", "--category"):
-            category_yaml = optarg
+    for opt, val in options:
+        if opt in ("-o", "--output"):
+            output_file = val
+        elif opt in ("-m", "--meta"):
+            meta_path = val
 
-    if category_yaml is None:
-        print("ERROR: -c category.yaml is required", file=sys.stderr)
-        sys.exit(1)
+    if not meta_path:
+        print("ERROR: meta.yaml is required (-m)")
+        return
 
-    categories = read_yaml(category_yaml)
-    general = categories["general_categories"]
-    dependency = categories["dependency_categories"]
+    if not output_file:
+        print("ERROR: output file is required (-o)")
+        return
 
-    if not args:
-        print("ERROR: no model YAML", file=sys.stderr)
-        sys.exit(1)
+    if len(args) != 1:
+        print("ERROR: exactly one *_ref.yaml must be specified")
+        return
 
-    # 1つの entity だけ生成
-    model_yaml = args[0]
-    data = read_yaml(model_yaml)
+    # meta.yaml 読み込み
+    meta = read_yaml(meta_path)
+    meta_models = meta["models"]
+
+    # *_ref.yaml 読み込み
+    ref_yaml = args[0]
+    data = read_yaml(ref_yaml)
     model = data["name"]
+    fields = meta_models[model]["fields"]
 
-    if output:
-        fp = open(output, "w", encoding="utf-8")
-    else:
-        fp = sys.stdout
+    # main の中でファイルを開く
+    with open(output_file, "w", encoding="utf-8") as fp:
+        fp.write(generate_test_for_model(model, fields))
 
-    generate_test_for_entity(
-        fp,
-        model,
-        general.get(model),
-        dependency.get(model),
-    )
-
-    if output:
-        fp.close()
+    print(f"Generated: {output_file}")
 
 
 if __name__ == "__main__":
     main()
-

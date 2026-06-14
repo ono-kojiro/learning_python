@@ -63,6 +63,8 @@ all()
   cmp2ref
   category
   depend
+  meta
+
   merge_models
 
   generate
@@ -164,6 +166,13 @@ depend()
    $cmd
 }
 
+meta()
+{
+   cmd="python3 generate_meta.py -o meta.yaml template/app/*_ref.yaml"
+   echo $cmd
+   $cmd
+}
+
 merge_models()
 {
    all_models_yaml="all-models.yaml"
@@ -214,9 +223,13 @@ generate()
     echo "INFO: generate fixture for $entity"
     mkdir -p tests/data/
     python3 generate_fixture.py \
+      -m meta.yaml \
       -o tests/data/test_${entity}-fixtures.yaml \
       ${template}
   done
+
+  # debug
+  cat tests/data/test_*-fixtures.yaml > all-fixtures.yaml
 
   templates=""
   for entity in ${entities}; do
@@ -299,7 +312,8 @@ loaddata()
      m=`echo $model | tr '[:upper:]' '[:lower:]'`
      file="${top_dir}/tests/data/test_${m}-fixtures.yaml"
      echo "DEBUG: generate ${file} ..."
-     python3 manage.py loaddata ${file} --verbosity 3
+     #python3 manage.py loaddata ${file} --verbosity 3
+     python3 manage.py loaddata ${file}
   done
 
   cd $top_dir
@@ -402,11 +416,25 @@ mclean()
   rm -rf ${workdir}
 }
 
+generate_test()
+{
+  mkdir -p tests/data/
+  for entity in ${entities}; do
+    target=`echo $entity | tr '[:upper:]' '[:lower:]'`
+    python3 generate_test.py -o tests/test_${target}.py \
+      -m meta.yaml \
+      template/app/${target}_ref.yaml
+    cp -f template/app/${target}_ref.yaml tests/data/
+  done
+}
+
 test()
 {
-  python3 generate_test.py -c category.yaml -o tests/test_device.py \
-    template/app/device_ref.yaml
+  generate_test
 
+  #target="device"
+  #python3 generate_test.py -c category.yaml -o tests/test_${target}.py \
+  #  template/app/${target}_ref.yaml
   pytest
 }
 

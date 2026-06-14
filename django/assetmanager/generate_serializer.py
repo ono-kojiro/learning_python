@@ -114,11 +114,15 @@ def generate_serializer_fk_parent(fp, model, fields, reverse_dependencies):
     for fname, field_def in fields.items():
         ftype = field_def["type"]
 
-        if ftype == "ForeignKey":
+        if ftype in ("ForeignKey", "OneToOneField"):
             to_model = field_def["to"]
             fp.write(
-                f"    {fname} = serializers.PrimaryKeyRelatedField(queryset={to_model}.objects.all())\n\n"
+                f"    {fname} = serializers.PrimaryKeyRelatedField(queryset={to_model}.objects.all(), required=False)\n\n"
             )
+
+        elif ftype == "JSONField":
+            fp.write(f"    {fname} = serializers.JSONField(required=False)\n\n")
+
         else:
             fp.write(f"    {fname} = serializers.CharField(required=False)\n\n")
 
@@ -146,11 +150,15 @@ def generate_serializer_normal(fp, model, fields):
     for fname, field_def in fields.items():
         ftype = field_def["type"]
 
-        if ftype == "ForeignKey":
+        if ftype in ("ForeignKey", "OneToOneField"):
             to_model = field_def["to"]
             fp.write(
-                f"    {fname} = serializers.PrimaryKeyRelatedField(queryset={to_model}.objects.all())\n\n"
+                f"    {fname} = serializers.PrimaryKeyRelatedField(queryset={to_model}.objects.all(), required=False)\n\n"
             )
+
+        elif ftype == "JSONField":
+            fp.write(f"    {fname} = serializers.JSONField(required=False)\n\n")
+
         else:
             fp.write(f"    {fname} = serializers.CharField(required=False)\n\n")
 
@@ -176,7 +184,6 @@ def generate_serializer(fp, data, dependencies, reverse_dependencies,
 
     fp.write(f"class {model}Serializer(serializers.ModelSerializer):\n")
 
-    # カテゴリ別ディスパッチ
     if dependency_category == "m2m_owner":
         return generate_serializer_m2m_owner(fp, model, fields)
 
@@ -186,7 +193,6 @@ def generate_serializer(fp, data, dependencies, reverse_dependencies,
     if dependency_category == "fk_parent":
         return generate_serializer_fk_parent(fp, model, fields, reverse_dependencies)
 
-    # fk_child / no_dependency
     return generate_serializer_normal(fp, model, fields)
 
 
