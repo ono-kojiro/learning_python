@@ -240,6 +240,7 @@ generate_serializer()
       -o ${workdir}/${application}/serializers/${entity}_serializer.py \
       -d depend.yaml \
       -c category.yaml \
+      -l template/app \
       template/app/${entity}_ref.yaml
   done
 }
