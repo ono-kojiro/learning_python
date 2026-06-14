@@ -262,6 +262,8 @@ generate_fixture()
 generate_url()
 {
   python3 generate_url.py -o ${workdir}/${application}/urls_api.py \
+    -l template/app \
+    -t urls_template.j2 \
      ${ref_yamls}
 }
 
