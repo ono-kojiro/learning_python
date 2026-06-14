@@ -297,10 +297,6 @@ generate()
 
   generate_admin_loader
 
-  echo "INFO: generate apps.py"
-  ./generators/generate_apps.py \
-    -n ${application} -o ${workdir}/${application}/apps.py
-
   rm -f ${workdir}/${application}/admin/__init__.py
 }
 
