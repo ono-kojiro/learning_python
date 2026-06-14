@@ -29,6 +29,10 @@ for entity in ${entities}; do
   ref_yamls="${ref_yamls} template/app/${entity}_ref.yaml"
 done
 
+depend_yaml="${workdir}/depend.yaml"
+category_yaml="${workdir}/category.yaml"
+meta_yaml="${workdir}/meta.yaml"
+
 prepare()
 {
   #python3 -m venv myenv
@@ -80,8 +84,6 @@ all()
   category
   depend
   meta
-
-  merge_models
 
   generate
   update_ini
@@ -168,10 +170,10 @@ log()
 category()
 {
    cmd="./generators/categorize_entity.py"
-   cmd="$cmd -o category.yaml template/app/*_ref.yaml"
+   cmd="$cmd -o ${category_yaml} template/app/*_ref.yaml"
    echo $cmd
    $cmd
-   cat category.yaml
+   cat ${category_yaml}
 
    cat template/app/*_ref.yaml > all_ref.yaml
 }
@@ -179,7 +181,7 @@ category()
 depend()
 {
    cmd="./generators/generate_depend.py"
-   cmd="$cmd -o depend.yaml template/app/*_ref.yaml"
+   cmd="$cmd -o ${depend_yaml} template/app/*_ref.yaml"
    echo $cmd
    $cmd
 }
@@ -187,21 +189,9 @@ depend()
 meta()
 {
    cmd="./generators/generate_meta.py"
-   cmd="$cmd -o meta.yaml template/app/*_ref.yaml"
+   cmd="$cmd -o ${meta_yaml} template/app/*_ref.yaml"
    echo $cmd
    $cmd
-}
-
-merge_models()
-{
-   all_models_yaml="all-models.yaml"
-   model_yamls=`find ./template/app/ -name "*.yaml"`
-   {
-     for model_yaml in $model_yamls; do
-       cat ${model_yaml}
-     done
-
-   } > ${all_models_yaml}
 }
 
 generate_model()
@@ -211,7 +201,7 @@ generate_model()
 
     echo "INFO: generate model for $entity"
     ./generators/generate_model.py \
-      -d depend.yaml \
+      -d ${depend_yaml} \
       -o ${workdir}/${application}/models/${entity}_model.py \
       ${ref_yaml}
   done
@@ -223,7 +213,7 @@ generate_admin()
     echo "INFO: generate admin for $entity"
     ./generators/generate_admin.py \
       -o ${workdir}/${application}/admin/${entity}_admin.py \
-      -d depend.yaml \
+      -d ${depend_yaml} \
       template/app/${entity}_ref.yaml
   done
 }
@@ -246,8 +236,8 @@ generate_serializer()
     echo "INFO: generate serializer for $entity"
     ./generators/generate_serializer.py \
       -o ${workdir}/${application}/serializers/${entity}_serializer.py \
-      -d depend.yaml \
-      -c category.yaml \
+      -d ${depend_yaml} \
+      -c ${category_yaml} \
       -l template/app \
       template/app/${entity}_ref.yaml
   done
@@ -259,7 +249,7 @@ generate_fixture()
     echo "INFO: generate fixture for $entity"
     mkdir -p tests/data/
     ./generators/generate_fixture.py \
-      -m meta.yaml \
+      -m ${meta_yaml} \
       -o tests/data/test_${entity}-fixtures.yaml \
       template/app/${entity}_ref.yaml
   done
@@ -366,7 +356,7 @@ migrate()
 loaddata()
 {
   echo "INFO: loaddata"
-  models=`yq -r '.load_order[]' depend.yaml`
+  models=`yq -r '.load_order[]' ${depend_yaml}`
 
   cd ${workdir}
   for model in ${models}; do
@@ -482,7 +472,7 @@ generate_test()
   mkdir -p tests/data/
   for entity in ${entities}; do
     ./generators/generate_test.py -o tests/test_generated_${entity}.py \
-      -m meta.yaml \
+      -m ${meta_yaml} \
       template/app/${entity}_ref.yaml
     cp -f template/app/${entity}_ref.yaml tests/data/
   done
