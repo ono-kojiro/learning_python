@@ -251,7 +251,9 @@ generate_fixture()
     echo "INFO: generate fixture for $entity"
     mkdir -p tests/data/
     ./generators/generate_fixture.py \
+      -l template/app \
       -m ${meta_yaml} \
+      -n template/app/names.yaml \
       -o tests/data/test_${entity}-fixtures.yaml \
       template/app/${entity}_ref.yaml
   done

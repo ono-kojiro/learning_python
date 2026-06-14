@@ -6,6 +6,7 @@ import yaml
 import random
 import string
 from collections import defaultdict, deque
+from jinja2 import Environment, FileSystemLoader
 
 
 def read_yaml(path):
@@ -13,18 +14,22 @@ def read_yaml(path):
         return yaml.safe_load(fp)
 
 
+# ---------------------------------------------------------
+# 名前生成（外部 YAML）
+# ---------------------------------------------------------
+def random_human_name(name_data):
+    first = name_data.get("first_names", [])
+    last = name_data.get("last_names", [])
+    if not first or not last:
+        return "Unknown User"
+    return random.choice(first) + " " + random.choice(last)
+
+
+# ---------------------------------------------------------
+# ランダム値生成
+# ---------------------------------------------------------
 def random_string(prefix, length=6):
     return prefix + ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
-
-
-def random_human_name():
-    first = ["Alice","Bob","Charlie","Diana","Eve","Frank","Grace","Hank","Ivy","Jack",
-             "Karen","Leo","Mia","Nina","Oscar","Paul","Quinn","Rose","Sam","Tina",
-             "Uma","Vince","Wendy","Xavier","Yuki","Zoe"]
-    last = ["Smith","Johnson","Williams","Brown","Jones","Miller","Davis","Garcia",
-            "Rodriguez","Wilson","Anderson","Thomas","Taylor","Moore","Jackson",
-            "Martin","Lee","Perez","Thompson","White"]
-    return random.choice(first) + " " + random.choice(last)
 
 
 def generate_random_cidr_ipv4(prefix=24):
@@ -58,12 +63,12 @@ def generate_gateway_from_cidr(cidr):
     return f"{a}.{b}.{c}.1"
 
 
-def generate_random_value(model, field_name, field_def, count, pk):
+def generate_random_value(model, field_name, field_def, count, pk, name_data):
     ftype = field_def["type"]
     null_ok = field_def.get("null", False)
 
     if model == "Manager" and field_name == "name":
-        return random_human_name()
+        return random_human_name(name_data)
 
     if ftype == "JSONField":
         return generate_jsonfield_value(field_name, field_def)
@@ -95,6 +100,9 @@ def generate_random_value(model, field_name, field_def, count, pk):
     return random_string("VAL-")
 
 
+# ---------------------------------------------------------
+# 依存関係
+# ---------------------------------------------------------
 def topological_sort(dependencies):
     indegree = defaultdict(int)
     graph = defaultdict(list)
@@ -119,7 +127,6 @@ def topological_sort(dependencies):
 
 
 def collect_dependencies(targets, dependencies):
-    """ターゲットモデルが依存するモデルをすべて集める"""
     result = set()
 
     def dfs(model):
@@ -134,23 +141,36 @@ def collect_dependencies(targets, dependencies):
     return result
 
 
+# ---------------------------------------------------------
+# main
+# ---------------------------------------------------------
 def main():
     options, args = getopt.getopt(
-        sys.argv[1:], "ho:m:c:", ["help", "output=", "meta=", "count=", "with-deps", "no-deps"]
+        sys.argv[1:], "ho:l:m:c:n:",
+        [
+            "help", "output=", "loader=", "meta=",
+            "count=", "names=", "with-deps", "no-deps"
+        ]
     )
 
     output = None
+    loader_d = None
     meta_path = None
+    names_path = None
     count = 10
     include_deps = False
 
     for opt, val in options:
         if opt in ("-o", "--output"):
             output = val
+        elif opt in ("-l", "--loader"):
+            loader_d = val
         elif opt in ("-m", "--meta"):
             meta_path = val
         elif opt in ("-c", "--count"):
             count = int(val)
+        elif opt in ("-n", "--names"):
+            names_path = val
         elif opt == "--with-deps":
             include_deps = True
         elif opt == "--no-deps":
@@ -160,10 +180,18 @@ def main():
         print("ERROR: meta.yaml is required (-m)")
         return
 
+    if loader_d is None:
+        print("ERROR: missing --loader")
+        return
+
+    # meta.yaml
     meta = read_yaml(meta_path)
     dependencies = meta["dependencies"]
 
-    # *_ref.yaml を読み込む
+    # 名前テンプレート
+    name_data = read_yaml(names_path) if names_path else {"first_names": [], "last_names": []}
+
+    # *_ref.yaml
     models = {}
     target_models = []
 
@@ -173,16 +201,15 @@ def main():
         models[model] = data["fields"]
         target_models.append(model)
 
-    # 依存モデルを収集
+    # 依存モデル
     deps = collect_dependencies(target_models, dependencies)
 
-    # 生成対象モデル
     if include_deps:
         generate_models = list(set(target_models) | deps)
     else:
         generate_models = target_models
 
-    # 依存関係順に並べる
+    # 依存順
     order = topological_sort(dependencies)
     order = [m for m in order if m in generate_models]
 
@@ -198,7 +225,9 @@ def main():
             }
 
             for fname, fdef in fields.items():
-                item["fields"][fname] = generate_random_value(model, fname, fdef, count, pk)
+                item["fields"][fname] = generate_random_value(
+                    model, fname, fdef, count, pk, name_data
+                )
 
             if "addresses" in item["fields"] and "gateway" in item["fields"]:
                 addrs = item["fields"]["addresses"]
@@ -207,9 +236,17 @@ def main():
 
             fixtures.append(item)
 
+    # Jinja2
+    env = Environment(
+        loader=FileSystemLoader(loader_d),
+        autoescape=False
+    )
+    template = env.get_template("fixture_template.j2")
+
+    content = template.render(fixtures=fixtures)
+
     fp = open(output, "w", encoding="utf-8") if output else sys.stdout
-    fp.write("# Generated by generate_fixture.py\n---\n")
-    yaml.dump(fixtures, fp, allow_unicode=True, sort_keys=False)
+    fp.write(content)
     if output:
         fp.close()
 
