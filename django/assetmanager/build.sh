@@ -214,8 +214,8 @@ generate_admin()
     echo "INFO: generate admin for $entity"
     ./generators/generate_admin.py \
       -o ${workdir}/${application}/admin/${entity}_admin.py \
-      -d ${depend_yaml} \
       -l template/app \
+      -m ${meta_yaml} \
       template/app/${entity}_ref.yaml
   done
 }

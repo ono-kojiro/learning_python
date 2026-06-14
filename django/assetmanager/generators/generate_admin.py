@@ -7,7 +7,7 @@ from jinja2 import Environment, FileSystemLoader
 
 
 def usage():
-    print(f"Usage : {sys.argv[0]} -o <output> -l <loader.d> -d depend.yaml <model_yaml>...")
+    print(f"Usage : {sys.argv[0]} -o <output> -l <loader.d> --meta meta.yaml <model_ref_yaml>")
 
 
 def read_yaml(filepath):
@@ -16,94 +16,52 @@ def read_yaml(filepath):
 
 
 # ---------------------------------------------------------
-# Inline クラス生成
+# Inline クラス生成（対象モデルの子モデルのみ）
 # ---------------------------------------------------------
-def generate_inline_blocks(model_defs, children_map):
+def generate_inline_blocks(target_model, model_defs, children_map):
     inline_blocks = []
+    inline_class_names = []
 
-    for parent, child_list in children_map.items():
-        for child in child_list:
-            child_def = model_defs.get(child)
-            if not child_def:
+    for child in children_map.get(target_model, []):
+        child_def = model_defs.get(child)
+        if not child_def:
+            continue
+
+        fields = child_def.get("fields", {})
+        inline_model_expr = None
+        inline_class_name = None
+
+        # 子モデルのフィールドを調べて親を参照しているものを探す
+        for fname, fdef in fields.items():
+            if fdef.get("to") != target_model:
                 continue
 
-            fields = child_def.get("fields", {})
-            inline_model_expr = None
-            inline_class_name = None
+            ftype = fdef.get("type")
 
-            # 子モデルのフィールドを調べて親を参照しているものを探す
-            for fname, fdef in fields.items():
-                if fdef.get("to") != parent:
-                    continue
+            # ForeignKey / OneToOne → Inline
+            if ftype in ("ForeignKey", "OneToOneField"):
+                inline_model_expr = f"{child}"
+                inline_class_name = f"{child}Inline"
+                break
 
-                ftype = fdef.get("type")
+            # ManyToMany → through モデルを Inline
+            if ftype == "ManyToManyField":
+                inline_model_expr = f"{child}.{fname}.through"
+                inline_class_name = f"{child}{fname.capitalize()}Inline"
+                break
 
-                # ForeignKey / OneToOne → Inline
-                if ftype in ("ForeignKey", "OneToOneField"):
-                    inline_model_expr = f"{child}"
-                    inline_class_name = f"{child}Inline"
-                    break
+        if inline_model_expr:
+            block = (
+                f"from myapp.models.{child.lower()}_model import {child}\n"
+                f"class {inline_class_name}(admin.TabularInline):\n"
+                f"    model = {inline_model_expr}\n"
+                f"    extra = 0\n"
+                f"    show_change_link = True\n\n"
+            )
+            inline_blocks.append(block)
+            inline_class_names.append(inline_class_name)
 
-                # ManyToMany → through モデルを Inline
-                if ftype == "ManyToManyField":
-                    inline_model_expr = f"{child}.{fname}.through"
-                    inline_class_name = f"{child}{fname.capitalize()}Inline"
-                    break
-
-            if inline_model_expr:
-                block = (
-                    f"from myapp.models.{child.lower()}_model import {child}\n"
-                    f"class {inline_class_name}(admin.TabularInline):\n"
-                    f"    model = {inline_model_expr}\n"
-                    f"    extra = 0\n"
-                    f"    show_change_link = True\n\n"
-                )
-                inline_blocks.append(block)
-
-    return inline_blocks
-
-
-# ---------------------------------------------------------
-# Admin クラス生成
-# ---------------------------------------------------------
-def generate_admin_blocks(model_defs, children_map):
-    admin_blocks = []
-
-    for model, data in model_defs.items():
-        inline_classes = []
-
-        # 子モデルの inline を収集
-        for child in children_map.get(model, []):
-            fields = model_defs[child].get("fields", {})
-            for fname, fdef in fields.items():
-                if fdef.get("to") != model:
-                    continue
-
-                ftype = fdef.get("type")
-
-                if ftype in ("ForeignKey", "OneToOneField"):
-                    inline_classes.append(f"{child}Inline")
-                    break
-
-                if ftype == "ManyToManyField":
-                    inline_classes.append(f"{child}{fname.capitalize()}Inline")
-                    break
-
-        # Admin クラス本体
-        if inline_classes:
-            admin_body = f"    inlines = [{', '.join(inline_classes)}]"
-        else:
-            admin_body = "    pass"
-
-        block = (
-            f"class {model}Admin(admin.ModelAdmin):\n"
-            f"{admin_body}\n\n"
-            f"admin.site.register(models.{model}, {model}Admin)\n\n"
-        )
-
-        admin_blocks.append(block)
-
-    return admin_blocks
+    return inline_blocks, inline_class_names
 
 
 # ---------------------------------------------------------
@@ -112,7 +70,7 @@ def generate_admin_blocks(model_defs, children_map):
 def main():
     try:
         options, args = getopt.getopt(
-            sys.argv[1:], "hvo:l:d:", ["help", "version", "output=", "loader=", "depend="]
+            sys.argv[1:], "hvo:l:m:", ["help", "version", "output=", "loader=", "meta="]
         )
     except getopt.GetoptError as err:
         print(str(err))
@@ -120,7 +78,7 @@ def main():
 
     output = None
     loader_d = None
-    depend_yaml = None
+    meta_yaml = None
 
     for option, optarg in options:
         if option in ("-h", "--help"):
@@ -130,35 +88,36 @@ def main():
             output = optarg
         elif option in ("-l", "--loader"):
             loader_d = optarg
-        elif option in ("-d", "--depend"):
-            depend_yaml = optarg
+        elif option in ("-m", "--meta"):
+            meta_yaml = optarg
 
     if loader_d is None:
         print("ERROR: missing --loader", file=sys.stderr)
         sys.exit(1)
 
-    if depend_yaml is None:
-        print("ERROR: depend.yaml is required", file=sys.stderr)
+    if meta_yaml is None:
+        print("ERROR: missing --meta", file=sys.stderr)
         sys.exit(1)
 
     if not args:
-        print("ERROR: model YAML files must be specified", file=sys.stderr)
+        print("ERROR: model_ref YAML must be specified", file=sys.stderr)
         sys.exit(1)
 
-    # depend.yaml 読み込み
-    depend_map = read_yaml(depend_yaml)["dependencies"]
+    # 対象モデルを ref_yaml から取得
+    ref_yaml = args[0]
+    ref_data = read_yaml(ref_yaml)
+    target_model = ref_data["name"]
+
+    # meta.yaml 読み込み
+    meta = read_yaml(meta_yaml)
+    depend_map = meta["dependencies"]
+    model_defs = meta["models"]
 
     # reverse dependency map
     children_map = {model: [] for model in depend_map}
     for model, deps in depend_map.items():
         for parent in deps:
             children_map[parent].append(model)
-
-    # model YAML 読み込み
-    model_defs = {}
-    for filepath in args:
-        data = read_yaml(filepath)
-        model_defs[data["name"]] = data
 
     # Jinja2
     env = Environment(
@@ -167,24 +126,23 @@ def main():
     )
     template = env.get_template("admin_template.j2")
 
-    # 出力
-    if output:
-        fp = open(output, "w", encoding="utf-8")
-    else:
-        fp = sys.stdout
-
-    inline_blocks = generate_inline_blocks(model_defs, children_map)
-    admin_blocks = generate_admin_blocks(model_defs, children_map)
-
-    content = template.render(
-        inline_blocks=inline_blocks,
-        admin_blocks=admin_blocks,
+    # Inline と Admin クラス生成
+    inline_blocks, inline_class_names = generate_inline_blocks(
+        target_model, model_defs, children_map
     )
 
-    fp.write(content)
+    content = template.render(
+        model=target_model,
+        inline_blocks=inline_blocks,
+        inline_class_names=inline_class_names,
+    )
 
+    # 出力
     if output:
-        fp.close()
+        with open(output, "w", encoding="utf-8") as fp:
+            fp.write(content)
+    else:
+        print(content)
 
 
 if __name__ == "__main__":
