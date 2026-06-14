@@ -16,8 +16,8 @@ entities="Device NetIF IPv4 Manager Comment Remark"
   
 prepare()
 {
-  python3 -m venv myenv
-  . ./myenv/bin/activate
+  #python3 -m venv myenv
+  #. ./myenv/bin/activate
   python3 -m pip install -r requirements.txt
   python3 -m pip install --upgrade pip
 }
@@ -421,7 +421,7 @@ generate_test()
   mkdir -p tests/data/
   for entity in ${entities}; do
     target=`echo $entity | tr '[:upper:]' '[:lower:]'`
-    python3 generate_test.py -o tests/test_${target}.py \
+    python3 generate_test.py -o tests/test_generated_${target}.py \
       -m meta.yaml \
       template/app/${target}_ref.yaml
     cp -f template/app/${target}_ref.yaml tests/data/

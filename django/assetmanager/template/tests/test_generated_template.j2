@@ -1,0 +1,78 @@
+# Auto-generated CRUD test for {{ model }}
+import requests
+import pytest
+import json
+
+model = "{{ model }}"
+fields = {{ fields_json }}
+
+def _gen_body(model, fields):
+    body = {}
+
+    {% for fname, fdef in fields.items() %}
+    {% set ftype = fdef.type %}
+
+    {# --- CharField --- #}
+    {% if ftype == "CharField" %}
+    body["{{ fname }}"] = model.upper() + "-TEST"
+
+    {# --- JSONField --- #}
+    {% elif ftype == "JSONField" %}
+    {% if fdef.default == "list" %}
+    body["{{ fname }}"] = []
+    {% else %}
+    body["{{ fname }}"] = {}
+    {% endif %}
+
+    {# --- ForeignKey / OneToOneField --- #}
+    {% elif ftype in ["ForeignKey", "OneToOneField"] %}
+    body["{{ fname }}"] = 1
+
+    {# --- ManyToManyField --- #}
+    {% elif ftype == "ManyToManyField" %}
+    body["{{ fname }}"] = [1]
+
+    {# --- その他の型（None で埋める） --- #}
+    {% else %}
+    body["{{ fname }}"] = None
+    {% endif %}
+
+    {% endfor %}
+    return body
+
+
+def test_{{ model_lower }}_crud(configs):
+    base = configs["base_url"] + "/api/{{ model_lower }}s/"
+
+    # GET list
+    res = requests.get(base)
+    assert res.status_code == 200
+
+    # POST create
+    item = _gen_body(model, fields)
+    res = requests.post(base, json=item)
+    assert res.status_code == 201
+    obj = res.json()
+    obj_id = obj["id"]
+
+    # GET detail
+    res = requests.get(base + f"{obj_id}/")
+    assert res.status_code == 200
+
+    # PATCH update (first CharField only)
+    patch_body = {}
+    {% set updated = false %}
+    {% for fname, fdef in fields.items() %}
+        {% if not updated and fdef.type == "CharField" %}
+    patch_body["{{ fname }}"] = "UPDATED"
+            {% set updated = true %}
+        {% endif %}
+    {% endfor %}
+
+    res = requests.patch(base + f"{obj_id}/", json=patch_body)
+    assert res.status_code in (200, 202)
+
+    # DELETE
+    res = requests.delete(base + f"{obj_id}/")
+    assert res.status_code == 204
+
