@@ -12,8 +12,19 @@ application="myapp"
 
 workdir="work"
   
-entities="Device NetIF IPv4 Manager Comment Remark"
-  
+Entities="Device NetIF IPv4 Manager Comment Remark"
+
+entities=""
+for Entity in ${Entities}; do
+  entity=`echo $Entity | tr '[:upper:]' '[:lower:]'`
+  entities="$entities $entity"
+done
+
+ref_yamls=""
+for entity in ${entities}; do
+  ref_yamls="${ref_yamls} template/app/${entity}_ref.yaml"
+done
+
 prepare()
 {
   #python3 -m venv myenv
@@ -27,6 +38,7 @@ if [ ! -e "myenv/bin/activate" ]; then
 fi
 
 . ./myenv/bin/activate
+
 
 help()
 {
@@ -118,11 +130,10 @@ replace()
 
 cmp2ref()
 {
-
-  for entity in ${entities}; do
-    basename=`echo $entity | tr '[:upper:]' '[:lower:]'`
+  for Entity in ${Entities}; do
+    basename=`echo $Entity | tr '[:upper:]' '[:lower:]'`
     python3 cmp2ref.py --output template/app/${basename}_ref.yaml \
-      --name ${entity} template/app/*_cmp.yaml
+      --name ${Entity} template/app/*_cmp.yaml
   done
 
   cat template/app/*_cmp.yaml > all_cmp.yaml
@@ -185,6 +196,82 @@ merge_models()
    } > ${all_models_yaml}
 }
 
+generate_model()
+{
+  for entity in ${entities}; do
+    ref_yaml="template/app/${entity}_ref.yaml"
+
+    echo "INFO: generate model for $entity"
+    python3 generate_model.py \
+      -d depend.yaml \
+      -o ${workdir}/${application}/models/${entity}_model.py \
+      ${ref_yaml}
+  done
+}
+
+generate_admin()
+{
+  for entity in ${entities}; do
+    echo "INFO: generate admin for $entity"
+    python3 generate_admin.py \
+      -o ${workdir}/${application}/admin/${entity}_admin.py \
+      -d depend.yaml \
+      template/app/${entity}_ref.yaml
+  done
+}
+
+generate_view()
+{
+  for entity in ${entities}; do
+    echo "INFO: generate view for $entity"
+    python3 generate_view.py \
+      -o ${workdir}/${application}/views/${entity}_view.py \
+      -l template/app \
+      -t viewset_template.j2 \
+      template/app/${entity}_ref.yaml
+  done
+}
+
+generate_serializer()
+{
+  for entity in ${entities}; do
+    echo "INFO: generate serializer for $entity"
+    python3 generate_serializer.py \
+      -o ${workdir}/${application}/serializers/${entity}_serializer.py \
+      -d depend.yaml \
+      -c category.yaml \
+      template/app/${entity}_ref.yaml
+  done
+}
+
+generate_fixture()
+{
+  for entity in ${entities}; do
+    echo "INFO: generate fixture for $entity"
+    mkdir -p tests/data/
+    python3 generate_fixture.py \
+      -m meta.yaml \
+      -o tests/data/test_${entity}-fixtures.yaml \
+      template/app/${entity}_ref.yaml
+  done
+
+  # debug
+  # cat tests/data/test_*-fixtures.yaml > all-fixtures.yaml
+}
+
+generate_url()
+{
+  python3 generate_url.py -o ${workdir}/${application}/urls_api.py \
+     ${ref_yamls}
+}
+
+generate_admin_loader()
+{
+  python3 generate_admin_loader.py \
+      -o ${workdir}/${application}/admin_loader.py \
+      ${ref_yamls}
+}
+
 generate()
 {
   components="models admin views serializers"
@@ -194,59 +281,18 @@ generate()
     rm -rf   ${workdir}/${application}/${component}.py
   done
 
-  for entity in ${entities}; do
-    entity=`echo $entity | tr '[:upper:]' '[:lower:]'`
-    
-    ref_yaml="template/app/${entity}_ref.yaml"
+  generate_model
+  generate_admin
 
-    echo "INFO: generate model for $entity"
-    python3 generate_model.py \
-      -d depend.yaml \
-      -o ${workdir}/${application}/models/${entity}_model.py \
-      ${ref_yaml}
+  generate_view
 
-    echo "INFO: generate admin for $entity"
-    python3 generate_admin.py -d depend.yaml ${ref_yaml} \
-      > ${workdir}/${application}/admin/${entity}_admin.py
+  generate_serializer
 
-    echo "INFO: generate view for $entity"
-    python3 generate_view.py \
-      -o ${workdir}/${application}/views/${entity}_view.py \
-      -l template/app \
-      -t viewset_template.j2 \
-      ${ref_yaml}
-  
-    echo "INFO: generate serializer for $entity"
-    python3 generate_serializer.py \
-      -o ${workdir}/${application}/serializers/${entity}_serializer.py \
-      -d depend.yaml \
-      -c category.yaml \
-      ${ref_yaml}
-    
-    echo "INFO: generate fixture for $entity"
-    mkdir -p tests/data/
-    python3 generate_fixture.py \
-      -m meta.yaml \
-      -o tests/data/test_${entity}-fixtures.yaml \
-      ${ref_yaml}
-  done
+  generate_fixture
 
-  # debug
-  cat tests/data/test_*-fixtures.yaml > all-fixtures.yaml
+  generate_url
 
-  ref_yamls=""
-  for entity in ${entities}; do
-    entity=`echo $entity | tr '[:upper:]' '[:lower:]'`
-    ref_yamls="${ref_yamls} template/app/${entity}_ref.yaml"
-  done
-
-  python3 generate_url.py -o ${workdir}/${application}/urls_api.py \
-     ${ref_yamls}
-
-  echo "INFO: generate admin loader"
-  python3 generate_admin_loader.py \
-      -o ${workdir}/${application}/admin_loader.py \
-      ${ref_yamls}
+  generate_admin_loader
 
   echo "INFO: generate apps.py"
   python3 generate_apps.py -n ${application} -o ${workdir}/${application}/apps.py
@@ -423,11 +469,10 @@ generate_test()
 {
   mkdir -p tests/data/
   for entity in ${entities}; do
-    target=`echo $entity | tr '[:upper:]' '[:lower:]'`
-    python3 generate_test.py -o tests/test_generated_${target}.py \
+    python3 generate_test.py -o tests/test_generated_${entity}.py \
       -m meta.yaml \
-      template/app/${target}_ref.yaml
-    cp -f template/app/${target}_ref.yaml tests/data/
+      template/app/${entity}_ref.yaml
+    cp -f template/app/${entity}_ref.yaml tests/data/
   done
 }
 
