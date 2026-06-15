@@ -83,7 +83,6 @@ all()
   schema
 
   generate
-  update_ini
   update_url
   migrate
 
@@ -252,6 +251,13 @@ generate_admin_loader()
       ${ref_yamls}
 }
 
+generate_init()
+{
+  echo "INFO: generate models/__init__.py"
+  ./generators/generate_init.py \
+    -o ${workdir}/${application}/models/__init__.py ${schema_yaml}
+}
+
 generate()
 {
   components="models admin views serializers"
@@ -274,28 +280,14 @@ generate()
 
   generate_admin_loader
 
+  generate_init
+
   rm -f ${workdir}/${application}/admin/__init__.py
 }
 
 gen()
 {
   generate
-}
-
-update_ini()
-{
-  echo "INFO: generate models/__init__.py"
-
-  ./generators/generate_ini.py \
-    -o ${workdir}/${application}/models/__init__.py \
-    template/app/*_ref.yaml
-
-  echo "" > ${workdir}/${application}/admin/__init__.py
-  echo "" > ${workdir}/${application}/views/__init__.py
-  #echo "" > ${workdir}/${application}/serializers/__init__.py
-  ./generators/generate_serializer_init.py \
-    -o ${workdir}/${application}/serializers/__init__.py \
-    template/app/*_ref.yaml
 }
 
 update_url()
