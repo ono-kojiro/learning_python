@@ -7,7 +7,8 @@ from jinja2 import Environment, FileSystemLoader
 
 
 def usage():
-    print(f"Usage : {sys.argv[0]} -o <output> -l <loader.d> -t <template.j2> <input>...")
+    print(f"Usage : {sys.argv[0]} -o <output> -l <loader.d> -t <template.j2> schema.yaml")
+    sys.exit(1)
 
 
 def read_yaml(path):
@@ -57,6 +58,13 @@ def main():
     if ret:
         sys.exit(ret)
 
+    if not args:
+        print("ERROR: schema.yaml must be specified", file=sys.stderr)
+        usage()
+
+    schema_path = args[0]
+
+    # 出力先
     if output:
         fp = open(output, "w", encoding="utf-8")
     else:
@@ -69,16 +77,11 @@ def main():
     )
     template = env.get_template(template_j2)
 
-    if not args:
-        print("ERROR: no input YAML files", file=sys.stderr)
-        usage()
-        sys.exit(1)
+    # schema.yaml を読み込む
+    schema = read_yaml(schema_path)
 
-    # モデル名を収集
-    models = []
-    for filepath in args:
-        data = read_yaml(filepath)
-        models.append(data["name"])
+    # モデル名一覧を取得
+    models = list(schema["models"].keys())
 
     # テンプレートレンダリング
     content = template.render(

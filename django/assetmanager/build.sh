@@ -241,14 +241,13 @@ generate_url()
   ./generators/generate_url.py -o ${workdir}/${application}/urls_api.py \
     -l template/app \
     -t urls_template.j2 \
-     ${ref_yamls}
+     ${schema_yaml}
 }
 
 generate_admin_loader()
 {
   ./generators/generate_admin_loader.py \
-      -o ${workdir}/${application}/admin_loader.py \
-      ${ref_yamls}
+      -o ${workdir}/${application}/admin_loader.py ${schema_yaml}
 }
 
 generate_init()
