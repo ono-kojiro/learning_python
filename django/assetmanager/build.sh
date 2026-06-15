@@ -29,8 +29,6 @@ for entity in ${entities}; do
   ref_yamls="${ref_yamls} ${top_dir}/template/app/${entity}_ref.yaml"
 done
 
-depend_yaml="schema/depend.yaml"
-category_yaml="schema/category.yaml"
 schema_yaml="schema/schema.yaml"
 
 prepare()
@@ -180,7 +178,6 @@ generate_model()
 
     echo "INFO: generate model for $entity"
     ./generators/generate_model.py \
-      -d ${depend_yaml} \
       -l template/app \
       -o ${workdir}/${application}/models/${entity}_model.py \
       ${ref_yaml}
@@ -217,8 +214,8 @@ generate_serializer()
     echo "INFO: generate serializer for $entity"
     ./generators/generate_serializer.py \
       -o ${workdir}/${application}/serializers/${entity}_serializer.py \
-      -d ${depend_yaml} \
-      -c ${category_yaml} \
+      -d ${schema_yaml} \
+      -c ${schema_yaml} \
       -l template/app \
       template/app/${entity}_ref.yaml
   done
@@ -335,7 +332,7 @@ migrate()
 loaddata()
 {
   echo "INFO: loaddata"
-  models=`yq -r '.load_order[]' ${depend_yaml}`
+  models=`yq -r '.load_order[]' ${schema_yaml}`
 
   cd ${workdir}
   for model in ${models}; do

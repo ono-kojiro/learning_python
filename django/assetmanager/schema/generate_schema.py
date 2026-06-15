@@ -3,6 +3,7 @@
 import sys
 import getopt
 import yaml
+from collections import defaultdict, deque
 
 
 def read_yaml(path):
@@ -10,8 +11,10 @@ def read_yaml(path):
         return yaml.safe_load(fp)
 
 
+# ------------------------------------------------------------
+# *_ref.yaml → models セクション
+# ------------------------------------------------------------
 def collect_models(ref_files):
-    """*_ref.yaml から models セクションを構築"""
     models = {}
 
     for path in ref_files:
@@ -23,8 +26,10 @@ def collect_models(ref_files):
     return models
 
 
+# ------------------------------------------------------------
+# 依存関係（ForeignKey / OneToOne / ManyToMany）
+# ------------------------------------------------------------
 def collect_dependencies(models):
-    """ForeignKey / OneToOne / ManyToMany から依存関係を抽出"""
     deps = {m: [] for m in models}
 
     for model, data in models.items():
@@ -40,8 +45,10 @@ def collect_dependencies(models):
     return deps
 
 
+# ------------------------------------------------------------
+# フィールドカテゴリ分類
+# ------------------------------------------------------------
 def collect_field_categories(models):
-    """フィールドタイプごとに分類"""
     categories = {}
 
     for model, data in models.items():
@@ -53,6 +60,117 @@ def collect_field_categories(models):
     return categories
 
 
+# ------------------------------------------------------------
+# GeneralCategory（旧 categorize_entity.py のロジック）
+# ------------------------------------------------------------
+def categorize_general(entity_name, models):
+    fields = models[entity_name]["fields"]
+
+    # Owner 判定（ManyToMany / *_ids）
+    for fdef in fields.values():
+        if fdef.get("type") == "ManyToManyField":
+            return "owner"
+
+    for fname in fields.keys():
+        if fname.endswith("_ids"):
+            return "owner"
+
+    # 子を持つかどうか（逆参照）
+    has_children = False
+    for other_name, other_data in models.items():
+        if other_name == entity_name:
+            continue
+        for fdef in other_data.get("fields", {}).values():
+            if fdef.get("to") == entity_name:
+                if fdef.get("type") in ("OneToOneField", "OneToMany"):
+                    has_children = True
+
+    # 親への OneToOne / ForeignKey
+    has_one_to_one_parent = any(
+        fdef.get("type") == "OneToOneField"
+        for fdef in fields.values()
+    )
+    has_foreign_key_parent = any(
+        fdef.get("type") == "ForeignKey"
+        for fdef in fields.values()
+    )
+
+    # Attribute
+    if has_one_to_one_parent and not has_children:
+        return "attribute"
+
+    # Resource
+    if has_foreign_key_parent and has_children:
+        return "resource"
+
+    return "resource"
+
+
+# ------------------------------------------------------------
+# DependencyCategory（旧 categorize_entity.py のロジック）
+# ------------------------------------------------------------
+def categorize_dependency(entity_name, models):
+    fields = models[entity_name]["fields"]
+
+    # ManyToMany の所有側
+    for fdef in fields.values():
+        if fdef.get("type") == "ManyToManyField":
+            return "m2m_owner"
+
+    # ManyToMany の対象側（逆参照）
+    for other_name, other_data in models.items():
+        if other_name == entity_name:
+            continue
+        for fdef in other_data.get("fields", {}).values():
+            if fdef.get("type") == "ManyToManyField" and fdef.get("to") == entity_name:
+                return "m2m_target"
+
+    # ForeignKey の親側（逆参照）
+    for other_name, other_data in models.items():
+        if other_name == entity_name:
+            continue
+        for fdef in other_data.get("fields", {}).values():
+            if fdef.get("type") == "ForeignKey" and fdef.get("to") == entity_name:
+                return "fk_parent"
+
+    # ForeignKey の子側
+    for fdef in fields.values():
+        if fdef.get("type") == "ForeignKey":
+            return "fk_child"
+
+    return "no_dependency"
+
+
+# ------------------------------------------------------------
+# トポロジカルソート（generate_depend.py のロジック）
+# ------------------------------------------------------------
+def topo_sort(dep_map):
+    graph = defaultdict(list)
+    indegree = defaultdict(int)
+
+    for model, parents in dep_map.items():
+        indegree[model] = len(parents)
+        for p in parents:
+            graph[p].append(model)
+
+    queue = deque([m for m, d in indegree.items() if d == 0])
+    order = []
+
+    while queue:
+        m = queue.popleft()
+        order.append(m)
+
+        for child in graph[m]:
+            indegree[child] -= 1
+            if indegree[child] == 0:
+                queue.append(child)
+
+    return order
+
+
+# ------------------------------------------------------------
+# main
+# ------------------------------------------------------------
 def main():
     try:
         opts, args = getopt.getopt(
@@ -82,11 +200,37 @@ def main():
     dependencies = collect_dependencies(models)
     field_categories = collect_field_categories(models)
 
+    # --- GeneralCategory / DependencyCategory ---
+    general_categories = {}
+    dependency_categories = {}
+
+    for entity_name in models.keys():
+        general_categories[entity_name] = categorize_general(entity_name, models)
+        dependency_categories[entity_name] = categorize_dependency(entity_name, models)
+
+    # --- reverse_dependencies（generate_depend.py のロジック） ---
+    reverse_dependencies = {model: [] for model in dependencies}
+
+    for model, parents in dependencies.items():
+        for p in parents:
+            reverse_dependencies[p].append(model)
+
+    # --- load_order（generate_depend.py のロジック） ---
+    load_order = topo_sort(dependencies)
+
+    # Device を最優先にする（暫定対応）
+    if "Device" in load_order:
+        load_order = ["Device"] + [m for m in load_order if m != "Device"]
+
     # --- schema.yaml の構造 ---
     schema = {
         "models": models,
         "dependencies": dependencies,
+        "reverse_dependencies": reverse_dependencies,
+        "load_order": load_order,
         "field_categories": field_categories,
+        "general_categories": general_categories,
+        "dependency_categories": dependency_categories,
     }
 
     # --- 出力 ---
@@ -97,4 +241,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

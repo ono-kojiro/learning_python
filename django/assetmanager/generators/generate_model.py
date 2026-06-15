@@ -162,7 +162,7 @@ def generate_model_lines(data):
 def main():
     try:
         options, args = getopt.getopt(
-            sys.argv[1:], "hvo:l:d:", ["help", "version", "output=", "loader=", "depend="]
+            sys.argv[1:], "hvo:l:", ["help", "version", "output=", "loader="]
         )
     except getopt.GetoptError as err:
         print(str(err))
@@ -170,7 +170,6 @@ def main():
 
     output = None
     loader_d = None
-    depend_yaml = None
 
     for option, optarg in options:
         if option in ("-h", "--help"):
@@ -180,15 +179,9 @@ def main():
             output = optarg
         elif option in ("-l", "--loader"):
             loader_d = optarg
-        elif option in ("-d", "--depend"):
-            depend_yaml = optarg
 
     if loader_d is None:
         print("ERROR: missing --loader", file=sys.stderr)
-        sys.exit(1)
-
-    if depend_yaml is None:
-        print("ERROR: no depend option", file=sys.stderr)
         sys.exit(1)
 
     if not args:
