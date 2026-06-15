@@ -146,16 +146,16 @@ def collect_dependencies(targets, dependencies):
 # ---------------------------------------------------------
 def main():
     options, args = getopt.getopt(
-        sys.argv[1:], "ho:l:m:c:n:",
+        sys.argv[1:], "ho:l:s:c:n:",
         [
-            "help", "output=", "loader=", "meta=",
+            "help", "output=", "loader=", "schema=",
             "count=", "names=", "with-deps", "no-deps"
         ]
     )
 
     output = None
     loader_d = None
-    meta_path = None
+    schema_yaml = None
     names_path = None
     count = 10
     include_deps = False
@@ -165,8 +165,8 @@ def main():
             output = val
         elif opt in ("-l", "--loader"):
             loader_d = val
-        elif opt in ("-m", "--meta"):
-            meta_path = val
+        elif opt in ("-s", "--schema"):
+            schema_yaml = val
         elif opt in ("-c", "--count"):
             count = int(val)
         elif opt in ("-n", "--names"):
@@ -176,8 +176,8 @@ def main():
         elif opt == "--no-deps":
             include_deps = False
 
-    if not meta_path:
-        print("ERROR: meta.yaml is required (-m)")
+    if not schema_yaml:
+        print("ERROR: schema.yaml is required (-s)")
         return
 
     if loader_d is None:
@@ -185,8 +185,8 @@ def main():
         return
 
     # meta.yaml
-    meta = read_yaml(meta_path)
-    dependencies = meta["dependencies"]
+    schema = read_yaml(schema_yaml)
+    dependencies = schema["dependencies"]
 
     # 名前テンプレート
     name_data = read_yaml(names_path) if names_path else {"first_names": [], "last_names": []}

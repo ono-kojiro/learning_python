@@ -70,7 +70,15 @@ def generate_inline_blocks(target_model, model_defs, children_map):
 def main():
     try:
         options, args = getopt.getopt(
-            sys.argv[1:], "hvo:l:m:", ["help", "version", "output=", "loader=", "meta="]
+            sys.argv[1:],
+            "hvo:l:s:",
+            [
+                "help",
+                "version",
+                "output=",
+                "loader=",
+                "schema="
+            ]
         )
     except getopt.GetoptError as err:
         print(str(err))
@@ -78,7 +86,7 @@ def main():
 
     output = None
     loader_d = None
-    meta_yaml = None
+    schema_yaml = None
 
     for option, optarg in options:
         if option in ("-h", "--help"):
@@ -88,15 +96,15 @@ def main():
             output = optarg
         elif option in ("-l", "--loader"):
             loader_d = optarg
-        elif option in ("-m", "--meta"):
-            meta_yaml = optarg
+        elif option in ("-s", "--schema"):
+            schema_yaml = optarg
 
     if loader_d is None:
         print("ERROR: missing --loader", file=sys.stderr)
         sys.exit(1)
 
-    if meta_yaml is None:
-        print("ERROR: missing --meta", file=sys.stderr)
+    if schema_yaml is None:
+        print("ERROR: missing --schema", file=sys.stderr)
         sys.exit(1)
 
     if not args:
@@ -109,9 +117,9 @@ def main():
     target_model = ref_data["name"]
 
     # meta.yaml 読み込み
-    meta = read_yaml(meta_yaml)
-    depend_map = meta["dependencies"]
-    model_defs = meta["models"]
+    schema = read_yaml(schema_yaml)
+    depend_map = schema["dependencies"]
+    model_defs = schema["models"]
 
     # reverse dependency map
     children_map = {model: [] for model in depend_map}

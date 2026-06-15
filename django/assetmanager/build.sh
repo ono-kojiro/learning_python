@@ -191,7 +191,7 @@ generate_admin()
     ./generators/generate_admin.py \
       -o ${workdir}/${application}/admin/${entity}_admin.py \
       -l template/app \
-      -m ${schema_yaml} \
+      -s ${schema_yaml} \
       template/app/${entity}_ref.yaml
   done
 }
@@ -214,8 +214,7 @@ generate_serializer()
     echo "INFO: generate serializer for $entity"
     ./generators/generate_serializer.py \
       -o ${workdir}/${application}/serializers/${entity}_serializer.py \
-      -d ${schema_yaml} \
-      -c ${schema_yaml} \
+      -s ${schema_yaml} \
       -l template/app \
       template/app/${entity}_ref.yaml
   done
@@ -228,7 +227,7 @@ generate_fixture()
     mkdir -p tests/data/
     ./generators/generate_fixture.py \
       -l template/app \
-      -m ${schema_yaml} \
+      -s ${schema_yaml} \
       -n template/app/names.yaml \
       -o tests/data/test_${entity}-fixtures.yaml \
       template/app/${entity}_ref.yaml
@@ -448,7 +447,7 @@ generate_test()
   mkdir -p tests/data/
   for entity in ${entities}; do
     ./generators/generate_test.py -o tests/test_generated_${entity}.py \
-      -m ${schema_yaml} \
+      -s ${schema_yaml} \
       template/app/${entity}_ref.yaml
     cp -f template/app/${entity}_ref.yaml tests/data/
   done

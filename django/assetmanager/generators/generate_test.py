@@ -16,20 +16,20 @@ def read_yaml(path):
     
 def main():
     options, args = getopt.getopt(
-        sys.argv[1:], "ho:m:", ["help", "output=", "meta="]
+        sys.argv[1:], "ho:s:", ["help", "output=", "schema="]
     )
 
     output_file = None
-    meta_path = None
+    schema_yaml = None
 
     for opt, val in options:
         if opt in ("-o", "--output"):
             output_file = val
-        elif opt in ("-m", "--meta"):
-            meta_path = val
+        elif opt in ("-s", "--schema"):
+            schema_yaml = val
 
-    if not meta_path:
-        print("ERROR: meta.yaml is required (-m)")
+    if not schema_yaml:
+        print("ERROR: schema.yaml is required (-s)")
         return
 
     if not output_file:
@@ -41,8 +41,8 @@ def main():
         return
 
     # meta.yaml 読み込み
-    meta = read_yaml(meta_path)
-    meta_models = meta["models"]
+    schema = read_yaml(schema_yaml)
+    meta_models = schema["models"]
 
     # *_ref.yaml 読み込み
     ref_yaml = args[0]

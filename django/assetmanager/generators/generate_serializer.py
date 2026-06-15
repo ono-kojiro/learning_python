@@ -7,7 +7,7 @@ from jinja2 import Environment, FileSystemLoader
 
 
 def usage():
-    print(f"Usage: {sys.argv[0]} -o <output> -l <loader.d> -d depend.yaml -c category.yaml <model_yaml>...")
+    print(f"Usage: {sys.argv[0]} -o <output> -l <loader.d> -s schema.yaml <model_yaml>...")
 
 
 def read_yaml(path):
@@ -19,14 +19,13 @@ def main():
     try:
         options, args = getopt.getopt(
             sys.argv[1:],
-            "hvo:l:d:c:",
+            "hvo:l:s:",
             [
                 "help",
                 "version",
                 "output=",
                 "loader=",
-                "depend=",
-                "category=",
+                "schema=",
             ]
         )
     except getopt.GetoptError as err:
@@ -35,8 +34,7 @@ def main():
 
     output = None
     loader_d = None
-    depend_yml = None
-    category_yml = None
+    schema_yaml = None
 
     for option, optarg in options:
         if option in ("-h", "--help"):
@@ -46,27 +44,24 @@ def main():
             output = optarg
         elif option in ("-l", "--loader"):
             loader_d = optarg
-        elif option in ("-d", "--depend"):
-            depend_yml = optarg
-        elif option in ("-c", "--category"):
-            category_yml = optarg
+        elif option in ("-s", "--schema"):
+            schema_yaml = optarg
 
     # 必須チェック
     if loader_d is None:
         print("ERROR: missing --loader", file=sys.stderr)
         sys.exit(1)
-    if depend_yml is None or category_yml is None:
-        print("ERROR: missing -d or -c", file=sys.stderr)
+    if schema_yaml is None:
+        print("ERROR: missing --schema", file=sys.stderr)
         sys.exit(1)
 
     # 依存関係とカテゴリを読み込み
-    deps = read_yaml(depend_yml)
-    dependencies = deps["dependencies"]
-    reverse_dependencies = deps["reverse_dependencies"]
+    schema = read_yaml(schema_yaml)
+    dependencies = schema["dependencies"]
+    reverse_dependencies = schema["reverse_dependencies"]
 
-    categories = read_yaml(category_yml)
-    general_categories = categories["general_categories"]
-    dependency_categories = categories["dependency_categories"]
+    general_categories = schema["general_categories"]
+    dependency_categories = schema["dependency_categories"]
 
     # Jinja2 環境
     env = Environment(
