@@ -257,6 +257,17 @@ generate_init()
     -o ${workdir}/${application}/models/__init__.py ${schema_yaml}
 }
 
+generate_app()
+{
+  echo "INFO: generate ${workdir}/${application}/apps.py"
+  ./generators/generate_apps.py \
+    -o ${workdir}/${application}/apps.py \
+    -l template/app \
+    -t apps.py.j2 \
+    --app-name ${application} \
+    ${schema_yaml}
+}
+
 generate()
 {
   components="models admin views serializers"
@@ -279,9 +290,12 @@ generate()
 
   generate_admin_loader
 
+  generate_app
+
   generate_init
 
-  rm -f ${workdir}/${application}/admin/__init__.py
+
+  #rm -f ${workdir}/${application}/admin/__init__.py
 }
 
 gen()
