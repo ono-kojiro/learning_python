@@ -26,12 +26,12 @@ done
 
 ref_yamls=""
 for entity in ${entities}; do
-  ref_yamls="${ref_yamls} template/app/${entity}_ref.yaml"
+  ref_yamls="${ref_yamls} ${top_dir}/template/app/${entity}_ref.yaml"
 done
 
-depend_yaml="${workdir}/depend.yaml"
-category_yaml="${workdir}/category.yaml"
-meta_yaml="${workdir}/meta.yaml"
+depend_yaml="schema/depend.yaml"
+category_yaml="schema/category.yaml"
+schema_yaml="schema/schema.yaml"
 
 prepare()
 {
@@ -81,9 +81,8 @@ all()
   allowed_hosts
 
   cmp2ref
-  category
-  depend
-  meta
+
+  schema
 
   generate
   update_ini
@@ -143,7 +142,7 @@ cmp2ref()
       --name ${Entity} template/app/*_cmp.yaml
   done
 
-  cat template/app/*_cmp.yaml > all_cmp.yaml
+  #cat template/app/*_cmp.yaml > all_cmp.yaml
 }
 
 replace_installed_apps()
@@ -167,31 +166,11 @@ log()
   cat ${project}/nohup.out
 }
 
-category()
+schema()
 {
-   cmd="./generators/categorize_entity.py"
-   cmd="$cmd -o ${category_yaml} template/app/*_ref.yaml"
-   echo $cmd
-   $cmd
-   cat ${category_yaml}
-
-   cat template/app/*_ref.yaml > all_ref.yaml
-}
-
-depend()
-{
-   cmd="./generators/generate_depend.py"
-   cmd="$cmd -o ${depend_yaml} template/app/*_ref.yaml"
-   echo $cmd
-   $cmd
-}
-
-meta()
-{
-   cmd="./generators/generate_meta.py"
-   cmd="$cmd -o ${meta_yaml} template/app/*_ref.yaml"
-   echo $cmd
-   $cmd
+  cd schema
+  make REF_YAMLS="${ref_yamls}" TOP_DIR="${top_dir}"
+  cd ${top_dir}
 }
 
 generate_model()
@@ -215,7 +194,7 @@ generate_admin()
     ./generators/generate_admin.py \
       -o ${workdir}/${application}/admin/${entity}_admin.py \
       -l template/app \
-      -m ${meta_yaml} \
+      -m ${schema_yaml} \
       template/app/${entity}_ref.yaml
   done
 }
@@ -252,7 +231,7 @@ generate_fixture()
     mkdir -p tests/data/
     ./generators/generate_fixture.py \
       -l template/app \
-      -m ${meta_yaml} \
+      -m ${schema_yaml} \
       -n template/app/names.yaml \
       -o tests/data/test_${entity}-fixtures.yaml \
       template/app/${entity}_ref.yaml
@@ -472,7 +451,7 @@ generate_test()
   mkdir -p tests/data/
   for entity in ${entities}; do
     ./generators/generate_test.py -o tests/test_generated_${entity}.py \
-      -m ${meta_yaml} \
+      -m ${schema_yaml} \
       template/app/${entity}_ref.yaml
     cp -f template/app/${entity}_ref.yaml tests/data/
   done
