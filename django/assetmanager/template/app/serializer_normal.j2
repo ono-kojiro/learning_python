@@ -16,3 +16,42 @@ class {{ model }}Serializer(serializers.ModelSerializer):
     class Meta:
         model = {{ model }}
         fields = {{ fields_list }}
+
+{%- if nested_fields %}
+    def create(self, validated_data):
+        # --- extract nested data ---
+        {%- for nf in nested_fields %}
+        {{ nf.name }}_data = validated_data.pop("{{ nf.name }}", {{ nf.default }})
+        {%- endfor %}
+
+        # --- create main object ---
+        obj = {{ model }}.objects.create(**validated_data)
+
+        # --- process nested fields ---
+        {%- for nf in nested_fields %}
+
+        {%- if nf.kind == "one_to_many" %}
+        # {{ nf.name }}: OneToMany → create children
+        for item in {{ nf.name }}_data:
+            child_list = item.pop("{{ nf.child_list }}", [])
+            child_obj = {{ nf.model }}.objects.create({{ nf.fk }}=obj, **item)
+            for child in child_list:
+                {{ nf.child_model }}.objects.create({{ nf.child_fk }}=child_obj, **child)
+        {%- endif %}
+
+        {%- if nf.kind == "one_to_one" %}
+        # {{ nf.name }}: OneToOne → create child
+        if {{ nf.name }}_data:
+            {{ nf.model }}.objects.create({{ nf.fk }}=obj, **{{ nf.name }}_data)
+        {%- endif %}
+
+        {%- if nf.kind == "many_to_many" %}
+        # {{ nf.name }}: ManyToMany → set relations
+        if {{ nf.name }}_data:
+            obj.{{ nf.name }}.set({{ nf.name }}_data)
+        {%- endif %}
+
+        {%- endfor %}
+
+        return obj
+{%- endif %}
