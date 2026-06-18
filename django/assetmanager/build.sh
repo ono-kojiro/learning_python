@@ -461,7 +461,7 @@ generate_test()
 test()
 {
   generate_test
-  pytest
+  pytest -s
 }
 
 if [ "$#" -eq 0 ]; then

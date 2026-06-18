@@ -101,7 +101,7 @@ def main():
             elif state == STATE_BLOCK:
                 if re.search(regex_to, line):
                     ymlfile = name.lower()
-                    fp.write('{0} = yaml.safe_load(open("{1}/{2}.yml"))'.format(name, project, name.lower()))
+                    fp.write('{0} = yaml.safe_load(open( str(BASE_DIR) + "/{1}/{2}.yml"))'.format(name, project, name.lower()))
                     fp.write('\n')
                     state = STATE_INIT
                 pass

@@ -55,13 +55,12 @@ def main():
         print("ERROR: missing --schema", file=sys.stderr)
         sys.exit(1)
 
-    # 依存関係とカテゴリを読み込み
+    # schema.yaml を読み込む
     schema = read_yaml(schema_yaml)
     dependencies = schema["dependencies"]
     reverse_dependencies = schema["reverse_dependencies"]
-
-    general_categories = schema["general_categories"]
     dependency_categories = schema["dependency_categories"]
+    nested_map = schema.get("nested", {})   # ★ nested セクション
 
     # Jinja2 環境
     env = Environment(
@@ -104,12 +103,16 @@ def main():
         for other_model in rev:
             fields_list.append(f"{other_model.lower()}s")
 
+        # ★ nested 構造を schema.yaml から取得
+        nested_fields = nested_map.get(model, [])
+
         # テンプレートへ渡す
         content = template.render(
             model=model,
             fields=fields,
             fields_list=fields_list,
             reverse_dependencies=reverse_dependencies,
+            nested_fields=nested_fields,   # ★ 追加
         )
 
         fp.write(content + "\n\n")

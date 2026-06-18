@@ -15,6 +15,48 @@ class {{ model }}Serializer(serializers.ModelSerializer):
         source='netif_set'
     )
 
+    {# ----------------------------- #}
+{%- if nested_fields %}
+    def create(self, validated_data):
+        # --- extract nested data ---
+        {%- for nf in nested_fields %}
+        {{ nf.name }}_data = validated_data.pop("{{ nf.name }}", None)
+        {%- endfor %}
+
+        obj = {{ model }}.objects.create(**validated_data)
+
+        # --- process nested fields ---
+        {%- for nf in nested_fields %}
+        {%- if nf.kind == "one_to_many" %}
+        # {{ nf.name }}: OneToMany
+        if {{ nf.name }}_data:
+            for item in {{ nf.name }}_data:
+                {%- if nf.child %}
+                child_list = item.pop("{{ nf.child.name }}", [])
+                child_obj = {{ nf.model }}.objects.create({{ nf.fk }}=obj, **item)
+                for child in child_list:
+                    {{ nf.child.model }}.objects.create({{ nf.child.fk }}=child_obj, **child)
+                {%- else %}
+                {{ nf.model }}.objects.create({{ nf.fk }}=obj, **item)
+                {%- endif %}
+        {%- endif %}
+
+        {%- if nf.kind == "one_to_one" %}
+        # {{ nf.name }}: OneToOne
+        if {{ nf.name }}_data:
+            {{ nf.model }}.objects.create({{ nf.fk }}=obj, **{{ nf.name }}_data)
+        {%- endif %}
+
+        {%- if nf.kind == "many_to_many" %}
+        # {{ nf.name }}: ManyToMany
+        if {{ nf.name }}_data:
+            obj.{{ nf.name }}.set({{ nf.name }}_data)
+        {%- endif %}
+        {%- endfor %}
+
+        return obj
+    {%- endif %}
+
     def update(self, instance, validated_data):
         managers = validated_data.pop('managers', None)
         instance = super().update(instance, validated_data)
@@ -38,4 +80,3 @@ class {{ model }}Serializer(serializers.ModelSerializer):
             'managers',
             'netifs',
         ]
-
