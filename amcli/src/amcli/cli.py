@@ -30,6 +30,14 @@ def installapp(app_name, project):
     run(app_name, project)
 
 @main.command()
+@click.option("--name", "-n", "entity_name", required=True, help="Entity name (e.g., Device)")
+@click.option("--output", "-o", "output_file", required=True, help="Output file path for *_ref.yaml")
+@click.argument("input_files", nargs=-1)
+def cmp2ref(entity_name, output_file, input_files):
+    from amcli.commands.cmp2ref import run
+    run(entity_name, output_file, input_files)
+
+@main.command()
 def genschema():
     from amcli.commands.genschema import run
     run()
