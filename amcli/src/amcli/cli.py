@@ -38,9 +38,14 @@ def cmp2ref(entity_name, output_file, input_files):
     run(entity_name, output_file, input_files)
 
 @main.command()
-def genschema():
-    from amcli.commands.genschema import run
-    run()
+@click.option("-o", "--output", "output_file", required=True, help="Output schema file (JSON)")
+@click.argument("input_files", nargs=-1)
+def genschema(output_file, input_files):
+    """
+    Generate schema.json from reference model JSON files.
+    """
+    from amcli.commands.generate_schema import run
+    run(output_file, input_files)
 
 @main.command()
 def generate():
