@@ -21,11 +21,11 @@ def startapp(app_name, directory):
     from amcli.commands.startapp import run
     run(app_name, directory)
 
-@main.command()
+@main.command(name="installapp")
 @click.argument("app_name")
 @click.option("--project", required=True, help="Path to Django project directory")
 def installapp(app_name, project):
-    """Add an app to the project (installed_apps.yml + settings.py update)"""
+    """Install an app into the project (installed_apps.yml + allowed_hosts.yml + settings.py update)"""
     from amcli.commands.installapp import run
     run(app_name, project)
 

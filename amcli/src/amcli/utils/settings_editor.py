@@ -34,3 +34,28 @@ def replace_installed_apps(settings_path: Path, project_name: str):
     new_tree = tree.visit(InstalledAppsTransformer(project_name))
     settings_path.write_text(new_tree.code, encoding="utf-8")
 
+class AllowedHostsYamlTransformer(cst.CSTTransformer):
+    def __init__(self, project_name):
+        self.project_name = project_name
+
+    def leave_Assign(self, original_node, updated_node):
+        if (
+            isinstance(original_node.targets[0].target, cst.Name)
+            and original_node.targets[0].target.value == "ALLOWED_HOSTS"
+        ):
+            new_value = cst.parse_expression(
+                f"yaml.safe_load(open(str(BASE_DIR / '{self.project_name}' / 'allowed_hosts.yml')))"
+            )
+            return updated_node.with_changes(value=new_value)
+
+        return updated_node
+
+
+def replace_allowed_hosts_with_yaml(settings_path, project_name):
+    code = settings_path.read_text(encoding="utf-8")
+    tree = cst.parse_module(code)
+
+    transformer = AllowedHostsYamlTransformer(project_name)
+    new_tree = tree.visit(transformer)
+
+    settings_path.write_text(new_tree.code, encoding="utf-8")
