@@ -13,6 +13,21 @@ def startproject(name, directory):
     from amcli.commands.startproject import run
     run(name, directory)
 
+@main.command()
+@click.argument("app_name")
+@click.option("--dir", "directory", required=True, help="Target directory to create the app")
+def startapp(app_name, directory):
+    """Create a new Django app inside the specified directory."""
+    from amcli.commands.startapp import run
+    run(app_name, directory)
+
+@main.command()
+@click.argument("app_name")
+@click.option("--project", required=True, help="Path to Django project directory")
+def installapp(app_name, project):
+    """Add an app to the project (installed_apps.yml + settings.py update)"""
+    from amcli.commands.installapp import run
+    run(app_name, project)
 
 @main.command()
 def genschema():
