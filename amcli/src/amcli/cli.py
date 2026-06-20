@@ -97,6 +97,21 @@ def genfixture(loader_dir, output_file, schema_yaml, names_yaml, count, include_
     run(loader_dir, output_file, schema_yaml, names_yaml, ref_yaml_list, count, include_deps)
 
 @main.command()
+@click.option("-l", "--loader", "loader_dir", required=True, help="Template loader directory")
+@click.option("-o", "--output", "output_file", required=True, help="Output urls file")
+@click.argument("schema_yaml")
+def genurl(loader_dir, output_file, schema_yaml):
+    from amcli.commands.generate_url import run
+    run(loader_dir, output_file, schema_yaml)
+
+@main.command()
+@click.option("-o", "--output", "output_file", required=True, help="Output admin_loader.py")
+@click.argument("schema_yaml")
+def genadminloader(output_file, schema_yaml):
+    from amcli.commands.generate_admin_loader import run
+    run(output_file, schema_yaml)
+
+@main.command()
 def generate():
     from amcli.commands.generate import run
     run()

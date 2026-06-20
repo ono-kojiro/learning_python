@@ -26,6 +26,9 @@ VIEW_PY   = $(addprefix $(VIEW_DIR)/,  $(notdir $(ENTITIES:=_view.py)))
 SERIALIZER_PY = $(addprefix $(SERIALIZER_DIR)/,  $(notdir $(ENTITIES:=_serializer.py)))
 FIXTURE_YML = $(addprefix $(FIXTURE_DIR)/test_, $(notdir $(ENTITIES:=-fixtures.yaml)))
 	
+URLS_API_PY     = $(WORK_DIR)/$(APP)/urls_api.py
+ADMIN_LOADER_PY = $(WORK_DIR)/$(APP)/admin_loader.py
+
 TEMPLATE_DIR = template
 	
 $(shell mkdir -p $(OUT_SPEC_DIR))
@@ -34,7 +37,7 @@ $(shell mkdir -p $(VIEW_DIR))
 $(shell mkdir -p $(SERIALIZER_DIR))
 $(shell mkdir -p $(FIXTURE_DIR))
 
-all : cmp2ref schema model admin view serializer fixture
+all : cmp2ref schema model admin view serializer fixture url loader
 
 help :
 	@echo "usage: make TARGET"
@@ -94,6 +97,16 @@ fixture: $(FIXTURE_YML)
 $(FIXTURE_DIR)/test_%-fixtures.yaml : $(OUT_SPEC_DIR)/%.json
 	amcli genfixture -o $@ -l $(TEMPLATE_DIR) -s $(SCHEMA_JSON) \
 		-n template/names.yaml $<
+
+url : $(URLS_API_PY)
+
+$(URLS_API_PY) : $(SCHEMA_JSON)
+	amcli genurl -o $@ -l $(TEMPLATE_DIR) $<
+
+loader : $(ADMIN_LOADER_PY)
+
+$(ADMIN_LOADER_PY) : $(SCHEMA_JSON)
+	amcli genadminloader -o $@ $<
 
 clean :
 	rm -f $(SPEC_JSON)
