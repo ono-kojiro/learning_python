@@ -18,11 +18,11 @@ def run(output_file, schema_path):
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
     with open(out_path, "w", encoding="utf-8") as fp:
-        fp.write("# auto-generated admin loader\n")
+        fp.write("# auto-generated loader\n")
 
         for name in models.keys():
             lower = name.lower()
             fp.write(f"from .admin.{lower}_admin import *\n")
 
-    print(f"[amcli] Generated admin_loader: {out_path}")
+    print(f"[amcli] Generated loader: {out_path}")
 

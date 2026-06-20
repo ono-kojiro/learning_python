@@ -105,10 +105,10 @@ def genurl(loader_dir, output_file, schema_yaml):
     run(loader_dir, output_file, schema_yaml)
 
 @main.command()
-@click.option("-o", "--output", "output_file", required=True, help="Output admin_loader.py")
+@click.option("-o", "--output", "output_file", required=True, help="Output loader.py")
 @click.argument("schema_yaml")
-def genadminloader(output_file, schema_yaml):
-    from amcli.commands.generate_admin_loader import run
+def genloader(output_file, schema_yaml):
+    from amcli.commands.generate_loader import run
     run(output_file, schema_yaml)
 
 @main.command()

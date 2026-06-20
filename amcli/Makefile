@@ -27,7 +27,7 @@ SERIALIZER_PY = $(addprefix $(SERIALIZER_DIR)/,  $(notdir $(ENTITIES:=_serialize
 FIXTURE_YML = $(addprefix $(FIXTURE_DIR)/test_, $(notdir $(ENTITIES:=-fixtures.yaml)))
 	
 URLS_API_PY     = $(WORK_DIR)/$(APP)/urls_api.py
-ADMIN_LOADER_PY = $(WORK_DIR)/$(APP)/admin_loader.py
+LOADER_PY = $(WORK_DIR)/$(APP)/loader.py
 
 TEMPLATE_DIR = template
 	
@@ -103,10 +103,10 @@ url : $(URLS_API_PY)
 $(URLS_API_PY) : $(SCHEMA_JSON)
 	amcli genurl -o $@ -l $(TEMPLATE_DIR) $<
 
-loader : $(ADMIN_LOADER_PY)
+loader : $(LOADER_PY)
 
-$(ADMIN_LOADER_PY) : $(SCHEMA_JSON)
-	amcli genadminloader -o $@ $<
+$(LOADER_PY) : $(SCHEMA_JSON)
+	amcli genloader -o $@ $<
 
 clean :
 	rm -f $(SPEC_JSON)
@@ -115,6 +115,8 @@ clean :
 	rm -f $(VIEW_PY)
 	rm -f $(SERIALIZER_PY)
 	rm -f $(FIXTURE_YML)
+	rm -f $(URLS_API_PY)
+	rm -f $(LOADER_PY)
 
 mclean :
 	rm -rf work
