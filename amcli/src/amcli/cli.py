@@ -40,16 +40,18 @@ def installapp(app_name, project, export_yaml, replace_yaml):
 
 @main.command(name="edit")
 @click.argument("setting_name")
-@click.option("--project", required=True)
-@click.option("--export", "export_yaml", required=False)
-@click.option("--import", "import_yaml", required=False)
-def edit(setting_name, project, export_yaml, import_yaml):
+@click.option("--project", required=False, help="Path to Django project directory")
+@click.option("--export", "export_yaml", required=False, help="Export YAML file")
+@click.option("--import", "import_yaml", required=False, help="Import YAML file")
+@click.option("--file", "-f", "target_file", required=False, help="Target file to edit")
+def edit(setting_name, project, export_yaml, import_yaml, target_file):
     from amcli.commands.edit import run
     run(
         setting_name=setting_name,
         project_dir=project,
         export_yaml=export_yaml,
         import_yaml=import_yaml,
+        target_file=target_file,
     )
 
 # ---------------------------------------------------------

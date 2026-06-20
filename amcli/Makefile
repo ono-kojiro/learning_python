@@ -103,6 +103,14 @@ edit :
 	
 	amcli edit --import $(ALLOWED_HOSTS_YML) \
 		--project $(WORK_DIR)/$(PROJECT) ALLOWED_HOSTS
+	
+	urls_py="$(WORK_DIR)/$(PROJECT)/urls.py"; \
+	target="from django.urls import path, include"; \
+	grep -q "$$target" $$urls_py || \
+	sed -i "s/from django.urls import path/$$target/" $$urls_py; \
+	grep -q "path('api/', include('myapp.urls_api'))" $$urls_py || \
+	sed -i "/^]/i\    path('api/', include('myapp.urls_api'))," $$urls_py
+
 
 debug :
 	@echo SPEC_YAML is $(SPEC_YAML)
