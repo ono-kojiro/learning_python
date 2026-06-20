@@ -59,6 +59,15 @@ def genmodel(loader_dir, output_file, input_files):
     run(loader_dir, output_file, input_files)
 
 @main.command()
+@click.option("-l", "--loader", "loader_dir", required=True, help="Template loader directory")
+@click.option("-o", "--output", "output_file", required=True, help="Output admin file")
+@click.option("-s", "--schema", "schema_yaml", required=True, help="schema.yaml path")
+@click.argument("ref_yaml")
+def genadmin(loader_dir, output_file, schema_yaml, ref_yaml):
+    from amcli.commands.generate_admin import run
+    run(loader_dir, output_file, schema_yaml, ref_yaml)
+
+@main.command()
 def generate():
     from amcli.commands.generate import run
     run()

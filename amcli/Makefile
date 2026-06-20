@@ -11,15 +11,19 @@ SCHEMA_DIR   = $(WORK_DIR)/schema
 
 SPEC_YAML = $(addprefix $(IN_SPEC_DIR)/, $(ENTITIES:=.yml))
 SPEC_JSON := $(addprefix $(OUT_SPEC_DIR)/, $(notdir $(SPEC_YAML:.yml=.json)))
+	
+SCHEMA_JSON = $(SCHEMA_DIR)/schema.json
 
 MODEL_DIR = $(WORK_DIR)/$(APP)/models
+ADMIN_DIR = $(WORK_DIR)/$(APP)/admin
 
 MODEL_PY  = $(addprefix $(MODEL_DIR)/, $(notdir $(ENTITIES:=_model.py)))
+ADMIN_PY  = $(addprefix $(ADMIN_DIR)/, $(notdir $(ENTITIES:=_admin.py)))
 	
 $(shell mkdir -p $(OUT_SPEC_DIR))
 $(shell mkdir -p $(SCHEMA_DIR))
 
-all : cmp2ref schema model
+all : cmp2ref schema model admin
 
 help :
 	@echo "usage: make TARGET"
@@ -51,12 +55,17 @@ $(OUT_SPEC_DIR)/%.json : $(IN_SPEC_DIR)/%.yml
 	amcli cmp2ref --spec $< -o $@ $(SPEC_YAML)
 
 schema :
-	amcli genschema -o $(SCHEMA_DIR)/schema.json $(OUT_SPEC_DIR)/*.json
+	amcli genschema -o $(SCHEMA_JSON) $(OUT_SPEC_DIR)/*.json
 
 model: $(MODEL_PY)
 
 $(MODEL_DIR)/%_model.py : $(OUT_SPEC_DIR)/%.json
 	amcli genmodel -l template/ -o $@ $<
+
+admin: $(ADMIN_PY)
+
+$(ADMIN_DIR)/%_admin.py : $(OUT_SPEC_DIR)/%.json
+	amcli genadmin -o $@ -l template/ -s $(SCHEMA_JSON) $<
 
 mclean :
 	rm -rf work
