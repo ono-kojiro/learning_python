@@ -29,13 +29,16 @@ def installapp(app_name, project):
     from amcli.commands.installapp import run
     run(app_name, project)
 
+# ---------------------------------------------------------
+# cmp2ref（最小限修正：--name → --spec）
+# ---------------------------------------------------------
 @main.command()
-@click.option("--name", "-n", "entity_name", required=True, help="Entity name (e.g., Device)")
-@click.option("--output", "-o", "output_file", required=True, help="Output file path for *_ref.yaml")
+@click.option("--spec", required=True, help="Path to spec YAML file")
+@click.option("--output", "-o", "output_file", required=True, help="Output file path for *_ref.json")
 @click.argument("input_files", nargs=-1)
-def cmp2ref(entity_name, output_file, input_files):
+def cmp2ref(spec, output_file, input_files):
     from amcli.commands.cmp2ref import run
-    run(entity_name, output_file, input_files)
+    run(spec, output_file, input_files)
 
 @main.command()
 @click.option("-o", "--output", "output_file", required=True, help="Output schema file (JSON)")
@@ -46,6 +49,14 @@ def genschema(output_file, input_files):
     """
     from amcli.commands.generate_schema import run
     run(output_file, input_files)
+
+@main.command()
+@click.option("-l", "--loader", "loader_dir", required=True, help="Template loader directory")
+@click.option("-o", "--output", "output_file", required=True, help="Output model file")
+@click.argument("input_files", nargs=-1)
+def genmodel(loader_dir, output_file, input_files):
+    from amcli.commands.generate_model import run
+    run(loader_dir, output_file, input_files)
 
 @main.command()
 def generate():
@@ -61,4 +72,3 @@ def runserver():
 def test():
     from amcli.commands.test import run
     run()
-

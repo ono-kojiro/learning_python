@@ -127,25 +127,37 @@ def build_reference_model(models, target_model):
     return out
 
 
-def run(entity_name, output_file, input_files):
+# ---------------------------------------------------------
+# ここから run() の修正（--name → --spec）
+# ---------------------------------------------------------
+
+def run(spec, output_file, input_files):
     cmp_paths = [Path(f).resolve() for f in input_files]
 
-    target = None
-    for p in cmp_paths:
-        if p.name.lower() == f"{entity_name.lower()}.yml":
-            target = p
-            break
+    # spec ファイル名からモデル名を抽出
+    spec_path = Path(spec)
+    stem = spec_path.stem  # device, netif, comment, manager, remark
+    target_lower = stem.lower()
 
-    if target is None:
-        print(f"[amcli] ERROR: {entity_name}.yml not found in input files")
-        return
-
-    model_name = target.stem
-    model_name = model_name[0].upper() + model_name[1:]
-
+    # 入力 YAML 群からモデル名を case-insensitive で探す
     models = load_owner_models(cmp_paths)
 
-    result = build_reference_model(models, model_name)
+    # YAML のキー一覧
+    yaml_keys = list(models.keys())
+
+    # 大文字小文字無視で一致するキーを探す
+    target_model = None
+    for key in yaml_keys:
+        if key.lower() == target_lower:
+            target_model = key
+            break
+
+    if target_model is None:
+        print(f"[amcli] ERROR: Model '{stem}' not found in YAML keys: {yaml_keys}")
+        return
+
+    # 参照モデルを構築
+    result = build_reference_model(models, target_model)
 
     output_path = Path(output_file).resolve()
 
