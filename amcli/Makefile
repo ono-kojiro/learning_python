@@ -1,6 +1,8 @@
 #ENTITIES = Device NetIF Comment Manager Remark
 ENTITIES = device netif comment manager remark
 
+TOP_DIR = $(shell pwd)
+
 PROJECT = myproject
 APP     = myapp
 
