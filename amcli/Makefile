@@ -35,13 +35,12 @@ MODELS_INIT_PY = $(WORK_DIR)/$(APP)/models/__init__.py
 
 TEMPLATE_DIR = template
 	
-$(shell mkdir -p $(OUT_SPEC_DIR))
-$(shell mkdir -p $(SCHEMA_DIR))
-$(shell mkdir -p $(VIEW_DIR))
-$(shell mkdir -p $(SERIALIZER_DIR))
-$(shell mkdir -p $(FIXTURE_DIR))
 
-all : cmp2ref schema model admin view serializer fixture url loader apps importer
+all : cmp2ref schema model admin view serializer fixture url \
+	loader apps importer
+
+shell :
+	cd $(WORK_DIR) && python3 manage.py shell
 
 help :
 	@echo "usage: make TARGET"
@@ -52,13 +51,29 @@ help :
 prepare :
 	python3 -m pip install -r requirements.txt
 
-init :
-	rm -rf $(WORK_DIR)
+init : startproject-ng startapp-ng installapp
+
+startproject :
+	django-admin startproject $(PROJECT) work
+
+startapp :
+	cd $(WORK_DIR) && python manage.py startapp $(APP)
+
+startproject-ng :
 	amcli startproject $(PROJECT) --dir $(WORK_DIR)/
+
+startapp-ng :
 	amcli startapp     $(APP) --dir $(WORK_DIR)/
+
+installapp :
 	amcli installapp   $(APP) --project $(WORK_DIR)/$(PROJECT)/
 	mkdir -p $(OUT_SPEC_DIR)
 	mkdir -p $(MODEL_DIR)
+	mkdir -p $(VIEW_DIR)
+	mkdir -p $(SERIALIZER_DIR)
+	mkdir -p $(OUT_SPEC_DIR)
+	mkdir -p $(SCHEMA_DIR)
+	mkdir -p $(FIXTURE_DIR)
 
 debug :
 	@echo SPEC_YAML is $(SPEC_YAML)
@@ -135,6 +150,17 @@ migrate :
 	cd $(WORK_DIR) && \
 		env $$(grep -v '^#' $(TOP_DIR)/.env | xargs) \
 		python3 manage.py createsuperuser --noinput || true
+
+loaddata :
+	@models=`cat work/schema/schema.json | jq -r '.load_order[]' | tr '[:upper:]' '[:lower:]'`; \
+	echo $${models}; \
+	cd work; \
+	for model in $${models}; do \
+		echo $${model}; \
+		fixture=$(TOP_DIR)/tests/data/test_$${model}-fixtures.yaml; \
+		echo $${fixture}; \
+		python3 manage.py loaddata $${fixture}; \
+	done 
 
 clean :
 	rm -f $(SPEC_JSON)

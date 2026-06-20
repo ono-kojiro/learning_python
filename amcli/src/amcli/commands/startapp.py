@@ -12,15 +12,15 @@ def run(app_name: str, directory: str):
     print(f"[amcli] Creating Django app: {app_name}")
     print(f"[amcli] Target directory: {target_dir}")
 
+    # ★ Django の startapp は manage.py のあるディレクトリで実行する
     result = subprocess.run(
         [
             sys.executable,
             "manage.py",
             "startapp",
-            app_name,
-            str(target_dir)
+            app_name
         ],
-        cwd=target_dir,  # ← これが重要
+        cwd=target_dir,   # ← ここが manage.py のある work/
         capture_output=True,
         text=True,
     )
@@ -31,4 +31,3 @@ def run(app_name: str, directory: str):
         sys.exit(result.returncode)
 
     print("[amcli] Django app created successfully")
-
