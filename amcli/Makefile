@@ -16,14 +16,17 @@ SCHEMA_JSON = $(SCHEMA_DIR)/schema.json
 
 MODEL_DIR = $(WORK_DIR)/$(APP)/models
 ADMIN_DIR = $(WORK_DIR)/$(APP)/admin
+VIEW_DIR = $(WORK_DIR)/$(APP)/views
 
 MODEL_PY  = $(addprefix $(MODEL_DIR)/, $(notdir $(ENTITIES:=_model.py)))
 ADMIN_PY  = $(addprefix $(ADMIN_DIR)/, $(notdir $(ENTITIES:=_admin.py)))
+VIEW_PY   = $(addprefix $(VIEW_DIR)/,  $(notdir $(ENTITIES:=_view.py)))
 	
 $(shell mkdir -p $(OUT_SPEC_DIR))
 $(shell mkdir -p $(SCHEMA_DIR))
+$(shell mkdir -p $(VIEW_DIR))
 
-all : cmp2ref schema model admin
+all : cmp2ref schema model admin view
 
 help :
 	@echo "usage: make TARGET"
@@ -66,6 +69,11 @@ admin: $(ADMIN_PY)
 
 $(ADMIN_DIR)/%_admin.py : $(OUT_SPEC_DIR)/%.json
 	amcli genadmin -o $@ -l template/ -s $(SCHEMA_JSON) $<
+
+view : $(VIEW_PY)
+
+$(VIEW_DIR)/%_view.py : $(OUT_SPEC_DIR)/%.json
+	amcli genview -o $@ -l template/ -t viewset_template.j2 $<
 
 mclean :
 	rm -rf work
