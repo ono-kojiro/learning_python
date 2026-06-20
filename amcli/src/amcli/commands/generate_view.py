@@ -9,15 +9,17 @@ def read_yaml(path):
 
 
 # ---------------------------------------------------------
-# amcli 用 run() 関数
+# amcli 用 run() 関数（テンプレート名は固定）
 # ---------------------------------------------------------
-def run(loader_dir, output_file, template_j2, ref_yaml):
+def run(loader_dir, output_file, ref_yaml):
+    TEMPLATE_NAME = "viewset_template.j2"   # ★ 決め打ち
+
     # Jinja2 環境
     env = Environment(
         loader=FileSystemLoader(loader_dir),
         autoescape=False
     )
-    template = env.get_template(template_j2)
+    template = env.get_template(TEMPLATE_NAME)
 
     # ref_yaml 読み込み
     data = read_yaml(ref_yaml)
@@ -37,4 +39,3 @@ def run(loader_dir, output_file, template_j2, ref_yaml):
         fp.write(content + "\n")
 
     print(f"[amcli] Generated view: {out_path}")
-

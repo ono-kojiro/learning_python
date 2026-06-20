@@ -70,11 +70,19 @@ def genadmin(loader_dir, output_file, schema_yaml, ref_yaml):
 @main.command()
 @click.option("-l", "--loader", "loader_dir", required=True, help="Template loader directory")
 @click.option("-o", "--output", "output_file", required=True, help="Output view file")
-@click.option("-t", "--template", "template_j2", required=True, help="Template file (Jinja2)")
 @click.argument("ref_yaml")
-def genview(loader_dir, output_file, template_j2, ref_yaml):
+def genview(loader_dir, output_file, ref_yaml):
     from amcli.commands.generate_view import run
-    run(loader_dir, output_file, template_j2, ref_yaml)
+    run(loader_dir, output_file, ref_yaml)
+
+@main.command()
+@click.option("-l", "--loader", "loader_dir", required=True, help="Template loader directory")
+@click.option("-o", "--output", "output_file", required=True, help="Output serializer file")
+@click.option("-s", "--schema", "schema_yaml", required=True, help="schema.yaml path")
+@click.argument("ref_yaml")
+def genserializer(loader_dir, output_file, schema_yaml, ref_yaml):
+    from amcli.commands.generate_serializer import run
+    run(loader_dir, output_file, schema_yaml, ref_yaml)
 
 @main.command()
 def generate():

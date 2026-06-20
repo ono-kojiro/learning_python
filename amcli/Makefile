@@ -17,16 +17,21 @@ SCHEMA_JSON = $(SCHEMA_DIR)/schema.json
 MODEL_DIR = $(WORK_DIR)/$(APP)/models
 ADMIN_DIR = $(WORK_DIR)/$(APP)/admin
 VIEW_DIR = $(WORK_DIR)/$(APP)/views
+SERIALIZER_DIR = $(WORK_DIR)/$(APP)/serializers
 
 MODEL_PY  = $(addprefix $(MODEL_DIR)/, $(notdir $(ENTITIES:=_model.py)))
 ADMIN_PY  = $(addprefix $(ADMIN_DIR)/, $(notdir $(ENTITIES:=_admin.py)))
 VIEW_PY   = $(addprefix $(VIEW_DIR)/,  $(notdir $(ENTITIES:=_view.py)))
+SERIALIZER_PY = $(addprefix $(SERIALIZER_DIR)/,  $(notdir $(ENTITIES:=_serializer.py)))
+	
+TEMPLATE_DIR = template
 	
 $(shell mkdir -p $(OUT_SPEC_DIR))
 $(shell mkdir -p $(SCHEMA_DIR))
 $(shell mkdir -p $(VIEW_DIR))
+$(shell mkdir -p $(SERIALIZER_DIR))
 
-all : cmp2ref schema model admin view
+all : cmp2ref schema model admin view serializer
 
 help :
 	@echo "usage: make TARGET"
@@ -63,17 +68,29 @@ schema :
 model: $(MODEL_PY)
 
 $(MODEL_DIR)/%_model.py : $(OUT_SPEC_DIR)/%.json
-	amcli genmodel -l template/ -o $@ $<
+	amcli genmodel -l $(TEMPLATE_DIR) -o $@ $<
 
 admin: $(ADMIN_PY)
 
 $(ADMIN_DIR)/%_admin.py : $(OUT_SPEC_DIR)/%.json
-	amcli genadmin -o $@ -l template/ -s $(SCHEMA_JSON) $<
+	amcli genadmin -o $@ -l $(TEMPLATE_DIR) -s $(SCHEMA_JSON) $<
 
 view : $(VIEW_PY)
 
 $(VIEW_DIR)/%_view.py : $(OUT_SPEC_DIR)/%.json
-	amcli genview -o $@ -l template/ -t viewset_template.j2 $<
+	amcli genview -o $@ -l $(TEMPLATE_DIR) $<
+
+serializer : $(SERIALIZER_PY)
+
+$(SERIALIZER_DIR)/%_serializer.py : $(OUT_SPEC_DIR)/%.json
+	amcli genserializer -o $@ -l $(TEMPLATE_DIR) -s $(SCHEMA_JSON) $<
+
+clean :
+	rm -f $(SPEC_JSON)
+	rm -f $(MODEL_PY)
+	rm -f $(ADMIN_PY)
+	rm -f $(VIEW_PY)
+	rm -f $(SERIALIZER_PY)
 
 mclean :
 	rm -rf work
