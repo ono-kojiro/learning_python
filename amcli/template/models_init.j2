@@ -1,0 +1,5 @@
+{# models/__init__.py - auto-generated #}
+{% for model in models -%}
+from .{{ model.lower() }}_model import {{ model }}
+{% endfor %}
+

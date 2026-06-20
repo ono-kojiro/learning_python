@@ -29,7 +29,7 @@ FIXTURE_YML = $(addprefix $(FIXTURE_DIR)/test_, $(notdir $(ENTITIES:=-fixtures.y
 URLS_API_PY     = $(WORK_DIR)/$(APP)/urls_api.py
 LOADER_PY = $(WORK_DIR)/$(APP)/loader.py
 APPS_PY = $(WORK_DIR)/$(APP)/apps.py
-INIT_PY = $(WORK_DIR)/$(APP)/models/__init__.py
+MODELS_INIT_PY = $(WORK_DIR)/$(APP)/models/__init__.py
 
 TEMPLATE_DIR = template
 	
@@ -39,7 +39,7 @@ $(shell mkdir -p $(VIEW_DIR))
 $(shell mkdir -p $(SERIALIZER_DIR))
 $(shell mkdir -p $(FIXTURE_DIR))
 
-all : cmp2ref schema model admin view serializer fixture url loader apps init
+all : cmp2ref schema model admin view serializer fixture url loader apps importer
 
 help :
 	@echo "usage: make TARGET"
@@ -50,7 +50,7 @@ help :
 prepare :
 	python3 -m pip install -r requirements.txt
 
-create :
+init :
 	rm -rf $(WORK_DIR)
 	amcli startproject $(PROJECT) --dir $(WORK_DIR)/
 	amcli startapp     $(APP) --dir $(WORK_DIR)/
@@ -72,7 +72,10 @@ $(OUT_SPEC_DIR)/%.json : $(IN_SPEC_DIR)/%.yml
 	amcli cmp2ref --spec $< -o $@ $(SPEC_YAML)
 
 schema :
-	amcli genschema -o $(SCHEMA_JSON) $(OUT_SPEC_DIR)/*.json
+	amcli genschema -o $(SCHEMA_JSON) \
+		--project $(PROJECT) \
+		--application $(APP) \
+		$(SPEC_JSON)
 
 model: $(MODEL_PY)
 
@@ -100,25 +103,27 @@ $(FIXTURE_DIR)/test_%-fixtures.yaml : $(OUT_SPEC_DIR)/%.json
 	amcli genfixture -o $@ -l $(TEMPLATE_DIR) -s $(SCHEMA_JSON) \
 		-n template/names.yaml $<
 
+importer : url loader apps models_init
+
 url : $(URLS_API_PY)
 
-$(URLS_API_PY) : $(SCHEMA_JSON)
-	amcli genurl -o $@ -l $(TEMPLATE_DIR) $<
+$(URLS_API_PY) : template/urls.j2 $(SCHEMA_JSON)
+	amcli genimporter -o $@ -s $(SCHEMA_JSON) $<
 
 loader : $(LOADER_PY)
 
-$(LOADER_PY) : $(SCHEMA_JSON)
-	amcli genloader -o $@ $<
+$(LOADER_PY) : template/loader.j2 $(SCHEMA_JSON)
+	amcli genimporter -o $@ -s $(SCHEMA_JSON) $<
 
 apps: $(APPS_PY)
 
-$(APPS_PY) : $(SCHEMA_JSON)
-	amcli genapps -o $@ -l $(TEMPLATE_DIR) --app-name $(APP) $<
+$(APPS_PY) : template/apps.py.j2 $(SCHEMA_JSON)
+	amcli genimporter -o $@ -s $(SCHEMA_JSON) $<
 
-init: $(INIT_PY)
+models_init : $(MODELS_INIT_PY)
 
-$(INIT_PY) : $(SCHEMA_JSON)
-	amcli geninit -o $@ $<
+$(MODELS_INIT_PY) : template/models_init.j2 $(SCHEMA_JSON)
+	amcli genimporter -o $@ -s $(SCHEMA_JSON) $< 
 
 clean :
 	rm -f $(SPEC_JSON)
@@ -127,10 +132,7 @@ clean :
 	rm -f $(VIEW_PY)
 	rm -f $(SERIALIZER_PY)
 	rm -f $(FIXTURE_YML)
-	rm -f $(URLS_API_PY)
-	rm -f $(LOADER_PY)
-	rm -f $(APPS_PY)
-	rm -f $(INIT_PY)
+	rm -f $(URLS_API_PY) $(LOADER_PY) $(APPS_PY) $(MODELS_INIT_PY)
 
 mclean :
 	rm -rf work

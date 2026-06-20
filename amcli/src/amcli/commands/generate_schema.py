@@ -214,9 +214,9 @@ def collect_nested(models):
 
 
 # ------------------------------------------------------------
-# amcli 用 run()
+# amcli 用 run()  ← ★ application / project を追加
 # ------------------------------------------------------------
-def run(output_file, input_files):
+def run(output_file, input_files, application=None, project=None):
     ref_paths = [Path(f).resolve() for f in input_files]
 
     # --- 解析 ---
@@ -243,7 +243,10 @@ def run(output_file, input_files):
 
     nested = collect_nested(models)
 
+    # ★ application / project を schema に追加
     schema = {
+        "project": project,
+        "application": application,
         "models": models,
         "dependencies": dependencies,
         "reverse_dependencies": reverse_dependencies,
@@ -260,4 +263,3 @@ def run(output_file, input_files):
         json.dump(schema, fp, indent=2, ensure_ascii=False)
 
     print(f"[amcli] Generated schema: {output_path}")
-

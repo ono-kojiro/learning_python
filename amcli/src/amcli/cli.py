@@ -41,14 +41,13 @@ def cmp2ref(spec, output_file, input_files):
     run(spec, output_file, input_files)
 
 @main.command()
-@click.option("-o", "--output", "output_file", required=True, help="Output schema file (JSON)")
-@click.argument("input_files", nargs=-1)
-def genschema(output_file, input_files):
-    """
-    Generate schema.json from reference model JSON files.
-    """
+@click.option("-o", "--output", "output_file", required=True, help="Output schema.json")
+@click.option("-a", "--application", "application", required=True, help="Django application name")
+@click.option("-p", "--project", "project", required=True, help="Django project name")
+@click.argument("ref_json_files", nargs=-1)
+def genschema(output_file, application, project, ref_json_files):
     from amcli.commands.generate_schema import run
-    run(output_file, input_files)
+    run(output_file, ref_json_files, application=application, project=project)
 
 @main.command()
 @click.option("-l", "--loader", "loader_dir", required=True, help="Template loader directory")
@@ -97,35 +96,13 @@ def genfixture(loader_dir, output_file, schema_yaml, names_yaml, count, include_
     run(loader_dir, output_file, schema_yaml, names_yaml, ref_yaml_list, count, include_deps)
 
 @main.command()
-@click.option("-l", "--loader", "loader_dir", required=True, help="Template loader directory")
-@click.option("-o", "--output", "output_file", required=True, help="Output urls file")
-@click.argument("schema_yaml")
-def genurl(loader_dir, output_file, schema_yaml):
-    from amcli.commands.generate_url import run
-    run(loader_dir, output_file, schema_yaml)
+@click.option("-o", "--output", "output_file", required=True, help="Output file")
+@click.option("-s", "--schema", "schema_path", required=False, help="schema.json (optional)")
+@click.argument("template_files", nargs=-1)
+def genimporter(output_file, schema_path, template_files):
+    from amcli.commands.generate_importer import run
+    run(output_file, schema_path, template_files)
 
-@main.command()
-@click.option("-o", "--output", "output_file", required=True, help="Output loader.py")
-@click.argument("schema_yaml")
-def genloader(output_file, schema_yaml):
-    from amcli.commands.generate_loader import run
-    run(output_file, schema_yaml)
-
-@main.command()
-@click.option("-l", "--loader", "loader_dir", required=True, help="Template loader directory")
-@click.option("-o", "--output", "output_file", required=True, help="Output apps.py")
-@click.option("--app-name", "app_name", required=True, help="Django app name")
-@click.argument("schema_yaml")
-def genapps(loader_dir, output_file, app_name, schema_yaml):
-    from amcli.commands.generate_apps import run
-    run(loader_dir, output_file, app_name, schema_yaml)
-
-@main.command()
-@click.option("-o", "--output", "output_file", required=True, help="Output models/__init__.py")
-@click.argument("schema_yaml")
-def geninit(output_file, schema_yaml):
-    from amcli.commands.generate_init import run
-    run(output_file, schema_yaml)
 
 @main.command()
 def generate():
