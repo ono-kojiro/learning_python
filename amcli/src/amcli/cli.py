@@ -129,6 +129,14 @@ def genimporter(output_file, schema_path, template_files):
     run(output_file, schema_path, template_files)
 
 
+@main.command(name="gentest")
+@click.option("--schema", "-s", required=True, help="Path to schema.yaml")
+@click.option("--ref", "-r", required=True, help="Path to *_ref.yaml")
+@click.option("--output", "-o", required=True, help="Output test file")
+def gentest(schema, ref, output):
+    from amcli.commands.generate_test import run
+    run(schema_yaml=schema, ref_yaml=ref, output_file=output)
+
 @main.command()
 def generate():
     from amcli.commands.generate import run

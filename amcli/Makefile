@@ -32,6 +32,8 @@ ADMIN_PY  = $(addprefix $(ADMIN_DIR)/, $(notdir $(ENTITIES:=_admin.py)))
 VIEW_PY   = $(addprefix $(VIEW_DIR)/,  $(notdir $(ENTITIES:=_view.py)))
 SERIALIZER_PY = $(addprefix $(SERIALIZER_DIR)/,  $(notdir $(ENTITIES:=_serializer.py)))
 FIXTURE_YML = $(addprefix $(FIXTURE_DIR)/test_, $(notdir $(ENTITIES:=-fixtures.yaml)))
+
+TEST_PY = $(addprefix tests/test_, $(notdir $(ENTITIES:=.py)))
 	
 ALLOWED_HOSTS_YML = $(WORK_DIR)/$(PROJECT)/allowed_hosts.yml
 	
@@ -43,11 +45,11 @@ MODELS_INIT_PY = $(WORK_DIR)/$(APP)/models/__init__.py
 TEMPLATE_DIR = template
 	
 
-all : cmp2ref schema generate migrate loaddata
+all : generate migrate loaddata
 
 init : startproject startapp installapp edit
 
-generate : generate-init model admin view serializer fixture importer
+generate : cmp2ref schema generate-init model admin view serializer fixture importer 
 
 importer : url loader apps models_init
 
@@ -58,7 +60,7 @@ help :
 	@echo "usage: make TARGET"
 	@echo "  target:"
 	@echo "    prepare"
-	@echo "    init / cmp2ref / schema / model"
+	@echo "    init / generate / migrate / loaddata / test"
 
 prepare :
 	python3 -m pip install -r requirements.txt
@@ -223,6 +225,18 @@ restart : stop start
 status :
 	ps -ef | grep 'python3 manage.py runserver_plus'
 
+gentest : $(TEST_PY)
+
+tests/test_%.py : $(OUT_SPEC_DIR)/%.json
+	amcli gentest -o $@ -s $(SCHEMA_JSON) --ref $<
+
+clean-test :
+	rm -rf $(TEST_PY)
+
+test :
+	$(MAKE) gentest
+	pytest -s
+
 clean :
 	rm -f $(SPEC_JSON)
 	rm -f $(MODEL_PY)
@@ -231,6 +245,7 @@ clean :
 	rm -f $(SERIALIZER_PY)
 	rm -f $(FIXTURE_YML)
 	rm -f $(URLS_API_PY) $(LOADER_PY) $(APPS_PY) $(MODELS_INIT_PY)
+	$(MAKE) clean-test
 
 mclean :
 	rm -rf work
