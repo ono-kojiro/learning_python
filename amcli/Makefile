@@ -4,7 +4,7 @@ ifneq (,$(wildcard .env))
 endif
 
 #ENTITIES = Device NetIF Comment Manager Remark
-ENTITIES = device netif comment manager remark
+ENTITIES = device netif ipv4 comment manager remark
 
 TOP_DIR = $(shell pwd)
 
@@ -213,9 +213,12 @@ start :
 	rm -f nohup.out; \
 	nohup python3 manage.py runserver_plus \
       --cert-file $(TOP_DIR)/$${CERTFILE} $${SERVER_ADDR_PORT} &
+	head nohup.out
 
 stop :
 	pkill -f 'python3 manage.py runserver_plus'
+
+restart : stop start
 
 status :
 	ps -ef | grep 'python3 manage.py runserver_plus'
