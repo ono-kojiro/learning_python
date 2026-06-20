@@ -28,6 +28,8 @@ FIXTURE_YML = $(addprefix $(FIXTURE_DIR)/test_, $(notdir $(ENTITIES:=-fixtures.y
 	
 URLS_API_PY     = $(WORK_DIR)/$(APP)/urls_api.py
 LOADER_PY = $(WORK_DIR)/$(APP)/loader.py
+APPS_PY = $(WORK_DIR)/$(APP)/apps.py
+INIT_PY = $(WORK_DIR)/$(APP)/models/__init__.py
 
 TEMPLATE_DIR = template
 	
@@ -37,7 +39,7 @@ $(shell mkdir -p $(VIEW_DIR))
 $(shell mkdir -p $(SERIALIZER_DIR))
 $(shell mkdir -p $(FIXTURE_DIR))
 
-all : cmp2ref schema model admin view serializer fixture url loader
+all : cmp2ref schema model admin view serializer fixture url loader apps init
 
 help :
 	@echo "usage: make TARGET"
@@ -48,7 +50,7 @@ help :
 prepare :
 	python3 -m pip install -r requirements.txt
 
-init :
+create :
 	rm -rf $(WORK_DIR)
 	amcli startproject $(PROJECT) --dir $(WORK_DIR)/
 	amcli startapp     $(APP) --dir $(WORK_DIR)/
@@ -108,6 +110,16 @@ loader : $(LOADER_PY)
 $(LOADER_PY) : $(SCHEMA_JSON)
 	amcli genloader -o $@ $<
 
+apps: $(APPS_PY)
+
+$(APPS_PY) : $(SCHEMA_JSON)
+	amcli genapps -o $@ -l $(TEMPLATE_DIR) --app-name $(APP) $<
+
+init: $(INIT_PY)
+
+$(INIT_PY) : $(SCHEMA_JSON)
+	amcli geninit -o $@ $<
+
 clean :
 	rm -f $(SPEC_JSON)
 	rm -f $(MODEL_PY)
@@ -117,6 +129,8 @@ clean :
 	rm -f $(FIXTURE_YML)
 	rm -f $(URLS_API_PY)
 	rm -f $(LOADER_PY)
+	rm -f $(APPS_PY)
+	rm -f $(INIT_PY)
 
 mclean :
 	rm -rf work

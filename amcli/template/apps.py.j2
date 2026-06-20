@@ -6,4 +6,4 @@ class {{ app_class }}(AppConfig):
     name = '{{ app_name }}'
 
     def ready(self):
-        import {{ app_name }}.admin_loader
+        import {{ app_name }}.loader

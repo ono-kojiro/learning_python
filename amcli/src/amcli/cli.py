@@ -112,6 +112,22 @@ def genloader(output_file, schema_yaml):
     run(output_file, schema_yaml)
 
 @main.command()
+@click.option("-l", "--loader", "loader_dir", required=True, help="Template loader directory")
+@click.option("-o", "--output", "output_file", required=True, help="Output apps.py")
+@click.option("--app-name", "app_name", required=True, help="Django app name")
+@click.argument("schema_yaml")
+def genapps(loader_dir, output_file, app_name, schema_yaml):
+    from amcli.commands.generate_apps import run
+    run(loader_dir, output_file, app_name, schema_yaml)
+
+@main.command()
+@click.option("-o", "--output", "output_file", required=True, help="Output models/__init__.py")
+@click.argument("schema_yaml")
+def geninit(output_file, schema_yaml):
+    from amcli.commands.generate_init import run
+    run(output_file, schema_yaml)
+
+@main.command()
 def generate():
     from amcli.commands.generate import run
     run()
