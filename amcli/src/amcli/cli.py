@@ -85,6 +85,18 @@ def genserializer(loader_dir, output_file, schema_yaml, ref_yaml):
     run(loader_dir, output_file, schema_yaml, ref_yaml)
 
 @main.command()
+@click.option("-l", "--loader", "loader_dir", required=True)
+@click.option("-o", "--output", "output_file", required=True)
+@click.option("-s", "--schema", "schema_yaml", required=True)
+@click.option("-n", "--names", "names_yaml", required=True)
+@click.option("-c", "--count", "count", default=10)
+@click.option("--with-deps", "include_deps", flag_value=True, default=False)
+@click.argument("ref_yaml_list", nargs=-1)
+def genfixture(loader_dir, output_file, schema_yaml, names_yaml, count, include_deps, ref_yaml_list):
+    from amcli.commands.generate_fixture import run
+    run(loader_dir, output_file, schema_yaml, names_yaml, ref_yaml_list, count, include_deps)
+
+@main.command()
 def generate():
     from amcli.commands.generate import run
     run()
