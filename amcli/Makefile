@@ -1,3 +1,8 @@
+ifneq (,$(wildcard .env))
+  include .env
+  export $(shell sed 's/=.*//' .env)
+endif
+
 #ENTITIES = Device NetIF Comment Manager Remark
 ENTITIES = device netif comment manager remark
 
@@ -28,6 +33,8 @@ VIEW_PY   = $(addprefix $(VIEW_DIR)/,  $(notdir $(ENTITIES:=_view.py)))
 SERIALIZER_PY = $(addprefix $(SERIALIZER_DIR)/,  $(notdir $(ENTITIES:=_serializer.py)))
 FIXTURE_YML = $(addprefix $(FIXTURE_DIR)/test_, $(notdir $(ENTITIES:=-fixtures.yaml)))
 	
+ALLOWED_HOSTS_YML = $(WORK_DIR)/$(PROJECT)/allowed_hosts.yml
+	
 URLS_API_PY     = $(WORK_DIR)/$(APP)/urls_api.py
 LOADER_PY = $(WORK_DIR)/$(APP)/loader.py
 APPS_PY = $(WORK_DIR)/$(APP)/apps.py
@@ -36,8 +43,13 @@ MODELS_INIT_PY = $(WORK_DIR)/$(APP)/models/__init__.py
 TEMPLATE_DIR = template
 	
 
-all : cmp2ref schema model admin view serializer fixture url \
-	loader apps importer
+all : cmp2ref schema generate migrate loaddata
+
+init : startproject startapp installapp edit
+
+generate : generate-init model admin view serializer fixture importer
+
+importer : url loader apps models_init
 
 shell :
 	cd $(WORK_DIR) && python3 manage.py shell
@@ -51,22 +63,30 @@ help :
 prepare :
 	python3 -m pip install -r requirements.txt
 
-init : startproject-ng startapp-ng installapp
-
-startproject :
+startproject-orig :
 	django-admin startproject $(PROJECT) work
 
-startapp :
+startapp-orig :
 	cd $(WORK_DIR) && python manage.py startapp $(APP)
 
-startproject-ng :
+startproject :
 	amcli startproject $(PROJECT) --dir $(WORK_DIR)/
 
-startapp-ng :
+startapp :
 	amcli startapp     $(APP) --dir $(WORK_DIR)/
 
 installapp :
-	amcli installapp   $(APP) --project $(WORK_DIR)/$(PROJECT)/
+	amcli installapp \
+		--export-installed-apps work/myproject/installed_apps.yml \
+		--project $(WORK_DIR)/$(PROJECT)/
+	amcli installapp \
+		--replace-installed-apps work/myproject/installed_apps.yml \
+		--project $(WORK_DIR)/$(PROJECT)/
+	
+	amcli installapp rest_framework    --project $(WORK_DIR)/$(PROJECT)/
+	amcli installapp django_extensions --project $(WORK_DIR)/$(PROJECT)/
+	amcli installapp $(APP) --project $(WORK_DIR)/$(PROJECT)/
+	
 	mkdir -p $(OUT_SPEC_DIR)
 	mkdir -p $(MODEL_DIR)
 	mkdir -p $(VIEW_DIR)
@@ -74,6 +94,15 @@ installapp :
 	mkdir -p $(OUT_SPEC_DIR)
 	mkdir -p $(SCHEMA_DIR)
 	mkdir -p $(FIXTURE_DIR)
+
+edit :
+	amcli edit --export $(ALLOWED_HOSTS_YML) \
+		--project $(WORK_DIR)/$(PROJECT) ALLOWED_HOSTS
+	
+	echo "[ \"*\" ]" > $(ALLOWED_HOSTS_YML)
+	
+	amcli edit --import $(ALLOWED_HOSTS_YML) \
+		--project $(WORK_DIR)/$(PROJECT) ALLOWED_HOSTS
 
 debug :
 	@echo SPEC_YAML is $(SPEC_YAML)
@@ -88,11 +117,20 @@ cmp2ref : $(SPEC_JSON)
 $(OUT_SPEC_DIR)/%.json : $(IN_SPEC_DIR)/%.yml
 	amcli cmp2ref --spec $< -o $@ $(SPEC_YAML)
 
-schema :
-	amcli genschema -o $(SCHEMA_JSON) \
+schema : $(SCHEMA_JSON)
+
+$(SCHEMA_JSON) :
+	amcli genschema -o $@ \
 		--project $(PROJECT) \
 		--application $(APP) \
 		$(SPEC_JSON)
+
+generate-init :
+	components="models admin views serializers"; \
+	for component in $${components}; do \
+		mkdir -p $(WORK_DIR)/$(APP)/$${component}/ ; \
+    	rm -rf   $(WORK_DIR)/$(APP)/$${component}.py ; \
+  	done
 
 model: $(MODEL_PY)
 
@@ -120,7 +158,6 @@ $(FIXTURE_DIR)/test_%-fixtures.yaml : $(OUT_SPEC_DIR)/%.json
 	amcli genfixture -o $@ -l $(TEMPLATE_DIR) -s $(SCHEMA_JSON) \
 		-n template/names.yaml $<
 
-importer : url loader apps models_init
 
 url : $(URLS_API_PY)
 
@@ -153,7 +190,7 @@ migrate :
 
 loaddata :
 	@models=`cat work/schema/schema.json | jq -r '.load_order[]' | tr '[:upper:]' '[:lower:]'`; \
-	echo $${models}; \
+	echo "MODELS: $${models}"; \
 	cd work; \
 	for model in $${models}; do \
 		echo $${model}; \
@@ -161,6 +198,19 @@ loaddata :
 		echo $${fixture}; \
 		python3 manage.py loaddata $${fixture}; \
 	done 
+
+start :
+	@set -a; . ./.env; set +a; \
+	cd $(WORK_DIR); \
+	rm -f nohup.out; \
+	nohup python3 manage.py runserver_plus \
+      --cert-file $(TOP_DIR)/$${CERTFILE} $${SERVER_ADDR_PORT} &
+
+stop :
+	pkill -f 'python3 manage.py runserver_plus'
+
+status :
+	ps -ef | grep 'python3 manage.py runserver_plus'
 
 clean :
 	rm -f $(SPEC_JSON)
