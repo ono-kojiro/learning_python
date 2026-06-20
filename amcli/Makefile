@@ -125,6 +125,15 @@ models_init : $(MODELS_INIT_PY)
 $(MODELS_INIT_PY) : template/models_init.j2 $(SCHEMA_JSON)
 	amcli genimporter -o $@ -s $(SCHEMA_JSON) $< 
 
+migrate :
+	rm -f $(WORK_DIR)/db.sqlite3
+	cd $(WORK_DIR) && python3 manage.py makemigrations
+	cd $(WORK_DIR) && python3 manage.py migrate
+
+	cd $(WORK_DIR) && \
+		env $$(grep -v '^#' $(TOP_DIR)/.env | xargs) \
+		python3 manage.py createsuperuser --noinput || true
+
 clean :
 	rm -f $(SPEC_JSON)
 	rm -f $(MODEL_PY)

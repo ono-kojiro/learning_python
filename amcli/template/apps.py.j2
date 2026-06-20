@@ -3,7 +3,8 @@ from django.apps import AppConfig
 
 class {{ app_class }}(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = '{{ app_name }}'
+    name = '{{ application }}'
 
     def ready(self):
-        import {{ app_name }}.loader
+        import {{ application }}.loader
+
