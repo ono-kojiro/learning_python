@@ -94,6 +94,15 @@ def build_reference_model(models, target_model):
                 "null": fdef.get("nullable", False),
                 "blank": fdef.get("nullable", False),
             }
+        elif ftype == "OneToOne":
+            base = fname
+            field_name = f"{base}_id"
+            out["fields"][field_name] = {
+                "type": "OneToOneField",
+                "to": fdef["to"],
+                "null": fdef.get("nullable", False),
+                "blank": fdef.get("nullable", False),
+            }
 
         elif ftype == "OneToMany":
             continue

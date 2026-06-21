@@ -51,12 +51,18 @@ TEMPLATE_DIR = template
 #   in:  template/test_generated_get.j2
 #   out:    tests/test_generated_get_device.py
 #
-TEST_TEMPLATES_J2 = $(TEMPLATE_DIR)/test_generated_get.j2
-TEST_SCRIPTS_PY = $(addprefix tests/$(notdir $(TEST_TEMPLATES_J2:.j2=))_, $(ENTITIES:=.py))
+TEST_TEMPLATES_J2 = \
+	$(TEMPLATE_DIR)/test_generated_get.j2 \
+	$(TEMPLATE_DIR)/test_generated_create.j2
+
+TEST_SCRIPTS_PY = $(foreach tmpl,$(TEST_TEMPLATES_J2), \
+                    $(foreach e,$(ENTITIES), \
+                      tests/$(basename $(notdir $(tmpl)))_$(e).py))
 
 all : generate migrate loaddata
 
 debug :
+	@echo TEST_TEMPLATES_J2 = $(TEST_TEMPLATES_J2)
 	@echo TEST_SCRIPTS_PY is $(TEST_SCRIPTS_PY)
 
 
@@ -225,17 +231,17 @@ start :
       --cert-file $(TOP_DIR)/$${CERTFILE} $${SERVER_ADDR_PORT} &
 
 stop :
-	pkill -f 'python3 manage.py runserver_plus'
+	-pkill -f 'python3 manage.py runserver_plus'
 
 restart : stop start
 
 status :
 	ps -ef | grep 'python3 manage.py runserver_plus'
 
-gentest : $(TEST_SCRIPTS_PY)
 
 tests/test_%.py : $(OUT_SPEC_DIR)/%.json
 	amcli gentest -o $@ -s $(SCHEMA_JSON) --ref $< template/test_generated.j2
+
 
 tests/test_%_01_create.py : $(OUT_SPEC_DIR)/%.json
 	amcli gentest template/test_01_create.j2 \
@@ -243,12 +249,20 @@ tests/test_%_01_create.py : $(OUT_SPEC_DIR)/%.json
 		--ref work/specs/$*.json \
 		--output tests/test_$*_01_create.py; \
 
-tests/test_generated_get_%.py : $(TEMPLATE_DIR)/test_generated_get.j2
+gentest : $(TEST_SCRIPTS_PY)
+
+define GENTEST_RULE
+$(1)_rule:
+tests/$(basename $(notdir $(1)))_%.py : $(1)
 	amcli gentest \
 		--schema $(SCHEMA_JSON) \
-		--ref work/specs/$*.json \
-		--output $@ \
-		$<
+		--ref work/specs/$$*.json \
+		--output $$@ \
+		$$<
+endef
+
+# 各テンプレートに対してルールを生成
+$(foreach tmpl,$(TEST_TEMPLATES_J2),$(eval $(call GENTEST_RULE,$(tmpl))))
 
 clean-test :
 	rm -rf $(TEST_SCRIPTS_PY)
@@ -268,5 +282,6 @@ clean :
 	$(MAKE) clean-test
 
 mclean :
+	-$(MAKE) stop
 	rm -rf work
 

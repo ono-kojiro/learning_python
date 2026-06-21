@@ -1,0 +1,151 @@
+import json
+import random
+import string
+import requests
+import pytest
+
+model = "{{ model }}"
+model_lower = "{{ model_lower }}"
+fields = {{ fields_json }}
+reverse_deps = {{ reverse_deps | repr }}
+fk_create_order = {{ fk_create_order | repr }}
+
+
+def _rand_str(prefix, length=8):
+    s = "".join(random.choices(string.hexdigits.lower(), k=length))
+    return f"{prefix}-{s}"
+
+
+def _gen_dummy_value(fname, fdef):
+    ftype = fdef["type"]
+
+    if ftype == "CharField":
+        max_len = fdef.get("max_length", 20)
+        base = fname.upper()
+        return _rand_str(base[:10], min(8, max_len))
+
+    if ftype == "TextField":
+        return f"{fname} text"
+
+    if ftype == "IntegerField":
+        return 1
+
+    if ftype == "FloatField":
+        return 1.0
+
+    if ftype == "BooleanField":
+        return True
+
+    if ftype == "JSONField":
+        return []
+
+    return None
+
+
+def _gen_body(model_name, fields_def, fk_values=None):
+    if fk_values is None:
+        fk_values = {}
+
+    print(f"[DEBUG] _gen_body model={model_name}")
+    print(f"[DEBUG] fields_def={fields_def}")
+    print(f"[DEBUG] fk_values={fk_values}")
+
+    body = {}
+    for fname, fdef in fields_def.items():
+        ftype = fdef["type"]
+
+        if ftype in ("ForeignKey", "OneToOneField"):
+            body[fname] = fk_values.get(fname)
+
+        elif ftype == "ManyToManyField":
+            v = fk_values.get(fname)
+            if v is None:
+                body[fname] = []
+            elif isinstance(v, list):
+                body[fname] = v
+            else:
+                body[fname] = [v]
+
+        else:
+            body[fname] = _gen_dummy_value(fname, fdef)
+
+    print(f"[DEBUG] generated body={body}")
+    return body
+
+
+def _create_fk_objects(configs, fields):
+    fk_values = {}
+
+    print("=== DEBUG FK LOOP START for {{ model }} ===")
+    {% for target in fk_create_order %}
+    print("Loop target:", "{{ target }}")
+    {% endfor %}
+    print("==========================================")
+
+    {% for target in fk_create_order %}
+    # Create {{ target }}
+    with open("../work/specs/{{ target.lower() }}.json", "r", encoding="utf-8") as fp:
+        ref = json.load(fp)
+
+    tbody = _gen_body("{{ target }}", ref["fields"], fk_values)
+
+    print("=== FK CREATE START ===")
+    print("Target model:", "{{ target }}")
+    print("ref fields:", ref["fields"])
+    print("fk_values BEFORE gen_body:", fk_values)
+    print("tbody BEFORE POST:", tbody)
+    print("========================")
+
+    res_fk = requests.post(
+        configs["base_url"] + "/api/{{ target.lower() }}s/",
+        json=tbody
+    )
+    if res_fk.status_code != 201:
+        print("POST ERROR:", res_fk.status_code, res_fk.json())
+    assert res_fk.status_code == 201
+
+    created_id = res_fk.json()["id"]
+
+    # 正方向 FK
+    for fname, fdef in ref["fields"].items():
+        if fdef.get("type") in ("ForeignKey", "OneToOneField") and fdef.get("to") == "{{ target }}":
+            fk_values[fname] = created_id
+
+    # 逆方向 FK
+    for dep_model in reverse_deps.get("{{ target }}", []):
+        with open(f"../work/specs/{dep_model.lower()}.json", "r", encoding="utf-8") as fp2:
+            dep_ref = json.load(fp2)
+
+        for fname, fdef in dep_ref["fields"].items():
+            if fdef.get("to") == "{{ target }}":
+                if fdef["type"] == "ManyToManyField":
+                    fk_values.setdefault(fname, []).append(created_id)
+                else:
+                    fk_values[fname] = created_id
+
+    {% endfor %}
+
+    print("[DEBUG] fk_values AFTER FK CREATION:", fk_values)
+    return fk_values
+
+
+@pytest.mark.order(3)
+def test_create_{{ model_lower }}(configs):
+    base = configs["base_url"]
+    url = base + "/api/{{ model_lower }}s/"
+
+    fk_values = _create_fk_objects(configs, fields)
+
+    item = _gen_body(model, fields, fk_values)
+
+    for k, v in fk_values.items():
+        item[k] = v
+
+    print("=== FINAL POST BODY for {{ model }} ===")
+    print(item)
+    print("=======================================")
+
+    res = requests.post(url, json=item)
+    if res.status_code != 201:
+        print("POST ERROR:", res.status_code, res.json())
+    assert res.status_code == 201

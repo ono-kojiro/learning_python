@@ -44,6 +44,27 @@ def collect_dependencies(models):
 
 
 # ------------------------------------------------------------
+# ★ 追加：全依存（transitive dependencies）
+# ------------------------------------------------------------
+def collect_all_dependencies(deps):
+    all_deps = {}
+
+    for model in deps.keys():
+        visited = set()
+        stack = list(deps[model])
+
+        while stack:
+            m = stack.pop()
+            if m not in visited:
+                visited.add(m)
+                stack.extend(deps.get(m, []))
+
+        all_deps[model] = list(visited)
+
+    return all_deps
+
+
+# ------------------------------------------------------------
 # フィールドカテゴリ分類
 # ------------------------------------------------------------
 def collect_field_categories(models):
@@ -214,7 +235,7 @@ def collect_nested(models):
 
 
 # ------------------------------------------------------------
-# amcli 用 run()  ← ★ application / project を追加
+# amcli 用 run()
 # ------------------------------------------------------------
 def run(output_file, input_files, application=None, project=None):
     ref_paths = [Path(f).resolve() for f in input_files]
@@ -222,6 +243,10 @@ def run(output_file, input_files, application=None, project=None):
     # --- 解析 ---
     models = collect_models(ref_paths)
     dependencies = collect_dependencies(models)
+
+    # ★ 全依存を追加
+    all_dependencies = collect_all_dependencies(dependencies)
+
     field_categories = collect_field_categories(models)
 
     general_categories = {}
@@ -243,12 +268,12 @@ def run(output_file, input_files, application=None, project=None):
 
     nested = collect_nested(models)
 
-    # ★ application / project を schema に追加
     schema = {
         "project": project,
         "application": application,
         "models": models,
         "dependencies": dependencies,
+        "all_dependencies": all_dependencies,   # ★ 追加
         "reverse_dependencies": reverse_dependencies,
         "load_order": load_order,
         "field_categories": field_categories,
@@ -257,7 +282,6 @@ def run(output_file, input_files, application=None, project=None):
         "nested": nested,
     }
 
-    # JSON で出力
     output_path = Path(output_file).resolve()
     with open(output_path, "w", encoding="utf-8") as fp:
         json.dump(schema, fp, indent=2, ensure_ascii=False)
