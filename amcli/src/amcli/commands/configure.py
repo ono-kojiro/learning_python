@@ -1,73 +1,86 @@
 # amcli/commands/configure.py
 
 import os
+import yaml
 from jinja2 import Environment, FileSystemLoader
+
+
+def load_config():
+    with open("config.yml") as f:
+        return yaml.safe_load(f)
 
 
 def run(output_file, application, project):
     """
     Generate build.ninja from Jinja2 templates.
-    This version matches build.ninja-reference exactly.
+    This version matches build.ninja-reference exactly,
+    but spec_order / specs / spec_jsons は config.yml から取得する。
     """
 
     # ----------------------------------------
-    # 固定 spec 順序（reference と完全一致）
+    # config.yml を読み込む
     # ----------------------------------------
-    spec_order = [
-        "device",
-        "netif",
-        "ipv4",
-        "comment",
-        "manager",
-        "remark",
-        "os",
-    ]
+    config = load_config()
 
-    specs = [f"specs/{name}.yml" for name in spec_order]
-    spec_jsons = [f"work/specs/{name}.json" for name in spec_order]
+    # CLI 引数が優先、なければ config.yml の値を使う
+    project = project or config["project"]
+    application = application or config["application"]
+
+    # outputdir（例: work）
+    outputdir = config["outputdir"]
 
     # ----------------------------------------
-    # makemigrations の依存リスト（1 行で出力するために Python 側で構築）
+    # entities（辞書）から spec_order を生成
+    # ※ 順序は辞書のキー順（Python3.7+ は定義順保持）
+    # ----------------------------------------
+    entities = config["entities"]  # dict: { device: specs/device.yml, ... }
+
+    spec_order = list(entities.keys())  # ["device", "netif", ...]
+    specs = [entities[name] for name in spec_order]  # ["specs/device.yml", ...]
+    spec_jsons = [f"{outputdir}/specs/{name}.json" for name in spec_order]
+
+    # ----------------------------------------
+    # makemigrations の依存リスト（従来通り）
     # ----------------------------------------
     makemigrations_list = []
 
     # models
     makemigrations_list += [
-        f"work/{application}/models/{name}_model.py"
+        f"{outputdir}/{application}/models/{name}_model.py"
         for name in spec_order
     ]
 
     # admin
     makemigrations_list += [
-        f"work/{application}/admin/{name}_admin.py"
+        f"{outputdir}/{application}/admin/{name}_admin.py"
         for name in spec_order
     ]
 
     # views
     makemigrations_list += [
-        f"work/{application}/views/{name}_view.py"
+        f"{outputdir}/{application}/views/{name}_view.py"
         for name in spec_order
     ]
 
     # serializers
     makemigrations_list += [
-        f"work/{application}/serializers/{name}_serializer.py"
+        f"{outputdir}/{application}/serializers/{name}_serializer.py"
         for name in spec_order
     ]
 
-    # その他
+    # その他（従来通り）
     makemigrations_list += [
-        f"work/{application}/admin/__init__.py",
-        f"work/{application}/views/__init__.py",
-        f"work/{application}/urls_api.py",
-        f"work/{application}/loader.py",
-        f"work/{application}/apps.py",
-        f"work/{application}/models/__init__.py",
-        "work/.rmdb",
+        f"{outputdir}/{application}/admin/__init__.py",
+        f"{outputdir}/{application}/views/__init__.py",
+        f"{outputdir}/{application}/urls_api.py",
+        f"{outputdir}/{application}/loader.py",
+        f"{outputdir}/{application}/apps.py",
+        f"{outputdir}/{application}/models/__init__.py",
+        f"{outputdir}/.rmdb",
     ]
 
     # ----------------------------------------
-    # loaddata の依存リスト（1 行で出力）
+    # loaddata の依存リスト（従来通り）
     # ----------------------------------------
     loaddata_list = [
         f"tests/data/test_{name}-fixtures.yaml"
