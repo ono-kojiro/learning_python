@@ -51,7 +51,7 @@ build work/.allowed_hosts_write: allowed_hosts_write work/.allowed_hosts_export
 build work/.allowed_hosts_import: allowed_hosts_import work/.allowed_hosts_write
 
 # 12. urls.py patch
-build work/.patch_urls: patch_urls work/.allowed_hosts_import
+build work/.patch_urls: patch_urls
 
 build init: phony work/.startproject work/.startapp work/.installapp_export work/.installapp_replace work/.installapp_rest work/.installapp_ext work/.installapp_myapp work/.mkdir_specs work/.mkdir_models work/.mkdir_views work/.mkdir_serializers work/.mkdir_schema work/.mkdir_tests work/.allowed_hosts_export work/.allowed_hosts_write work/.allowed_hosts_import work/.patch_urls
 

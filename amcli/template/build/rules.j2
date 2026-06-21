@@ -26,7 +26,7 @@ rule allowed_hosts_import
   command = amcli edit --import work/{{ project }}/allowed_hosts.yml --project work/{{ project }} ALLOWED_HOSTS
 
 rule patch_urls
-  command = sh patch_urls.sh
+  command = amcli patch --target urls --project {{ project }} --application {{ app }}
 
 rule cmp2ref
   command = amcli cmp2ref --spec $in -o $out {{ specs|join(" ") }}

@@ -166,6 +166,20 @@ def configure_cmd(output_file, application, project):
         project=project,
     )
 
+@main.command(name="patch")
+@click.option("--target", "-t", required=True, type=click.Choice(["urls"]), help="Patch target")
+@click.option("--project", "-p", required=True, help="Django project name")
+@click.option("--application", "-a", required=True, help="Django application name")
+def patch_cmd(target, project, application):
+    """
+    Apply patches to Django project files.
+
+    TARGET:
+      urls  - Patch urls.py to include API routing
+    """
+    from amcli.commands.patch import run
+    path = run(target=target, project=project, application=application)
+    click.echo(f"Patched {path}")
 
 
 @main.command()
