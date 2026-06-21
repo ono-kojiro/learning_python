@@ -62,7 +62,7 @@ rule migrate
   command = cd work && python3 manage.py migrate && cd ..
 
 rule createsuperuser
-  command = sh createsuperuser.sh
+  command = amcli createsuperuser --project {{ project }}
 
 rule loaddata
   command = python3 work/manage.py loaddata $in

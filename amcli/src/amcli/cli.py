@@ -181,6 +181,15 @@ def patch_cmd(target, project, application):
     path = run(target=target, project=project, application=application)
     click.echo(f"Patched {path}")
 
+@main.command(name="createsuperuser")
+@click.option("-p", "--project", required=True, help="Django project name")
+def createsuperuser_cmd(project):
+    """
+    Create Django superuser using environment variables from .env.
+    """
+    from amcli.commands.createsuperuser import run
+    path = run(project=project)
+    click.echo(f"Superuser created via {path}")
 
 @main.command()
 def generate():
