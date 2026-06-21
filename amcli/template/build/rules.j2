@@ -1,0 +1,72 @@
+rule startproject
+  command = amcli startproject {{ project }} --dir work/
+
+rule startapp
+  command = amcli startapp {{ app }} --dir work/
+
+rule installapp_export
+  command = amcli installapp --export-installed-apps work/{{ project }}/installed_apps.yml --project work/{{ project }}/
+
+rule installapp_replace
+  command = amcli installapp --replace-installed-apps work/{{ project }}/installed_apps.yml --project work/{{ project }}/
+
+rule installapp_pkg
+  command = amcli installapp $pkg --project work/{{ project }}/
+
+rule mkdir
+  command = mkdir -p $dir
+
+rule allowed_hosts_export
+  command = amcli edit --export work/{{ project }}/allowed_hosts.yml --project work/{{ project }} ALLOWED_HOSTS
+
+rule allowed_hosts_write
+  command = echo "[ \"*\" ]" > work/{{ project }}/allowed_hosts.yml
+
+rule allowed_hosts_import
+  command = amcli edit --import work/{{ project }}/allowed_hosts.yml --project work/{{ project }} ALLOWED_HOSTS
+
+rule patch_urls
+  command = sh patch_urls.sh
+
+rule cmp2ref
+  command = amcli cmp2ref --spec $in -o $out {{ specs|join(" ") }}
+
+rule genschema
+  command = amcli genschema -o $out --project {{ project }} --application {{ app }} {{ spec_jsons|join(" ") }}
+
+rule genmodel
+  command = amcli genmodel -l template -o $out $in
+
+rule genadmin
+  command = amcli genadmin -o $out -l template -s work/schema/schema.json $in
+
+rule genview
+  command = amcli genview -o $out -l template $in
+
+rule genserializer
+  command = amcli genserializer -o $out -l template -s work/schema/schema.json $in
+
+rule genfixture
+  command = amcli genfixture -o $out -l template -s work/schema/schema.json -n template/names.yaml $in
+
+rule genimporter
+  command = amcli genimporter -o $out -s work/schema/schema.json $in
+
+rule rmdb
+  command = rm -f work/db.sqlite3
+
+rule makemigrations
+  command = cd work && python3 manage.py makemigrations && cd ..
+
+rule migrate
+  command = cd work && python3 manage.py migrate && cd ..
+
+rule createsuperuser
+  command = sh createsuperuser.sh
+
+rule loaddata
+  command = python3 work/manage.py loaddata $in
+
+rule touch
+  command = touch $out
+

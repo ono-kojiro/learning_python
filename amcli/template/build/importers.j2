@@ -1,0 +1,8 @@
+build work/{{ app }}/urls_api.py:        genimporter template/urls.j2
+build work/{{ app }}/loader.py:          genimporter template/loader.j2
+build work/{{ app }}/apps.py:            genimporter template/apps.py.j2
+build work/{{ app }}/models/__init__.py: genimporter template/models_init.j2
+
+build work/{{ app }}/admin/__init__.py: touch work/.installapp_myapp
+build work/{{ app }}/views/__init__.py: touch work/.installapp_myapp
+

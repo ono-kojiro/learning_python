@@ -1,0 +1,57 @@
+# 1. startproject
+build work/.startproject: startproject
+
+# 2. startapp
+build work/.startapp: startapp work/.startproject
+
+# 3. installapp export
+build work/.installapp_export: installapp_export work/.startapp
+
+# 4. installapp replace
+build work/.installapp_replace: installapp_replace work/.installapp_export
+
+# 5. installapp rest_framework
+build work/.installapp_rest: installapp_pkg work/.installapp_replace
+  pkg = rest_framework
+
+# 6. installapp django_extensions
+build work/.installapp_ext: installapp_pkg work/.installapp_rest
+  pkg = django_extensions
+
+# 7. installapp myapp
+build work/.installapp_myapp: installapp_pkg work/.installapp_ext
+  pkg = {{ app }}
+
+# 8. mkdir 群
+build work/.mkdir_specs: mkdir work/.installapp_myapp
+  dir = work/specs
+
+build work/.mkdir_models: mkdir work/.installapp_myapp
+  dir = work/{{ app }}/models
+
+build work/.mkdir_views: mkdir work/.installapp_myapp
+  dir = work/{{ app }}/views
+
+build work/.mkdir_serializers: mkdir work/.installapp_myapp
+  dir = work/{{ app }}/serializers
+
+build work/.mkdir_schema: mkdir work/.installapp_myapp
+  dir = work/schema
+
+build work/.mkdir_tests: mkdir work/.installapp_myapp
+  dir = tests/data
+
+# 9. allowed_hosts export
+build work/.allowed_hosts_export: allowed_hosts_export work/.mkdir_schema
+
+# 10. allowed_hosts write
+build work/.allowed_hosts_write: allowed_hosts_write work/.allowed_hosts_export
+
+# 11. allowed_hosts import
+build work/.allowed_hosts_import: allowed_hosts_import work/.allowed_hosts_write
+
+# 12. urls.py patch
+build work/.patch_urls: patch_urls work/.allowed_hosts_import
+
+build init: phony work/.startproject work/.startapp work/.installapp_export work/.installapp_replace work/.installapp_rest work/.installapp_ext work/.installapp_myapp work/.mkdir_specs work/.mkdir_models work/.mkdir_views work/.mkdir_serializers work/.mkdir_schema work/.mkdir_tests work/.allowed_hosts_export work/.allowed_hosts_write work/.allowed_hosts_import work/.patch_urls
+

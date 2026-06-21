@@ -1,0 +1,26 @@
+###############################################
+# rules
+###############################################
+{% include "rules.j2" %}
+
+###############################################
+# targets (依存関係つき)
+###############################################
+{% include "init_phase.j2" %}
+
+{% include "cmp2ref.j2" %}
+
+{% include "genschema.j2" %}
+
+{% include "codegen_models.j2" %}
+{% include "codegen_admin.j2" %}
+{% include "codegen_views.j2" %}
+{% include "codegen_serializers.j2" %}
+{% include "codegen_fixtures.j2" %}
+
+{% include "importers.j2" %}
+
+{% include "makemigrations.j2" %}
+
+{% include "migrate_and_load.j2" %}
+

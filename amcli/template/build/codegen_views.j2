@@ -1,0 +1,4 @@
+{% for name in spec_order %}
+build work/{{ app }}/views/{{ name }}_view.py:   genview work/specs/{{ name }}.json
+{% endfor %}
+

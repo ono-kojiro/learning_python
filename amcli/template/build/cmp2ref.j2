@@ -1,0 +1,4 @@
+{% for name in spec_order %}
+build work/specs/{{ name }}.json:   cmp2ref specs/{{ name }}.yml   | init
+{% endfor %}
+

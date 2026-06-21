@@ -6,4 +6,5 @@ __pycache__/
 *.crt
 *.key
 *.pem
+build.ninja
 
