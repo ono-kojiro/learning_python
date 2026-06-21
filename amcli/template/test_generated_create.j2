@@ -10,6 +10,7 @@ fields = {{ fields_json }}
 reverse_deps = {{ reverse_deps | repr }}
 fk_create_order = {{ fk_create_order | repr }}
 
+debug = False
 
 def _rand_str(prefix, length=8):
     s = "".join(random.choices(string.hexdigits.lower(), k=length))
@@ -46,9 +47,10 @@ def _gen_body(model_name, fields_def, fk_values=None):
     if fk_values is None:
         fk_values = {}
 
-    print(f"[DEBUG] _gen_body model={model_name}")
-    print(f"[DEBUG] fields_def={fields_def}")
-    print(f"[DEBUG] fk_values={fk_values}")
+    if debug :
+        print(f"[DEBUG] _gen_body model={model_name}")
+        print(f"[DEBUG] fields_def={fields_def}")
+        print(f"[DEBUG] fk_values={fk_values}")
 
     body = {}
     for fname, fdef in fields_def.items():
@@ -69,18 +71,22 @@ def _gen_body(model_name, fields_def, fk_values=None):
         else:
             body[fname] = _gen_dummy_value(fname, fdef)
 
-    print(f"[DEBUG] generated body={body}")
+    if debug :
+        print(f"[DEBUG] generated body={body}")
     return body
 
 
 def _create_fk_objects(configs, fields):
     fk_values = {}
 
-    print("=== DEBUG FK LOOP START for {{ model }} ===")
+    if debug :
+        print("=== DEBUG FK LOOP START for {{ model }} ===")
     {% for target in fk_create_order %}
-    print("Loop target:", "{{ target }}")
+    if debug :
+        print("Loop target:", "{{ target }}")
     {% endfor %}
-    print("==========================================")
+    if debug :
+        print("==========================================")
 
     {% for target in fk_create_order %}
     # Create {{ target }}
@@ -89,12 +95,13 @@ def _create_fk_objects(configs, fields):
 
     tbody = _gen_body("{{ target }}", ref["fields"], fk_values)
 
-    print("=== FK CREATE START ===")
-    print("Target model:", "{{ target }}")
-    print("ref fields:", ref["fields"])
-    print("fk_values BEFORE gen_body:", fk_values)
-    print("tbody BEFORE POST:", tbody)
-    print("========================")
+    if debug :
+        print("=== FK CREATE START ===")
+        print("Target model:", "{{ target }}")
+        print("ref fields:", ref["fields"])
+        print("fk_values BEFORE gen_body:", fk_values)
+        print("tbody BEFORE POST:", tbody)
+        print("========================")
 
     res_fk = requests.post(
         configs["base_url"] + "/api/{{ target.lower() }}s/",
@@ -125,7 +132,8 @@ def _create_fk_objects(configs, fields):
 
     {% endfor %}
 
-    print("[DEBUG] fk_values AFTER FK CREATION:", fk_values)
+    if debug :
+        print("[DEBUG] fk_values AFTER FK CREATION:", fk_values)
     return fk_values
 
 
@@ -141,9 +149,10 @@ def test_create_{{ model_lower }}(configs):
     for k, v in fk_values.items():
         item[k] = v
 
-    print("=== FINAL POST BODY for {{ model }} ===")
-    print(item)
-    print("=======================================")
+    if debug :
+        print("=== FINAL POST BODY for {{ model }} ===")
+        print(item)
+        print("=======================================")
 
     res = requests.post(url, json=item)
     if res.status_code != 201:

@@ -238,17 +238,6 @@ restart : stop start
 status :
 	ps -ef | grep 'python3 manage.py runserver_plus'
 
-
-tests/test_%.py : $(OUT_SPEC_DIR)/%.json
-	amcli gentest -o $@ -s $(SCHEMA_JSON) --ref $< template/test_generated.j2
-
-
-tests/test_%_01_create.py : $(OUT_SPEC_DIR)/%.json
-	amcli gentest template/test_01_create.j2 \
-		--schema $(SCHEMA_JSON) \
-		--ref work/specs/$*.json \
-		--output tests/test_$*_01_create.py; \
-
 gentest : $(TEST_SCRIPTS_PY)
 
 define GENTEST_RULE
