@@ -1,6 +1,10 @@
+# amcli/commands/generate_admin.py
+
 from pathlib import Path
 import yaml
 from jinja2 import Environment, FileSystemLoader
+
+from amcli.utils.constants import FieldType, normalize_field_type
 
 
 def read_yaml(filepath):
@@ -29,16 +33,16 @@ def generate_inline_blocks(target_model, model_defs, children_map):
             if fdef.get("to") != target_model:
                 continue
 
-            ftype = fdef.get("type")
+            ftype = normalize_field_type(fdef.get("type"))
 
             # ForeignKey / OneToOne → Inline
-            if ftype in ("ForeignKey", "OneToOneField"):
+            if ftype in (FieldType.FOREIGN_KEY, FieldType.ONE_TO_ONE):
                 inline_model_expr = f"{child}"
                 inline_class_name = f"{child}Inline"
                 break
 
             # ManyToMany → through モデルを Inline
-            if ftype == "ManyToManyField":
+            if ftype == FieldType.MANY_TO_MANY:
                 inline_model_expr = f"{child}.{fname}.through"
                 inline_class_name = f"{child}{fname.capitalize()}Inline"
                 break
@@ -102,4 +106,3 @@ def run(loader_dir, output_file, schema_yaml, ref_yaml):
         fp.write(content)
 
     print(f"[amcli] Generated admin: {out_path}")
-

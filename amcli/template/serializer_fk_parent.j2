@@ -4,9 +4,9 @@ from myapp.models import *
 
 class {{ model }}Serializer(serializers.ModelSerializer):
 {%- for fname, fdef in fields.items() %}
-    {%- if fdef.type in ["ForeignKey", "OneToOneField"] %}
+    {%- if fdef.type in [FieldType.FOREIGN_KEY, FieldType.ONE_TO_ONE] %}
     {{ fname }} = serializers.PrimaryKeyRelatedField(queryset={{ fdef.to }}.objects.all(), required=False)
-    {%- elif fdef.type == "JSONField" %}
+    {%- elif fdef.type == FieldType.JSON %}
     {{ fname }} = serializers.JSONField(required=False)
     {%- else %}
     {{ fname }} = serializers.CharField(required=False)

@@ -2,6 +2,7 @@ from pathlib import Path
 import yaml
 from jinja2 import Environment, FileSystemLoader
 
+from amcli.utils.constants import FieldType
 
 def read_yaml(path):
     with open(path, "r", encoding="utf-8") as fp:
@@ -24,6 +25,9 @@ def run(loader_dir, output_file, schema_yaml, ref_yaml):
         loader=FileSystemLoader(loader_dir),
         autoescape=False
     )
+
+    # ★ これを追加する
+    env.globals["FieldType"] = FieldType
 
     # ref_yaml 読み込み
     data = read_yaml(ref_yaml)

@@ -1,6 +1,10 @@
+# amcli/commands/generate_model.py
+
 from pathlib import Path
 import json
 from jinja2 import Environment, FileSystemLoader
+
+from amcli.utils.constants import FieldType, normalize_field_type
 
 
 def read_json(filepath):
@@ -29,10 +33,10 @@ def render_simple_field(fname, field_def):
             k = "null"
         args.append(render_default(k, v))
     arg_str = ", ".join(args)
-    return f"{fname} = models.{field_def['type']}({arg_str})"
+    return f"{fname} = models.{field_def['type'].value}({arg_str})"
 
 
-def render_relation_field(fname, field_def, ftype):
+def render_relation_field(fname, field_def, ftype: FieldType):
     args = []
 
     # to=
@@ -54,7 +58,7 @@ def render_relation_field(fname, field_def, ftype):
         args.append(render_default(k, v))
 
     arg_str = ", ".join(args)
-    return f"{fname} = models.{ftype}({arg_str})"
+    return f"{fname} = models.{ftype.value}({arg_str})"
 
 
 def render_many_to_many_field(fname, field_def, model_name):
@@ -121,15 +125,14 @@ def generate_model_lines(data):
     field_lines = []
 
     for fname, field_def in fields.items():
-        ftype = field_def["type"]
+        ftype = normalize_field_type(field_def["type"])
 
         # ForeignKey / OneToOne
-        if ("ForeignKey" in ftype) or ("OneToOne" in ftype):
-            model_ftype = "OneToOneField" if ftype == "OneToOne" else ftype
-            line = render_relation_field(fname, field_def, model_ftype)
+        if ftype in (FieldType.FOREIGN_KEY, FieldType.ONE_TO_ONE):
+            line = render_relation_field(fname, field_def, ftype)
             field_lines.append(line)
 
-        elif ftype == "ManyToManyField":
+        elif ftype == FieldType.MANY_TO_MANY:
             line = render_many_to_many_field(fname, field_def, name)
             field_lines.append(line)
 
@@ -170,6 +173,11 @@ def run(loader_dir, output_file, input_files):
     # 各モデルを生成
     for filepath in input_files:
         data = read_json(filepath)
+
+        # type を Enum に正規化
+        for fname, fdef in data["fields"].items():
+            fdef["type"] = normalize_field_type(fdef["type"])
+
         model = data["name"]
 
         field_lines, str_method, meta_lines = generate_model_lines(data)
@@ -185,4 +193,3 @@ def run(loader_dir, output_file, input_files):
 
     fp.close()
     print(f"[amcli] Generated model: {output_path}")
-

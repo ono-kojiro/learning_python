@@ -1,6 +1,10 @@
+# amcli/commands/cmp2ref.py
+
 from pathlib import Path
 import yaml
 import json
+
+from amcli.utils.constants import FieldType, normalize_field_type
 
 
 def load_owner_models(paths):
@@ -12,37 +16,41 @@ def load_owner_models(paths):
     return models
 
 
+# ---------------------------------------------------------
+# プリミティブ型 → Django フィールド型
+# ---------------------------------------------------------
 def convert_primitive_field(fdef):
     out = {}
     ftype = fdef["type"]
 
     if ftype == "String":
-        out["type"] = "CharField"
+        out["type"] = FieldType.CHAR.value
         out["max_length"] = fdef.get("max_length", 255)
 
     elif ftype == "Text":
-        out["type"] = "TextField"
+        out["type"] = FieldType.TEXT.value
 
     elif ftype == "Int":
-        out["type"] = "IntegerField"
+        out["type"] = FieldType.INTEGER.value
 
     elif ftype == "Float":
-        out["type"] = "FloatField"
+        out["type"] = FieldType.FLOAT.value
 
     elif ftype == "Bool":
-        out["type"] = "BooleanField"
+        out["type"] = FieldType.BOOLEAN.value
 
     elif ftype == "ID":
-        out["type"] = "CharField"
+        out["type"] = FieldType.CHAR.value
         out["max_length"] = fdef.get("max_length", 100)
         out["unique"] = True
 
     elif ftype.startswith("List"):
-        out["type"] = "JSONField"
+        out["type"] = FieldType.JSON.value
 
     else:
         raise ValueError(f"Unknown primitive type: {ftype}")
 
+    # 共通属性
     if "unique" in fdef:
         out["unique"] = fdef["unique"]
 
@@ -55,6 +63,9 @@ def convert_primitive_field(fdef):
     return out
 
 
+# ---------------------------------------------------------
+# PK フィールドの抽出
+# ---------------------------------------------------------
 def get_pk_field(models, model_name):
     fields = models[model_name]["fields"]
     for fname, fdef in fields.items():
@@ -63,6 +74,9 @@ def get_pk_field(models, model_name):
     return None, None
 
 
+# ---------------------------------------------------------
+# 参照モデル構築
+# ---------------------------------------------------------
 def build_reference_model(models, target_model):
     if target_model not in models:
         raise ValueError(f"Model {target_model} not found")
@@ -73,43 +87,44 @@ def build_reference_model(models, target_model):
         "fields": {}
     }
 
+    # -------------------------------
+    # 自モデルのフィールド変換
+    # -------------------------------
     for fname, fdef in models[target_model]["fields"].items():
         ftype = fdef["type"]
 
+        # プリミティブ型
         if ftype in ["String", "Text", "Int", "Float", "Bool", "ID"] or ftype.startswith("List"):
             out["fields"][fname] = convert_primitive_field(fdef)
 
+        # ManyToMany
         elif ftype == "ManyToMany":
             base = fname[:-1] if fname.endswith("s") else fname
             new_name = f"{base}_ids"
             out["fields"][new_name] = {
-                "type": "ManyToManyField",
+                "type": FieldType.MANY_TO_MANY.value,
                 "to": fdef["to"]
             }
 
+        # OneToOne
         elif ftype == "OneToOne":
             out["fields"][fname] = {
-                "type": "OneToOneField",
-                "to": fdef["to"],
-                "null": fdef.get("nullable", False),
-                "blank": fdef.get("nullable", False),
-            }
-        elif ftype == "OneToOne":
-            base = fname
-            field_name = f"{base}_id"
-            out["fields"][field_name] = {
-                "type": "OneToOneField",
+                "type": FieldType.ONE_TO_ONE.value,
                 "to": fdef["to"],
                 "null": fdef.get("nullable", False),
                 "blank": fdef.get("nullable", False),
             }
 
+        # OneToMany は無視（逆参照で処理）
         elif ftype == "OneToMany":
             continue
 
         else:
             raise ValueError(f"Unknown type: {ftype}")
 
+    # -------------------------------
+    # 逆参照（OneToMany → ForeignKey）
+    # -------------------------------
     for model_name, model_def in models.items():
         for fname, fdef in model_def["fields"].items():
             ftype = fdef["type"]
@@ -121,7 +136,7 @@ def build_reference_model(models, target_model):
                 field_name = f"{model_name.lower()}_id"
 
                 out["fields"][field_name] = {
-                    "type": "ForeignKey",
+                    "type": FieldType.FOREIGN_KEY.value,
                     "to": model_name,
                     "on_delete": "SET_NULL" if nullable else "CASCADE",
                 }
@@ -137,24 +152,20 @@ def build_reference_model(models, target_model):
 
 
 # ---------------------------------------------------------
-# ここから run() の修正（--name → --spec）
+# run()（--spec 対応）
 # ---------------------------------------------------------
-
 def run(spec, output_file, input_files):
     cmp_paths = [Path(f).resolve() for f in input_files]
 
     # spec ファイル名からモデル名を抽出
     spec_path = Path(spec)
-    stem = spec_path.stem  # device, netif, comment, manager, remark
+    stem = spec_path.stem
     target_lower = stem.lower()
 
     # 入力 YAML 群からモデル名を case-insensitive で探す
     models = load_owner_models(cmp_paths)
-
-    # YAML のキー一覧
     yaml_keys = list(models.keys())
 
-    # 大文字小文字無視で一致するキーを探す
     target_model = None
     for key in yaml_keys:
         if key.lower() == target_lower:
@@ -170,7 +181,6 @@ def run(spec, output_file, input_files):
 
     output_path = Path(output_file).resolve()
 
-    # JSON で出力
     with open(output_path, "w") as f:
         json.dump(result, f, indent=2, ensure_ascii=False)
 

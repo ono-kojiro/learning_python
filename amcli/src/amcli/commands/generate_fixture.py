@@ -1,9 +1,13 @@
+# amcli/commands/generate_fixture.py
+
 from pathlib import Path
 import yaml
 import random
 import string
 from collections import defaultdict, deque
 from jinja2 import Environment, FileSystemLoader
+
+from amcli.utils.constants import FieldType, normalize_field_type
 
 
 def read_yaml(path):
@@ -61,39 +65,49 @@ def generate_gateway_from_cidr(cidr):
 
 
 def generate_random_value(model, field_name, field_def, count, pk, name_data):
-    ftype = field_def["type"]
+    ftype = normalize_field_type(field_def["type"])
     null_ok = field_def.get("null", False)
 
+    # Manager.name は特別扱い
     if model == "Manager" and field_name == "name":
         return random_human_name(name_data)
 
-    if ftype == "JSONField":
+    # JSONField
+    if ftype == FieldType.JSON:
         return generate_jsonfield_value(field_name, field_def)
 
+    # gateway は addresses から後で生成
     if field_name == "gateway":
         return None
 
-    if ftype == "CharField":
+    # CharField
+    if ftype == FieldType.CHAR:
         return random_string(f"{model.upper()}-")
 
-    if ftype == "GenericIPAddressField":
+    # GenericIPAddressField（Enum には無いので文字列比較）
+    if ftype.value == "GenericIPAddressField":
         return f"192.168.{random.randint(0,255)}.{random.randint(1,254)}"
 
-    if ftype == "OneToOneField":
+    # OneToOneField
+    if ftype == FieldType.ONE_TO_ONE:
         return pk
 
-    if ftype == "ForeignKey":
+    # ForeignKey
+    if ftype == FieldType.FOREIGN_KEY:
         if null_ok and random.random() < 0.2:
             return None
         return random.randint(1, count)
 
-    if ftype == "ManyToManyField":
+    # ManyToManyField
+    if ftype == FieldType.MANY_TO_MANY:
         n = random.randint(1, min(3, count))
         return random.sample(list(range(1, count + 1)), n)
 
+    # null=True の場合
     if null_ok:
         return None
 
+    # デフォルト
     return random_string("VAL-")
 
 
@@ -139,7 +153,7 @@ def collect_dependencies(targets, dependencies):
 
 
 # ---------------------------------------------------------
-# amcli 用 run() 関数
+# amcli 用 run()
 # ---------------------------------------------------------
 def run(loader_dir, output_file, schema_yaml, names_yaml, ref_yaml_list, count=10, include_deps=False):
     # schema.yaml
@@ -156,6 +170,11 @@ def run(loader_dir, output_file, schema_yaml, names_yaml, ref_yaml_list, count=1
     for filepath in ref_yaml_list:
         data = read_yaml(filepath)
         model = data["name"]
+
+        # type を Enum に正規化
+        for fname, fdef in data["fields"].items():
+            fdef["type"] = normalize_field_type(fdef["type"])
+
         models[model] = data["fields"]
         target_models.append(model)
 
@@ -187,6 +206,7 @@ def run(loader_dir, output_file, schema_yaml, names_yaml, ref_yaml_list, count=1
                     model, fname, fdef, count, pk, name_data
                 )
 
+            # gateway の自動生成
             if "addresses" in item["fields"] and "gateway" in item["fields"]:
                 addrs = item["fields"]["addresses"]
                 if addrs:
@@ -210,4 +230,3 @@ def run(loader_dir, output_file, schema_yaml, names_yaml, ref_yaml_list, count=1
         fp.write(content)
 
     print(f"[amcli] Generated fixture: {out_path}")
-
