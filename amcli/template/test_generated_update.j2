@@ -1,0 +1,193 @@
+import json
+import random
+import string
+import requests
+import pytest
+
+# ============================
+# DEBUG フラグ
+# ============================
+DEBUG = False
+
+def dprint(*args, **kwargs):
+    if DEBUG:
+        print(*args, **kwargs)
+
+model = "{{ model }}"
+model_lower = "{{ model_lower }}"
+fields = {{ fields_json }}
+fk_create_order = {{ fk_create_order | repr }}
+reverse_deps = {{ reverse_deps | repr }}
+
+
+def _rand_str(prefix, length=8):
+    s = "".join(random.choices(string.hexdigits.lower(), k=length))
+    return f"{prefix}-{s}"
+
+
+def _gen_dummy_value(fname, fdef):
+    ftype = fdef["type"]
+
+    if ftype == "CharField":
+        max_len = fdef.get("max_length", 20)
+        base = fname.upper()
+        return _rand_str(base[:10], min(8, max_len))
+
+    if ftype == "TextField":
+        return f"{fname} text"
+
+    if ftype == "IntegerField":
+        return 1
+
+    if ftype == "FloatField":
+        return 1.0
+
+    if ftype == "BooleanField":
+        return True
+
+    if ftype == "JSONField":
+        return []
+
+    return None
+
+
+def _gen_update_value(fname, fdef):
+    ftype = fdef["type"]
+
+    if ftype == "CharField":
+        return _rand_str("UPDATED")
+
+    if ftype == "TextField":
+        return "updated text"
+
+    if ftype == "IntegerField":
+        return 999
+
+    if ftype == "FloatField":
+        return 9.99
+
+    if ftype == "BooleanField":
+        return False
+
+    if ftype == "JSONField":
+        return ["updated"]
+
+    return None
+
+
+def _gen_body(model_name, fields_def, fk_values=None):
+    if fk_values is None:
+        fk_values = {}
+
+    body = {}
+    for fname, fdef in fields_def.items():
+        ftype = fdef["type"]
+
+        if ftype in ("ForeignKey", "OneToOneField"):
+            body[fname] = fk_values.get(fname)
+
+        elif ftype == "ManyToManyField":
+            v = fk_values.get(fname)
+            if v is None:
+                body[fname] = []
+            elif isinstance(v, list):
+                body[fname] = v
+            else:
+                body[fname] = [v]
+
+        else:
+            body[fname] = _gen_dummy_value(fname, fdef)
+
+    return body
+
+
+def _create_fk_objects(configs, fields):
+    fk_values = {}
+
+    dprint("=== DEBUG FK LOOP START for {{ model }} ===")
+    {% for target in fk_create_order %}
+    dprint("Loop target:", "{{ target }}")
+    {% endfor %}
+    dprint("==========================================")
+
+    {% for target in fk_create_order %}
+    with open("../work/specs/{{ target.lower() }}.json", "r", encoding="utf-8") as fp:
+        ref = json.load(fp)
+
+    tbody = _gen_body("{{ target }}", ref["fields"], fk_values)
+
+    res_fk = requests.post(
+        configs["base_url"] + "/api/{{ target.lower() }}s/",
+        json=tbody
+    )
+    assert res_fk.status_code == 201
+
+    created_id = res_fk.json()["id"]
+
+    # 正方向 FK
+    for fname, fdef in ref["fields"].items():
+        if fdef.get("type") in ("ForeignKey", "OneToOneField") and fdef.get("to") == "{{ target }}":
+            fk_values[fname] = created_id
+
+    # 逆方向 FK
+    for dep_model in reverse_deps.get("{{ target }}", []):
+        with open(f"../work/specs/{dep_model.lower()}.json", "r", encoding="utf-8") as fp2:
+            dep_ref = json.load(fp2)
+
+        for fname, fdef in dep_ref["fields"].items():
+            if fdef.get("to") == "{{ target }}":
+                if fdef["type"] == "ManyToManyField":
+                    fk_values.setdefault(fname, []).append(created_id)
+                else:
+                    fk_values[fname] = created_id
+
+    {% endfor %}
+
+    return fk_values
+
+
+@pytest.mark.order(5)
+def test_update_{{ model_lower }}(configs):
+    base = configs["base_url"]
+
+    # 1. 依存モデルを作成
+    fk_values = _create_fk_objects(configs, fields)
+
+    # 2. 元データを作成
+    item = _gen_body(model, fields, fk_values)
+
+    for fname, fdef in fields.items():
+        if fdef["type"] in ("ForeignKey", "OneToOneField", "ManyToManyField"):
+            if fname in fk_values:
+                item[fname] = fk_values[fname]
+
+    res = requests.post(base + "/api/{{ model_lower }}s/", json=item)
+    assert res.status_code == 201
+
+    obj_id = res.json()["id"]
+
+    # 3. 更新データを作成（FK は変更しない）
+    update_body = {}
+    for fname, fdef in fields.items():
+        if fdef["type"] not in ("ForeignKey", "OneToOneField", "ManyToManyField"):
+            update_body[fname] = _gen_update_value(fname, fdef)
+
+    dprint("=== UPDATE BODY ===")
+    dprint(update_body)
+    dprint("===================")
+
+    # 4. PATCH
+    patch_res = requests.patch(
+        base + f"/api/{{ model_lower }}s/{obj_id}/",
+        json=update_body
+    )
+    assert patch_res.status_code == 200
+
+    # 5. GET して更新が反映されていることを確認
+    get_res = requests.get(base + f"/api/{{ model_lower }}s/{obj_id}/")
+    assert get_res.status_code == 200
+
+    data = get_res.json()
+    for fname, val in update_body.items():
+        assert data[fname] == val
+
