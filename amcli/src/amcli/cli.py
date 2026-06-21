@@ -148,6 +148,26 @@ def gentest(template_file, schema, ref, output):
         output_file=output,
     )
 
+@main.command(name="configure")
+@click.option("-o", "--output", "output_file", required=True, help="Output build.ninja")
+@click.option("-a", "--application", "application", required=True, help="Django application name")
+@click.option("-p", "--project", "project", required=True, help="Django project name")
+def configure_cmd(output_file, application, project):
+    """
+    Generate build.ninja automatically from project structure.
+
+    PROJECT は Django プロジェクト名、APPLICATION は Django アプリ名。
+    specs/*.yml や template/*.j2 をスキャンして build.ninja を生成します。
+    """
+    from amcli.commands.configure import run
+    run(
+        output_file=output_file,
+        application=application,
+        project=project,
+    )
+
+
+
 @main.command()
 def generate():
     from amcli.commands.generate import run

@@ -4,7 +4,7 @@ ifneq (,$(wildcard .env))
 endif
 
 #ENTITIES = Device NetIF Comment Manager Remark
-ENTITIES = device netif ipv4 comment manager remark
+ENTITIES = device netif ipv4 comment manager remark os
 
 TOP_DIR = $(shell pwd)
 
@@ -76,6 +76,15 @@ importer : url loader apps models_init
 
 shell :
 	cd $(WORK_DIR) && python3 manage.py shell
+
+configure :
+	amcli configure --project myproject --application myapp \
+		--output build.ninja
+
+build :
+	ninja -j1
+
+config : configure
 
 help :
 	@echo "usage: make TARGET"
