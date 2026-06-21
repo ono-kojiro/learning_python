@@ -53,7 +53,8 @@ TEMPLATE_DIR = template
 #
 TEST_TEMPLATES_J2 = \
 	$(TEMPLATE_DIR)/test_generated_get.j2 \
-	$(TEMPLATE_DIR)/test_generated_create.j2
+	$(TEMPLATE_DIR)/test_generated_create.j2 \
+	$(TEMPLATE_DIR)/test_generated_delete.j2
 
 TEST_SCRIPTS_PY = $(foreach tmpl,$(TEST_TEMPLATES_J2), \
                     $(foreach e,$(ENTITIES), \
