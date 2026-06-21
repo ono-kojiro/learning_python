@@ -1,57 +1,57 @@
 # 1. startproject
-build work/.startproject: startproject
+build {{ outputdir }}/.startproject: startproject
 
 # 2. startapp
-build work/.startapp: startapp work/.startproject
+build {{ outputdir }}/.startapp: startapp {{ outputdir }}/.startproject
 
 # 3. installapp export
-build work/.installapp_export: installapp_export work/.startapp
+build {{ outputdir }}/.installapp_export: installapp_export {{ outputdir }}/.startapp
 
 # 4. installapp replace
-build work/.installapp_replace: installapp_replace work/.installapp_export
+build {{ outputdir }}/.installapp_replace: installapp_replace {{ outputdir }}/.installapp_export
 
 # 5. installapp rest_framework
-build work/.installapp_rest: installapp_pkg work/.installapp_replace
+build {{ outputdir }}/.installapp_rest: installapp_pkg {{ outputdir }}/.installapp_replace
   pkg = rest_framework
 
 # 6. installapp django_extensions
-build work/.installapp_ext: installapp_pkg work/.installapp_rest
+build {{ outputdir }}/.installapp_ext: installapp_pkg {{ outputdir }}/.installapp_rest
   pkg = django_extensions
 
 # 7. installapp myapp
-build work/.installapp_myapp: installapp_pkg work/.installapp_ext
+build {{ outputdir }}/.installapp_myapp: installapp_pkg {{ outputdir }}/.installapp_ext
   pkg = {{ app }}
 
 # 8. mkdir 群
-build work/.mkdir_specs: mkdir work/.installapp_myapp
-  dir = work/specs
+build {{ outputdir }}/.mkdir_specs: mkdir {{ outputdir }}/.installapp_myapp
+  dir = {{ outputdir }}/specs
 
-build work/.mkdir_models: mkdir work/.installapp_myapp
-  dir = work/{{ app }}/models
+build {{ outputdir }}/.mkdir_models: mkdir {{ outputdir }}/.installapp_myapp
+  dir = {{ outputdir }}/{{ app }}/models
 
-build work/.mkdir_views: mkdir work/.installapp_myapp
-  dir = work/{{ app }}/views
+build {{ outputdir }}/.mkdir_views: mkdir {{ outputdir }}/.installapp_myapp
+  dir = {{ outputdir }}/{{ app }}/views
 
-build work/.mkdir_serializers: mkdir work/.installapp_myapp
-  dir = work/{{ app }}/serializers
+build {{ outputdir }}/.mkdir_serializers: mkdir {{ outputdir }}/.installapp_myapp
+  dir = {{ outputdir }}/{{ app }}/serializers
 
-build work/.mkdir_schema: mkdir work/.installapp_myapp
-  dir = work/schema
+build {{ outputdir }}/.mkdir_schema: mkdir {{ outputdir }}/.installapp_myapp
+  dir = {{ outputdir }}/schema
 
-build work/.mkdir_tests: mkdir work/.installapp_myapp
+build {{ outputdir }}/.mkdir_tests: mkdir {{ outputdir }}/.installapp_myapp
   dir = tests/data
 
 # 9. allowed_hosts export
-build work/.allowed_hosts_export: allowed_hosts_export work/.mkdir_schema
+build {{ outputdir }}/.allowed_hosts_export: allowed_hosts_export {{ outputdir }}/.mkdir_schema
 
 # 10. allowed_hosts write
-build work/.allowed_hosts_write: allowed_hosts_write work/.allowed_hosts_export
+build {{ outputdir }}/.allowed_hosts_write: allowed_hosts_write {{ outputdir }}/.allowed_hosts_export
 
 # 11. allowed_hosts import
-build work/.allowed_hosts_import: allowed_hosts_import work/.allowed_hosts_write
+build {{ outputdir }}/.allowed_hosts_import: allowed_hosts_import {{ outputdir }}/.allowed_hosts_write
 
 # 12. urls.py patch
-build work/.patch_urls: patch_urls
+build {{ outputdir }}/.patch_urls: patch_urls
 
-build init: phony work/.startproject work/.startapp work/.installapp_export work/.installapp_replace work/.installapp_rest work/.installapp_ext work/.installapp_myapp work/.mkdir_specs work/.mkdir_models work/.mkdir_views work/.mkdir_serializers work/.mkdir_schema work/.mkdir_tests work/.allowed_hosts_export work/.allowed_hosts_write work/.allowed_hosts_import work/.patch_urls
+build init: phony {{ outputdir }}/.startproject {{ outputdir }}/.startapp {{ outputdir }}/.installapp_export {{ outputdir }}/.installapp_replace {{ outputdir }}/.installapp_rest {{ outputdir }}/.installapp_ext {{ outputdir }}/.installapp_myapp {{ outputdir }}/.mkdir_specs {{ outputdir }}/.mkdir_models {{ outputdir }}/.mkdir_views {{ outputdir }}/.mkdir_serializers {{ outputdir }}/.mkdir_schema {{ outputdir }}/.mkdir_tests {{ outputdir }}/.allowed_hosts_export {{ outputdir }}/.allowed_hosts_write {{ outputdir }}/.allowed_hosts_import {{ outputdir }}/.patch_urls
 
