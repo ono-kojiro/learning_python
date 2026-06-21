@@ -1,29 +1,29 @@
 rule startproject
-  command = amcli startproject {{ project }} --dir work/
+  command = amcli startproject {{ project }} --dir {{ outputdir }}/
 
 rule startapp
-  command = amcli startapp {{ app }} --dir work/
+  command = amcli startapp {{ app }} --dir {{ outputdir }}/
 
 rule installapp_export
-  command = amcli installapp --export-installed-apps work/{{ project }}/installed_apps.yml --project work/{{ project }}/
+  command = amcli installapp --export-installed-apps {{ outputdir }}/{{ project }}/installed_apps.yml --project {{ outputdir }}/{{ project }}/
 
 rule installapp_replace
-  command = amcli installapp --replace-installed-apps work/{{ project }}/installed_apps.yml --project work/{{ project }}/
+  command = amcli installapp --replace-installed-apps {{ outputdir }}/{{ project }}/installed_apps.yml --project {{ outputdir }}/{{ project }}/
 
 rule installapp_pkg
-  command = amcli installapp $pkg --project work/{{ project }}/
+  command = amcli installapp $pkg --project {{ outputdir }}/{{ project }}/
 
 rule mkdir
   command = mkdir -p $dir
 
 rule allowed_hosts_export
-  command = amcli edit --export work/{{ project }}/allowed_hosts.yml --project work/{{ project }} ALLOWED_HOSTS
+  command = amcli edit --export {{ outputdir }}/{{ project }}/allowed_hosts.yml --project {{ outputdir }}/{{ project }} ALLOWED_HOSTS
 
 rule allowed_hosts_write
-  command = echo "[ \"*\" ]" > work/{{ project }}/allowed_hosts.yml
+  command = echo "[ \"*\" ]" > {{ outputdir }}/{{ project }}/allowed_hosts.yml
 
 rule allowed_hosts_import
-  command = amcli edit --import work/{{ project }}/allowed_hosts.yml --project work/{{ project }} ALLOWED_HOSTS
+  command = amcli edit --import {{ outputdir }}/{{ project }}/allowed_hosts.yml --project {{ outputdir }}/{{ project }} ALLOWED_HOSTS
 
 rule patch_urls
   command = amcli patch --target urls --project {{ project }} --application {{ app }}
@@ -38,34 +38,34 @@ rule genmodel
   command = amcli genmodel -l template -o $out $in
 
 rule genadmin
-  command = amcli genadmin -o $out -l template -s work/schema/schema.json $in
+  command = amcli genadmin -o $out -l template -s {{ outputdir }}/schema/schema.json $in
 
 rule genview
   command = amcli genview -o $out -l template $in
 
 rule genserializer
-  command = amcli genserializer -o $out -l template -s work/schema/schema.json $in
+  command = amcli genserializer -o $out -l template -s {{ outputdir }}/schema/schema.json $in
 
 rule genfixture
-  command = amcli genfixture -o $out -l template -s work/schema/schema.json -n template/names.yaml $in
+  command = amcli genfixture -o $out -l template -s {{ outputdir }}/schema/schema.json -n template/names.yaml $in
 
 rule genimporter
-  command = amcli genimporter -o $out -s work/schema/schema.json $in
+  command = amcli genimporter -o $out -s {{ outputdir }}/schema/schema.json $in
 
 rule rmdb
-  command = rm -f work/db.sqlite3
+  command = rm -f {{ outputdir }}/db.sqlite3
 
 rule makemigrations
-  command = cd work && python3 manage.py makemigrations && cd ..
+  command = cd {{ outputdir }} && python3 manage.py makemigrations && cd ..
 
 rule migrate
-  command = cd work && python3 manage.py migrate && cd ..
+  command = cd {{ outputdir }} && python3 manage.py migrate && cd ..
 
 rule createsuperuser
   command = amcli createsuperuser --project {{ project }}
 
 rule loaddata
-  command = python3 work/manage.py loaddata $in
+  command = python3 {{ outputdir }}/manage.py loaddata $in
 
 rule touch
   command = touch $out

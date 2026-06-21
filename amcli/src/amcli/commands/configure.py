@@ -109,6 +109,7 @@ def run(output_file, application, project):
         "spec_jsons": spec_jsons,
         "makemigrations_list": makemigrations_list,
         "loaddata_list": loaddata_list,
+        "outputdir": outputdir,
     }
 
     # ----------------------------------------
