@@ -1,0 +1,15 @@
+---
+project: myproject
+application: myapp
+
+entities:
+  device: specs/device.yml
+  netif: specs/netif.yml
+  ipv4: specs/ipv4.yml
+  comment: specs/comment.yml
+  manager: specs/manager.yml
+  remark: specs/remark.yml
+  os: specs/os.yml
+
+outputdir: work
+
