@@ -1,0 +1,24 @@
+# Auto-generated GET test for {{ model }}
+import requests
+import pytest
+
+@pytest.mark.order(2)
+def test_get_{{ model_lower }}s(configs):
+    base = configs["base_url"]
+    list_url = base + "/api/{{ model_lower }}s/"
+
+    # GET list
+    res = requests.get(list_url)
+    assert res.status_code == 200
+
+    items = res.json()
+    assert isinstance(items, list)
+    assert len(items) > 0
+
+    item = items[0]
+    assert "id" in item
+
+    # GET detail
+    detail_url = base + "/api/{{ model_lower }}s/" + str(item["id"]) + "/"
+    res2 = requests.get(detail_url)
+    assert res2.status_code == 200

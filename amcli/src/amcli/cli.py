@@ -130,12 +130,23 @@ def genimporter(output_file, schema_path, template_files):
 
 
 @main.command(name="gentest")
+@click.argument("template_file", type=click.Path(exists=True))
 @click.option("--schema", "-s", required=True, help="Path to schema.yaml")
 @click.option("--ref", "-r", required=True, help="Path to *_ref.yaml")
 @click.option("--output", "-o", required=True, help="Output test file")
-def gentest(schema, ref, output):
+def gentest(template_file, schema, ref, output):
+    """
+    Generate a test file from a Jinja2 template.
+
+    TEMPLATE_FILE は test_01_create.j2 / test_02_crud.j2 / test_03_delete.j2 など。
+    """
     from amcli.commands.generate_test import run
-    run(schema_yaml=schema, ref_yaml=ref, output_file=output)
+    run(
+        schema_yaml=schema,
+        ref_yaml=ref,
+        template_file=template_file,
+        output_file=output,
+    )
 
 @main.command()
 def generate():

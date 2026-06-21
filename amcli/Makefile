@@ -34,6 +34,9 @@ SERIALIZER_PY = $(addprefix $(SERIALIZER_DIR)/,  $(notdir $(ENTITIES:=_serialize
 FIXTURE_YML = $(addprefix $(FIXTURE_DIR)/test_, $(notdir $(ENTITIES:=-fixtures.yaml)))
 
 TEST_PY = $(addprefix tests/test_, $(notdir $(ENTITIES:=.py)))
+
+TEST_GENERATED_PY = $(addprefix tests/test_, $(ENTITIES:=_01_create.py))
+
 	
 ALLOWED_HOSTS_YML = $(WORK_DIR)/$(PROJECT)/allowed_hosts.yml
 	
@@ -43,9 +46,19 @@ APPS_PY = $(WORK_DIR)/$(APP)/apps.py
 MODELS_INIT_PY = $(WORK_DIR)/$(APP)/models/__init__.py
 
 TEMPLATE_DIR = template
-	
+
+# ex.
+#   in:  template/test_generated_get.j2
+#   out:    tests/test_generated_get_device.py
+#
+TEST_TEMPLATES_J2 = $(TEMPLATE_DIR)/test_generated_get.j2
+TEST_SCRIPTS_PY = $(addprefix tests/$(notdir $(TEST_TEMPLATES_J2:.j2=))_, $(ENTITIES:=.py))
 
 all : generate migrate loaddata
+
+debug :
+	@echo TEST_SCRIPTS_PY is $(TEST_SCRIPTS_PY)
+
 
 init : startproject startapp installapp edit
 
@@ -60,10 +73,13 @@ help :
 	@echo "usage: make TARGET"
 	@echo "  target:"
 	@echo "    prepare"
-	@echo "    init / generate / migrate / loaddata / test"
+	@echo "    init / generate / migrate / loaddata"
+	@echo "    start / stop / restart"
+	@echo "    test"
 
 prepare :
 	python3 -m pip install -r requirements.txt
+	python3 -m pip install -e .
 
 startproject-orig :
 	django-admin startproject $(PROJECT) work
@@ -113,14 +129,6 @@ edit :
 	grep -q "path('api/', include('myapp.urls_api'))" $$urls_py || \
 	sed -i "/^]/i\    path('api/', include('myapp.urls_api'))," $$urls_py
 
-
-debug :
-	@echo SPEC_YAML is $(SPEC_YAML)
-	@echo SPEC_JSON is $(SPEC_JSON)
-	@echo MODEL_DIR is $(MODEL_DIR)
-	@echo MODEL_PY is $(MODEL_PY)
-	@echo OUT_SPEC_DIR is $(OUT_SPEC_DIR)
-	@echo FIXTURE_YML is $(FIXTURE_YML)
 
 cmp2ref : $(SPEC_JSON)
 
@@ -215,7 +223,6 @@ start :
 	rm -f nohup.out; \
 	nohup python3 manage.py runserver_plus \
       --cert-file $(TOP_DIR)/$${CERTFILE} $${SERVER_ADDR_PORT} &
-	head nohup.out
 
 stop :
 	pkill -f 'python3 manage.py runserver_plus'
@@ -225,13 +232,26 @@ restart : stop start
 status :
 	ps -ef | grep 'python3 manage.py runserver_plus'
 
-gentest : $(TEST_PY)
+gentest : $(TEST_SCRIPTS_PY)
 
 tests/test_%.py : $(OUT_SPEC_DIR)/%.json
-	amcli gentest -o $@ -s $(SCHEMA_JSON) --ref $<
+	amcli gentest -o $@ -s $(SCHEMA_JSON) --ref $< template/test_generated.j2
+
+tests/test_%_01_create.py : $(OUT_SPEC_DIR)/%.json
+	amcli gentest template/test_01_create.j2 \
+		--schema $(SCHEMA_JSON) \
+		--ref work/specs/$*.json \
+		--output tests/test_$*_01_create.py; \
+
+tests/test_generated_get_%.py : $(TEMPLATE_DIR)/test_generated_get.j2
+	amcli gentest \
+		--schema $(SCHEMA_JSON) \
+		--ref work/specs/$*.json \
+		--output $@ \
+		$<
 
 clean-test :
-	rm -rf $(TEST_PY)
+	rm -rf $(TEST_SCRIPTS_PY)
 
 test :
 	$(MAKE) gentest
