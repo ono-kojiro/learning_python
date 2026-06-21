@@ -1,0 +1,20 @@
+Comment:
+  meta:
+    verbose_name: "Comment"
+    verbose_name_plural: "Comments"
+
+  fields:
+    comment_id:
+      type: String
+      unique: true
+      max_length: 100
+
+    text:
+      type: String
+      max_length: 500
+
+    device:
+      type: OneToOne
+      to: Device
+      nullable: false
+

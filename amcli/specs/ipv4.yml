@@ -1,0 +1,29 @@
+---
+IPv4:
+  meta:
+    verbose_name: "IPv4"
+    verbose_name_plural: "IPv4"
+
+  fields:
+    ipv4_id:
+      type: String
+      unique: true
+      max_length: 100
+
+    method:
+      type: String
+      max_length: 16
+      default: "manual"
+
+    addresses:
+      type: List<String>
+      help: "CIDR Format (ex. [ 192.168.1.72/24 ])"
+
+    gateway:
+      type: String
+      max_length: 64
+
+    dns:
+      type: List<String>
+      help: "list of DNS servers"
+

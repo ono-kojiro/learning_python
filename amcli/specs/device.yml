@@ -1,0 +1,27 @@
+---
+Device:
+  category: resource   # ★ 追加
+
+  meta:
+    verbose_name: "Device"
+    verbose_name_plural: "Devices"
+
+  fields:
+    device_id:
+      type: String
+      unique: true
+      max_length: 100
+
+    name:
+      type: String
+      max_length: 100
+
+    serial_number:
+      type: String
+      max_length: 100
+
+    # Device owns many NetIF
+    netifs:
+      type: OneToMany
+      to: NetIF
+      nullable: false   # Device が消えたら NetIF も消える（CASCADE）
