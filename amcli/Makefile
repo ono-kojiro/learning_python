@@ -282,6 +282,5 @@ clean :
 	$(MAKE) clean-test
 
 mclean :
-	-$(MAKE) stop
-	rm -rf work
+	amcli mclean
 

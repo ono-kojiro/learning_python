@@ -191,6 +191,21 @@ def createsuperuser_cmd(project):
     path = run(project=project)
     click.echo(f"Superuser created via {path}")
 
+@main.command(name="mclean")
+def mclean_cmd():
+    """
+    Maintainer clean: remove all generated files under outputdir.
+    """
+    from amcli.commands.mclean import run
+    path = run()
+    click.echo(f"Maintainer clean completed: {path}")
+
+@main.command(name="maintainer-clean")
+def maintainer_clean_cmd():
+    from amcli.commands.mclean import run
+    path = run()
+    click.echo(f"Maintainer clean completed: {path}")
+
 @main.command()
 def generate():
     from amcli.commands.generate import run
