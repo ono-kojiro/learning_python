@@ -1,6 +1,3 @@
 {% for name in spec_order %}
-build tests/data/test_{{
-    name
-}}-fixtures.yaml:   genfixture work/specs/{{ name }}.json
+build tests/data/test_{{ name }}-fixtures.yaml: genfixture work/specs/{{ name }}.json | work/schema/schema.json
 {% endfor %}
-

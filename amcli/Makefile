@@ -61,7 +61,7 @@ TEST_SCRIPTS_PY = $(foreach tmpl,$(TEST_TEMPLATES_J2), \
                     $(foreach e,$(ENTITIES), \
                       tests/$(basename $(notdir $(tmpl)))_$(e).py))
 
-all : generate migrate loaddata
+all : build
 
 debug :
 	@echo TEST_TEMPLATES_J2 = $(TEST_TEMPLATES_J2)
@@ -82,7 +82,7 @@ configure :
 		--output build.ninja
 
 build :
-	ninja -j1
+	ninja
 
 config : configure
 

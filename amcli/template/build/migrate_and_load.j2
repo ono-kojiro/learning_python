@@ -3,4 +3,4 @@ build work/.rmdb: rmdb work/schema/schema.json
 build work/.migrate: migrate work/.makemigrations
 build work/.createsuperuser: createsuperuser work/.migrate
 
-build work/.loaddata: loaddata {{ loaddata_list | join(" ") }}
+build work/.loaddata: loaddata {{ loaddata_list | join(" ") }} | work/.migrate

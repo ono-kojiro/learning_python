@@ -51,8 +51,7 @@ build {{ outputdir }}/.allowed_hosts_write: allowed_hosts_write {{ outputdir }}/
 build {{ outputdir }}/.allowed_hosts_import: allowed_hosts_import {{ outputdir }}/.allowed_hosts_write
 
 # 12. urls.py patch
-build {{ outputdir }}/.patch_urls: patch_urls
+# ★ ここだけ修正（startproject → installapp_myapp）
+build {{ outputdir }}/.patch_urls: patch_urls {{ outputdir }}/.installapp_myapp
 
-build init: phony {{ outputdir }}/.startproject {{ outputdir }}/.startapp {{ outputdir }}/.installapp_export {{ outputdir }}/.installapp_replace {{ outputdir }}/.installapp_rest {{ outputdir }}/.installapp_ext {{ outputdir }}/.installapp_myapp {{ outputdir }}/.mkdir_specs {{ outputdir }}/.mkdir_models {{ outputdir }}/.mkdir_views {{ outputdir }}/.mkdir_serializers {{ outputdir }}/.mkdir_schema {{ outputdir }}/.mkdir_tests {{ outputdir }}/.allowed_hosts_export {{ outputdir }}/.allowed_hosts_write {{ outputdir }}/.allowed_hosts_import {{ outputdir }}/.patch_urls
-
-build mclean: mclean
+build init: phony {{ outputdir }}/.startproject {{ outputdir }}/.startapp {{ outputdir }}/.installapp_export {{ outputdir }}/.installapp_replace {{ outputdir }}/.installapp_rest {{ outputdir }}/.installapp_ext {{ outputdir }}/.installapp_myapp {{ outputdir }}/.mkdir_specs {{ outputdir }}/.mkdir_models {{ outputdir }}/.mkdir_views {{ outputdir }}/.mkdir_serializers {{ outputdir }}/.mkdir_schema {{ outputdir }}/.mkdir_tests {{ outputdir }}/.allowed_hosts_export {{ outputdir }}/.allowed_hosts_write {{ outputdir }}/.allowed_hosts_import
