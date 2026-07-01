@@ -1,5 +1,4 @@
 *~
-work/
 __pycache__/
 *.egg-info/
 .env
@@ -7,4 +6,5 @@ __pycache__/
 *.key
 *.pem
 build.ninja
+*.json
 

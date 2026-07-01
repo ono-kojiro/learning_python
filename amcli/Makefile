@@ -1,286 +1,86 @@
-ifneq (,$(wildcard .env))
-  include .env
-  export $(shell sed 's/=.*//' .env)
-endif
+TOP_DIR = .
+include $(TOP_DIR)/common.mk
 
-#ENTITIES = Device NetIF Comment Manager Remark
-ENTITIES = device netif ipv4 comment manager remark os
-
-TOP_DIR = $(shell pwd)
-
-PROJECT = myproject
-APP     = myapp
-
-IN_SPEC_DIR  = specs
-WORK_DIR     = work
-OUT_SPEC_DIR = $(WORK_DIR)/specs
-SCHEMA_DIR   = $(WORK_DIR)/schema
-
-SPEC_YAML = $(addprefix $(IN_SPEC_DIR)/, $(ENTITIES:=.yml))
-SPEC_JSON := $(addprefix $(OUT_SPEC_DIR)/, $(notdir $(SPEC_YAML:.yml=.json)))
+all : init generate migrate loaddata
 	
-SCHEMA_JSON = $(SCHEMA_DIR)/schema.json
+env :
+	python3 -m venv myenv
+	. ./myenv/bin/activate && pip3 install -r requirements.txt
 
-MODEL_DIR = $(WORK_DIR)/$(APP)/models
-ADMIN_DIR = $(WORK_DIR)/$(APP)/admin
-VIEW_DIR = $(WORK_DIR)/$(APP)/views
-SERIALIZER_DIR = $(WORK_DIR)/$(APP)/serializers
-FIXTURE_DIR = tests/data
+install :
+	. ./myenv/bin/activate && pip3 install -e .
 
-MODEL_PY  = $(addprefix $(MODEL_DIR)/, $(notdir $(ENTITIES:=_model.py)))
-ADMIN_PY  = $(addprefix $(ADMIN_DIR)/, $(notdir $(ENTITIES:=_admin.py)))
-VIEW_PY   = $(addprefix $(VIEW_DIR)/,  $(notdir $(ENTITIES:=_view.py)))
-SERIALIZER_PY = $(addprefix $(SERIALIZER_DIR)/,  $(notdir $(ENTITIES:=_serializer.py)))
-FIXTURE_YML = $(addprefix $(FIXTURE_DIR)/test_, $(notdir $(ENTITIES:=-fixtures.yaml)))
+init :
+	$(MAKE) -C $(WORK_DIR) init
 
-TEST_PY = $(addprefix tests/test_, $(notdir $(ENTITIES:=.py)))
-
-TEST_GENERATED_PY = $(addprefix tests/test_, $(ENTITIES:=_01_create.py))
-
-	
-ALLOWED_HOSTS_YML = $(WORK_DIR)/$(PROJECT)/allowed_hosts.yml
-	
-URLS_API_PY     = $(WORK_DIR)/$(APP)/urls_api.py
-LOADER_PY = $(WORK_DIR)/$(APP)/loader.py
-APPS_PY = $(WORK_DIR)/$(APP)/apps.py
-MODELS_INIT_PY = $(WORK_DIR)/$(APP)/models/__init__.py
-
-TEMPLATE_DIR = template
-
-# ex.
-#   in:  template/test_generated_get.j2
-#   out:    tests/test_generated_get_device.py
-#
-TEST_TEMPLATES_J2 = \
-	$(TEMPLATE_DIR)/test_generated_get.j2 \
-	$(TEMPLATE_DIR)/test_generated_create.j2 \
-	$(TEMPLATE_DIR)/test_generated_delete.j2 \
-	$(TEMPLATE_DIR)/test_generated_update.j2
-
-TEST_SCRIPTS_PY = $(foreach tmpl,$(TEST_TEMPLATES_J2), \
-                    $(foreach e,$(ENTITIES), \
-                      tests/$(basename $(notdir $(tmpl)))_$(e).py))
-
-all : build
-
-debug :
-	@echo TEST_TEMPLATES_J2 = $(TEST_TEMPLATES_J2)
-	@echo TEST_SCRIPTS_PY is $(TEST_SCRIPTS_PY)
-
-
-init : startproject startapp installapp edit
-
-generate : cmp2ref schema generate-init model admin view serializer fixture importer 
-
-importer : url loader apps models_init
-
-shell :
-	cd $(WORK_DIR) && python3 manage.py shell
-
-configure :
-	amcli configure --project myproject --application myapp \
-		--output build.ninja
-
-build :
-	ninja
-
-config : configure
+generate :spec schema model admin view serializer fixture importer
 
 help :
 	@echo "usage: make TARGET"
 	@echo "  target:"
-	@echo "    prepare"
-	@echo "    init / generate / migrate / loaddata"
-	@echo "    start / stop / restart"
-	@echo "    test"
+	@echo "    init"
+	@echo "    generate ( spec schema model admin view serializer "
+	@echo "       fixture importer )"
+	@echo ""
+	@echo "    clean"
+spec :
+	$(MAKE) -C specs
 
-prepare :
-	python3 -m pip install -r requirements.txt
-	python3 -m pip install -e .
+schema:
+	$(MAKE) -C schema
 
-startproject-orig :
-	django-admin startproject $(PROJECT) work
+model :
+	$(MAKE) -C models
 
-startapp-orig :
-	cd $(WORK_DIR) && python manage.py startapp $(APP)
+admin :
+	$(MAKE) -C admins
 
-startproject :
-	amcli startproject $(PROJECT) --dir $(WORK_DIR)/
+view :
+	$(MAKE) -C views
 
-startapp :
-	amcli startapp     $(APP) --dir $(WORK_DIR)/
+serializer :
+	$(MAKE) -C serializers
 
-installapp :
-	amcli installapp \
-		--export-installed-apps work/myproject/installed_apps.yml \
-		--project $(WORK_DIR)/$(PROJECT)/
-	amcli installapp \
-		--replace-installed-apps work/myproject/installed_apps.yml \
-		--project $(WORK_DIR)/$(PROJECT)/
-	
-	amcli installapp rest_framework    --project $(WORK_DIR)/$(PROJECT)/
-	amcli installapp django_extensions --project $(WORK_DIR)/$(PROJECT)/
-	amcli installapp $(APP) --project $(WORK_DIR)/$(PROJECT)/
-	
-	mkdir -p $(OUT_SPEC_DIR)
-	mkdir -p $(MODEL_DIR)
-	mkdir -p $(VIEW_DIR)
-	mkdir -p $(SERIALIZER_DIR)
-	mkdir -p $(OUT_SPEC_DIR)
-	mkdir -p $(SCHEMA_DIR)
-	mkdir -p $(FIXTURE_DIR)
+fixture :
+	$(MAKE) -C fixtures
 
-edit :
-	amcli edit --export $(ALLOWED_HOSTS_YML) \
-		--project $(WORK_DIR)/$(PROJECT) ALLOWED_HOSTS
-	
-	echo "[ \"*\" ]" > $(ALLOWED_HOSTS_YML)
-	
-	amcli edit --import $(ALLOWED_HOSTS_YML) \
-		--project $(WORK_DIR)/$(PROJECT) ALLOWED_HOSTS
-	
-	urls_py="$(WORK_DIR)/$(PROJECT)/urls.py"; \
-	target="from django.urls import path, include"; \
-	grep -q "$$target" $$urls_py || \
-	sed -i "s/from django.urls import path/$$target/" $$urls_py; \
-	grep -q "path('api/', include('myapp.urls_api'))" $$urls_py || \
-	sed -i "/^]/i\    path('api/', include('myapp.urls_api'))," $$urls_py
-
-
-cmp2ref : $(SPEC_JSON)
-
-$(OUT_SPEC_DIR)/%.json : $(IN_SPEC_DIR)/%.yml
-	amcli cmp2ref --spec $< -o $@ $(SPEC_YAML)
-
-schema : $(SCHEMA_JSON)
-
-$(SCHEMA_JSON) :
-	amcli genschema -o $@ \
-		--project $(PROJECT) \
-		--application $(APP) \
-		$(SPEC_JSON)
-
-generate-init :
-	components="models admin views serializers"; \
-	for component in $${components}; do \
-		mkdir -p $(WORK_DIR)/$(APP)/$${component}/ ; \
-    	rm -rf   $(WORK_DIR)/$(APP)/$${component}.py ; \
-  	done
-
-model: $(MODEL_PY)
-
-$(MODEL_DIR)/%_model.py : $(OUT_SPEC_DIR)/%.json
-	amcli genmodel -l $(TEMPLATE_DIR) -o $@ $<
-
-admin: $(ADMIN_PY)
-
-$(ADMIN_DIR)/%_admin.py : $(OUT_SPEC_DIR)/%.json
-	amcli genadmin -o $@ -l $(TEMPLATE_DIR) -s $(SCHEMA_JSON) $<
-
-view : $(VIEW_PY)
-
-$(VIEW_DIR)/%_view.py : $(OUT_SPEC_DIR)/%.json
-	amcli genview -o $@ -l $(TEMPLATE_DIR) $<
-
-serializer : $(SERIALIZER_PY)
-
-$(SERIALIZER_DIR)/%_serializer.py : $(OUT_SPEC_DIR)/%.json
-	amcli genserializer -o $@ -l $(TEMPLATE_DIR) -s $(SCHEMA_JSON) $<
-
-fixture: $(FIXTURE_YML)
-
-$(FIXTURE_DIR)/test_%-fixtures.yaml : $(OUT_SPEC_DIR)/%.json
-	amcli genfixture -o $@ -l $(TEMPLATE_DIR) -s $(SCHEMA_JSON) \
-		-n template/names.yaml $<
-
-
-url : $(URLS_API_PY)
-
-$(URLS_API_PY) : template/urls.j2 $(SCHEMA_JSON)
-	amcli genimporter -o $@ -s $(SCHEMA_JSON) $<
-
-loader : $(LOADER_PY)
-
-$(LOADER_PY) : template/loader.j2 $(SCHEMA_JSON)
-	amcli genimporter -o $@ -s $(SCHEMA_JSON) $<
-
-apps: $(APPS_PY)
-
-$(APPS_PY) : template/apps.py.j2 $(SCHEMA_JSON)
-	amcli genimporter -o $@ -s $(SCHEMA_JSON) $<
-
-models_init : $(MODELS_INIT_PY)
-
-$(MODELS_INIT_PY) : template/models_init.j2 $(SCHEMA_JSON)
-	amcli genimporter -o $@ -s $(SCHEMA_JSON) $< 
+importer :
+	$(MAKE) -C importers
 
 migrate :
-	rm -f $(WORK_DIR)/db.sqlite3
-	cd $(WORK_DIR) && python3 manage.py makemigrations
-	cd $(WORK_DIR) && python3 manage.py migrate
-
-	cd $(WORK_DIR) && \
-		env $$(grep -v '^#' $(TOP_DIR)/.env | xargs) \
-		python3 manage.py createsuperuser --noinput || true
+	$(MAKE) -C work migrate
 
 loaddata :
-	@models=`cat work/schema/schema.json | jq -r '.load_order[]' | tr '[:upper:]' '[:lower:]'`; \
-	echo "MODELS: $${models}"; \
-	cd work; \
-	for model in $${models}; do \
-		echo $${model}; \
-		fixture=$(TOP_DIR)/tests/data/test_$${model}-fixtures.yaml; \
-		echo $${fixture}; \
-		python3 manage.py loaddata $${fixture}; \
-	done 
+	$(MAKE) -C work loaddata
 
 start :
-	@set -a; . ./.env; set +a; \
-	cd $(WORK_DIR); \
-	rm -f nohup.out; \
-	nohup python3 manage.py runserver_plus \
-      --cert-file $(TOP_DIR)/$${CERTFILE} $${SERVER_ADDR_PORT} &
+	$(MAKE) -C work start
 
 stop :
-	-pkill -f 'python3 manage.py runserver_plus'
+	$(MAKE) -C work stop
 
-restart : stop start
+restart :
+	$(MAKE) -C work restart
 
-status :
-	ps -ef | grep 'python3 manage.py runserver_plus'
-
-gentest : $(TEST_SCRIPTS_PY)
-
-define GENTEST_RULE
-$(1)_rule:
-tests/$(basename $(notdir $(1)))_%.py : $(1)
-	amcli gentest \
-		--schema $(SCHEMA_JSON) \
-		--ref work/specs/$$*.json \
-		--output $$@ \
-		$$<
-endef
-
-# 各テンプレートに対してルールを生成
-$(foreach tmpl,$(TEST_TEMPLATES_J2),$(eval $(call GENTEST_RULE,$(tmpl))))
-
-clean-test :
-	rm -rf $(TEST_SCRIPTS_PY)
+gentest :
+	$(MAKE) -C tests gentest
 
 test :
-	$(MAKE) gentest
 	pytest -s
 
 clean :
-	rm -f $(SPEC_JSON)
-	rm -f $(MODEL_PY)
-	rm -f $(ADMIN_PY)
-	rm -f $(VIEW_PY)
-	rm -f $(SERIALIZER_PY)
-	rm -f $(FIXTURE_YML)
-	rm -f $(URLS_API_PY) $(LOADER_PY) $(APPS_PY) $(MODELS_INIT_PY)
-	$(MAKE) clean-test
+	$(MAKE) -C importers clean
+	$(MAKE) -C fixtures clean
+	$(MAKE) -C serializers clean
+	$(MAKE) -C views   clean
+	$(MAKE) -C admins  clean
+	$(MAKE) -C models  clean
+	$(MAKE) -C schema  clean
+	$(MAKE) -C specs   clean
+	$(MAKE) -C work clean
 
-mclean :
-	amcli mclean
+.PHONY : \
+	all clean test schema
+
+.EXPORT_ALL_VARIABLES:
 
