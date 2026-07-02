@@ -1,6 +1,8 @@
 TOP_DIR = ..
 include ../common.mk
 
+$(shell mkdir -p $(SCHEMA_DIR))
+
 all : schema
 
 schema : $(SCHEMA_JSON)

@@ -11,7 +11,7 @@ SPEC_DIR   = $(WORK_DIR)/specs
 SPECS_YML  = $(wildcard $(INPUT_DIR)/*.yml)
 SPECS_JSON = $(addprefix $(SPEC_DIR)/, $(notdir $(SPECS_YML:.yml=.json)))
 
-SCHEMA_DIR  = $(TOP_DIR)/schema
+SCHEMA_DIR  = $(WORK_DIR)/schema
 SCHEMA_JSON = $(SCHEMA_DIR)/schema.json
 
 IMPORTER_DIR = $(TOP_DIR)/importers

@@ -8,17 +8,27 @@ from amcli.utils.settings_editor import (
 def run(setting_name, project_dir, export_yaml, import_yaml, target_file=None):
     # --- 編集対象ファイルを決定 ---
     if target_file:
-        # 例: urls.py を直接指定
         settings_path = Path(target_file).resolve()
         project_path = settings_path.parent
     else:
-        # 従来通り settings.py を対象にする
         project_path = Path(project_dir).resolve()
         settings_path = project_path / "settings.py"
 
     # --- export ---
     if export_yaml:
-        values = extract_setting_list(settings_path, setting_name)
+        try:
+            # 1回目: settings.py にリストがある場合
+            values = extract_setting_list(settings_path, setting_name)
+        except RuntimeError:
+            # 2回目以降: YAML 読み込み式になっている場合
+            yaml_path = project_path / f"{setting_name.lower()}.yml"
+            if yaml_path.exists():
+                values = yaml.safe_load(yaml_path.read_text(encoding="utf-8"))
+            else:
+                raise RuntimeError(
+                    f"{setting_name} not found in settings.py and no YAML file exists"
+                )
+
         Path(export_yaml).write_text(
             yaml.dump(values, allow_unicode=True, sort_keys=False),
             encoding="utf-8"
