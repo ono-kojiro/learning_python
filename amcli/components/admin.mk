@@ -3,16 +3,14 @@ include ../common.mk
 
 ADMINS_PY = $(addprefix $(ADMIN_DIR)/, $(notdir $(SPECS_JSON:.json=_admin.py)))
 
-all : admin copy
+$(shell mkdir -p $(ADMIN_DIR))
+
+all : admin
 
 admin : $(ADMINS_PY)
 
-$(ADMIN_DIR)/%_admin.py : $(SPEC_DIR)/%.json
+$(ADMIN_DIR)/%_admin.py : $(SPEC_DIR)/%.json $(SCHEMA_JSON)
 	amcli genadmin -l $(TEMPLATE_DIR) -o $@ -s $(SCHEMA_JSON) $<
-
-copy :
-	mkdir -p $(WORK_DIR)/$(APPLICATION)/admin
-	cp -f $(ADMINS_PY) $(WORK_DIR)/$(APPLICATION)/admin/
 
 clean :
 	rm -f $(ADMINS_PY)

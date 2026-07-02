@@ -3,49 +3,35 @@ include $(TOP_DIR)/common.mk
 
 all : init generate migrate loaddata
 	
-env :
-	python3 -m venv myenv
-	. ./myenv/bin/activate && pip3 install -r requirements.txt
+prepare :
+	python3 -m pip install -r requirements.txt
 
 install :
-	. ./myenv/bin/activate && pip3 install -e .
-
-init :
-	$(MAKE) -C $(WORK_DIR) init
-
-generate :spec schema model admin view serializer fixture importer
+	python3 -m pip install -e .
 
 help :
 	@echo "usage: make TARGET"
 	@echo "  target:"
-	@echo "    init"
+	@echo "    prepare"
+	@echo "    install"
+	@echo ""
 	@echo "    generate ( spec schema model admin view serializer "
-	@echo "       fixture importer )"
+	@echo "       fixture importer gentest )"
+	@echo ""
+	@echo "    migrate"
+	@echo "    loaddata"
+	@echo ""
+	@echo "    start"
+	@echo "    test"
+	@echo ""
 	@echo ""
 	@echo "    clean"
-spec :
-	$(MAKE) -C specs
 
-schema:
-	$(MAKE) -C schema
+init :
+	$(MAKE) -C work init
 
-model :
-	$(MAKE) -C models
-
-admin :
-	$(MAKE) -C admins
-
-view :
-	$(MAKE) -C views
-
-serializer :
-	$(MAKE) -C serializers
-
-fixture :
-	$(MAKE) -C fixtures
-
-importer :
-	$(MAKE) -C importers
+generate :
+	$(MAKE) -C components
 
 migrate :
 	$(MAKE) -C work migrate
@@ -66,17 +52,13 @@ gentest :
 	$(MAKE) -C tests gentest
 
 test :
+	$(MAKE) start
+	sleep 1
 	pytest -s
+	$(MAKE) stop
 
 clean :
-	$(MAKE) -C importers clean
-	$(MAKE) -C fixtures clean
-	$(MAKE) -C serializers clean
-	$(MAKE) -C views   clean
-	$(MAKE) -C admins  clean
-	$(MAKE) -C models  clean
-	$(MAKE) -C schema  clean
-	$(MAKE) -C specs   clean
+	$(MAKE) -C components clean
 	$(MAKE) -C work clean
 
 .PHONY : \

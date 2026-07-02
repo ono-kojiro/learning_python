@@ -5,9 +5,6 @@ all : schema
 
 schema : $(SCHEMA_JSON)
 
-debug :
-	echo $(SCHEMA_JSON)
-
 $(SCHEMA_JSON) : $(SPECS_JSON)
 	amcli genschema -o $@ \
 		--project $(PROJECT) --application $(APPLICATION) $(SPECS_JSON)

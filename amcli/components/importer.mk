@@ -1,12 +1,12 @@
 TOP_DIR = ..
 include $(TOP_DIR)/common.mk
 
-URLS_API_PY = urls_api.py
-LOADER_PY   = loader.py
-APPS_PY     = apps.py
-MODELS_INIT_PY = models_init.py
+URLS_API_PY = $(WORK_DIR)/$(APPLICATION)/urls_api.py
+LOADER_PY   = $(WORK_DIR)/$(APPLICATION)/loader.py
+APPS_PY     = $(WORK_DIR)/$(APPLICATION)/apps.py
+MODELS_INIT_PY = $(WORK_DIR)/$(APPLICATION)/models/__init__.py
 
-all : init url loader apps models_init copy
+all : init url loader apps models_init
 
 url : $(URLS_API_PY)
 
@@ -34,12 +34,6 @@ init :
 		mkdir -p $(WORK_DIR)/$(APPLICATION)/$${component}/ ; \
 		rm -rf   $(WORK_DIR)/$(APPLICATION)/$${component}.py ; \
 	done
-
-copy :
-	cp -f $(URLS_API_PY) $(WORK_DIR)/$(APPLICATION)/
-	cp -f $(LOADER_PY)   $(WORK_DIR)/$(APPLICATION)/
-	cp -f $(APPS_PY)     $(WORK_DIR)/$(APPLICATION)/
-	cp -f $(MODELS_INIT_PY) $(WORK_DIR)/$(APPLICATION)/models/__init__.py
 
 clean :
 	rm -f $(URLS_API_PY)
