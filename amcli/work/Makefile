@@ -78,4 +78,5 @@ clean :
 	rm -rf $(APPLICATION)
 	rm -f db.sqlite3
 	rm -f nohup.out
+	rm -rf $(SCHEMA_DIR) $(SPEC_DIR)
 

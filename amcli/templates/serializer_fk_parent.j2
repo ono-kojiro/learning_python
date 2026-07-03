@@ -13,8 +13,12 @@ class {{ model }}Serializer(serializers.ModelSerializer):
     {%- endif %}
 {%- endfor %}
 
+{# --- OneToMany の逆参照だけ追加 --- #}
 {%- for other_model in reverse_dependencies.get(model, []) %}
+    {%- set rel = reverse_dependencies_detail.get(other_model) %}
+    {%- if rel and rel.type == "OneToMany" %}
     {{ other_model.lower() }}s = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    {%- endif %}
 {%- endfor %}
 
     class Meta:

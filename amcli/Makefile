@@ -32,6 +32,7 @@ init :
 
 generate :
 	$(MAKE) -C components
+	$(MAKE) -C tests gentest
 
 migrate :
 	$(MAKE) -C work migrate
@@ -48,9 +49,6 @@ stop :
 restart :
 	$(MAKE) -C work restart
 
-gentest :
-	$(MAKE) -C tests gentest
-
 test :
 	$(MAKE) start
 	sleep 1
@@ -60,6 +58,7 @@ test :
 clean :
 	$(MAKE) -C components clean
 	$(MAKE) -C work clean
+	$(MAKE) -C tests clean
 
 .PHONY : \
 	all clean test schema

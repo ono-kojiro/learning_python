@@ -9,6 +9,13 @@ def read_yaml(path):
     with open(path, "r", encoding="utf-8") as fp:
         return yaml.safe_load(fp)
 
+def compute_fk_create_order(model_name, schema):
+    deps = schema["dependencies"].get(model_name, [])
+    load_order = schema["load_order"]
+
+    # load_order の順番を維持しつつ、依存モデルだけを抽出
+    ordered = [m for m in load_order if m in deps]
+    return ordered
 
 def run(schema_yaml, ref_yaml, template_file, output_file):
     # --- ref.yaml（テスト対象モデル） ---
@@ -23,12 +30,13 @@ def run(schema_yaml, ref_yaml, template_file, output_file):
     load_order = schema["load_order"]
     all_dependencies = schema["all_dependencies"]          # ★ 全依存（transitive）
     reverse_dependencies = schema["reverse_dependencies"]  # ★ 逆方向依存
+    dependencies = schema["dependencies"]                  # ★ 直接依存（Borrow → User, Book）
 
     # このモデルが依存する全モデル（Device → NetIF → IPv4 など）
     deps = all_dependencies.get(model, [])
 
     # load_order に従って FK 作成順序を決定
-    fk_create_order = [m for m in load_order if m in deps]
+    fk_create_order = compute_fk_create_order(model, schema)
 
     # --- Jinja2 テンプレート ---
     env = Environment(
@@ -46,7 +54,10 @@ def run(schema_yaml, ref_yaml, template_file, output_file):
         fields=fields,
         fields_json=repr(fields),
         fk_create_order=fk_create_order,
-        reverse_deps=reverse_dependencies,   # ★ テンプレートへ渡す
+        reverse_deps=reverse_dependencies,
+        dependencies=dependencies,            # ★ 追加：テンプレートで使える
+        all_dependencies=all_dependencies,    # ★ 追加：テンプレートで使える
+        load_order=load_order                 # ★ 追加：テンプレートで使える
     )
 
     # --- 出力 ---

@@ -1,0 +1,21 @@
+---
+Publisher:
+  meta:
+    verbose_name: "Publisher"
+    verbose_name_plural: "Publishers"
+
+  fields:
+    publisher_id:
+      type: String
+      unique: true
+      max_length: 100
+
+    name:
+      type: String
+      max_length: 255
+
+    address:
+      type: String
+      max_length: 500
+      nullable: true
+

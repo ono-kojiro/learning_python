@@ -10,13 +10,14 @@ def read_yaml(path):
 
 
 # ---------------------------------------------------------
-# amcli 用 run() 関数
+# amcli 用 run() 関数（修正版）
 # ---------------------------------------------------------
 def run(loader_dir, output_file, schema_yaml, ref_yaml):
     # schema.yaml を読み込む
     schema = read_yaml(schema_yaml)
     dependencies = schema["dependencies"]
     reverse_dependencies = schema["reverse_dependencies"]
+    reverse_dependencies_detail = schema.get("reverse_dependencies_detail", {})
     dependency_categories = schema["dependency_categories"]
     nested_map = schema.get("nested", {})   # ★ nested セクション
 
@@ -26,7 +27,7 @@ def run(loader_dir, output_file, schema_yaml, ref_yaml):
         autoescape=False
     )
 
-    # ★ これを追加する
+    # ★ FieldType をテンプレートで使えるようにする
     env.globals["FieldType"] = FieldType
 
     # ref_yaml 読み込み
@@ -52,20 +53,28 @@ def run(loader_dir, output_file, schema_yaml, ref_yaml):
     # fields_list の構築（Meta.fields 用）
     fields_list = ["id"] + list(fields.keys())
 
-    # reverse FK を追加（fk_parent の場合のみ）
+    # ---------------------------------------------------------
+    # ★ 修正ポイント：逆参照フィールドは OneToMany のみ追加する
+    # ---------------------------------------------------------
     rev = reverse_dependencies.get(model, [])
+
     for other_model in rev:
-        fields_list.append(f"{other_model.lower()}s")
+        rel = reverse_dependencies_detail.get(other_model)
+        if rel and rel.get("type") == "OneToMany":
+            fields_list.append(f"{other_model.lower()}s")
 
     # ★ nested 構造を schema.yaml から取得
     nested_fields = nested_map.get(model, [])
 
-    # テンプレートへ渡す
+    # ---------------------------------------------------------
+    # ★ reverse_dependencies_detail をテンプレートへ渡す（必須）
+    # ---------------------------------------------------------
     content = template.render(
         model=model,
         fields=fields,
         fields_list=fields_list,
         reverse_dependencies=reverse_dependencies,
+        reverse_dependencies_detail=reverse_dependencies_detail,
         nested_fields=nested_fields,
     )
 
@@ -77,4 +86,3 @@ def run(loader_dir, output_file, schema_yaml, ref_yaml):
         fp.write(content + "\n")
 
     print(f"[amcli] Generated serializer: {out_path}")
-

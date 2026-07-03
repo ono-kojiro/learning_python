@@ -1,24 +1,20 @@
 ---
-Manager:
+User:
   meta:
-    verbose_name: "Manager"
-    verbose_name_plural: "Managers"
+    verbose_name: "User"
+    verbose_name_plural: "Users"
 
   fields:
-    manager_id:
+    user_id:
       type: String
       unique: true
       max_length: 100
 
     name:
       type: String
-      max_length: 100
+      max_length: 255
 
     email:
       type: String
       max_length: 255
-
-    devices:
-      type: ManyToMany
-      to: Device
 

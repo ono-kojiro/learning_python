@@ -1,0 +1,21 @@
+---
+Author:
+  meta:
+    verbose_name: "Author"
+    verbose_name_plural: "Authors"
+
+  fields:
+    author_id:
+      type: String
+      unique: true
+      max_length: 100
+
+    name:
+      type: String
+      max_length: 255
+
+    biography:
+      type: String
+      max_length: 2000
+      nullable: true
+

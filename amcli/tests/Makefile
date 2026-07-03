@@ -41,4 +41,5 @@ $(foreach tmpl,$(TEST_TEMPLATES_J2),$(eval $(call GENTEST_RULE,$(tmpl))))
 
 clean :
 	rm -f $(TEST_SCRIPTS_PY)
+	rm -f test_generated_*.py
 

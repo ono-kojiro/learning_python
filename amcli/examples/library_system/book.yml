@@ -1,0 +1,30 @@
+---
+Book:
+  meta:
+    verbose_name: "Book"
+    verbose_name_plural: "Books"
+
+  fields:
+    book_id:
+      type: String
+      unique: true
+      max_length: 100
+
+    title:
+      type: String
+      max_length: 255
+
+    author:
+      type: OneToOne
+      to: Author
+      nullable: false
+
+    publisher:
+      type: OneToOne
+      to: Publisher
+      nullable: false
+
+    tags:
+      type: List<String>
+      nullable: true
+

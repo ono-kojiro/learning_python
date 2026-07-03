@@ -1,0 +1,26 @@
+---
+Borrow:
+  meta:
+    verbose_name: "Borrow"
+    verbose_name_plural: "Borrow"
+
+  fields:
+    borrow_id:
+      type: String
+      unique: true
+      max_length: 100
+
+    user:
+      type: OneToOne
+      to: User
+      nullable: false
+
+    book:
+      type: OneToOne
+      to: Book
+      nullable: false
+
+    borrowed_at:
+      type: DateTime
+
+

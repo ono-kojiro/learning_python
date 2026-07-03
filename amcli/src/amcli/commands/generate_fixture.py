@@ -7,6 +7,9 @@ import string
 from collections import defaultdict, deque
 from jinja2 import Environment, FileSystemLoader
 
+import datetime
+import random
+
 from amcli.utils.constants import FieldType, normalize_field_type
 
 
@@ -88,6 +91,12 @@ def generate_random_value(model, field_name, field_def, count, pk, name_data):
     if ftype.value == "GenericIPAddressField":
         return f"192.168.{random.randint(0,255)}.{random.randint(1,254)}"
 
+    if ftype == FieldType.DATETIME:
+        return random_datetime()
+
+    if ftype == FieldType.DATE:
+        return random_date()
+
     # OneToOneField
     if ftype == FieldType.ONE_TO_ONE:
         return pk
@@ -151,6 +160,19 @@ def collect_dependencies(targets, dependencies):
 
     return result
 
+def random_datetime():
+    # 適当な日時を生成（過去 10 年以内）
+    JST = datetime.timezone(datetime.timedelta(hours=9))
+    now = datetime.datetime.now(JST)
+    delta_days = random.randint(0, 3650)
+    dt = now - datetime.timedelta(days=delta_days)
+    return dt.isoformat()
+
+def random_date():
+    now = datetime.date.today()
+    delta_days = random.randint(0, 3650)
+    d = now - datetime.timedelta(days=delta_days)
+    return d.strftime("%Y-%m-%d")
 
 # ---------------------------------------------------------
 # amcli 用 run()

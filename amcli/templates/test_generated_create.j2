@@ -4,6 +4,8 @@ import string
 import requests
 import pytest
 
+import datetime
+
 model = "{{ model }}"
 model_lower = "{{ model_lower }}"
 fields = {{ fields_json }}
@@ -40,6 +42,9 @@ def _gen_dummy_value(fname, fdef):
     if ftype == "JSONField":
         return []
 
+    if ftype == "DateTimeField":
+        return datetime.datetime.now().isoformat()
+
     return None
 
 
@@ -47,20 +52,30 @@ def _gen_body(model_name, fields_def, fk_values=None):
     if fk_values is None:
         fk_values = {}
 
-    if debug :
+    if debug:
         print(f"[DEBUG] _gen_body model={model_name}")
         print(f"[DEBUG] fields_def={fields_def}")
         print(f"[DEBUG] fk_values={fk_values}")
 
     body = {}
+
     for fname, fdef in fields_def.items():
         ftype = fdef["type"]
 
+        # --- ForeignKey / OneToOneField ---
         if ftype in ("ForeignKey", "OneToOneField"):
-            body[fname] = fk_values.get(fname)
+            # ★ 正しい汎用ロジック：フィールド名ではなく "to" を使う
+            target_model = fdef["to"].lower()
+            body[fname] = fk_values.get(target_model)
 
+            if debug:
+                print(f"[DEBUG] FK field={fname}, to={target_model}, value={body[fname]}")
+
+        # --- ManyToManyField ---
         elif ftype == "ManyToManyField":
-            v = fk_values.get(fname)
+            target_model = fdef["to"].lower()
+            v = fk_values.get(target_model)
+
             if v is None:
                 body[fname] = []
             elif isinstance(v, list):
@@ -68,72 +83,83 @@ def _gen_body(model_name, fields_def, fk_values=None):
             else:
                 body[fname] = [v]
 
+            if debug:
+                print(f"[DEBUG] M2M field={fname}, to={target_model}, value={body[fname]}")
+
+        # --- Normal fields ---
         else:
             body[fname] = _gen_dummy_value(fname, fdef)
 
-    if debug :
-        print(f"[DEBUG] generated body={body}")
-    return body
+            if debug:
+                print(f"[DEBUG] Normal field={fname}, value={body[fname]}")
 
+    if debug:
+        print(f"[DEBUG] generated body={body}")
+
+    return body
 
 def _create_fk_objects(configs, fields):
     fk_values = {}
 
-    if debug :
-        print("=== DEBUG FK LOOP START for {{ model }} ===")
-    {% for target in fk_create_order %}
-    if debug :
-        print("Loop target:", "{{ target }}")
-    {% endfor %}
-    if debug :
-        print("==========================================")
+    print("\n=== DEBUG: ENTER _create_fk_objects for", model, "===")
 
-    {% for target in fk_create_order %}
-    # Create {{ target }}
-    with open("../work/specs/{{ target.lower() }}.json", "r", encoding="utf-8") as fp:
-        ref = json.load(fp)
+    # schema.json を読む
+    with open("../work/schema/schema.json", "r", encoding="utf-8") as fp:
+        schema = json.load(fp)
 
-    tbody = _gen_body("{{ target }}", ref["fields"], fk_values)
+    deps = schema["dependencies"].get(model, [])
+    print("DEBUG: deps =", deps)
 
-    if debug :
-        print("=== FK CREATE START ===")
-        print("Target model:", "{{ target }}")
-        print("ref fields:", ref["fields"])
-        print("fk_values BEFORE gen_body:", fk_values)
-        print("tbody BEFORE POST:", tbody)
-        print("========================")
+    load_order = schema["load_order"]
+    print("DEBUG: load_order =", load_order)
 
-    res_fk = requests.post(
-        configs["base_url"] + "/api/{{ target.lower() }}s/",
-        json=tbody
-    )
-    if res_fk.status_code != 201:
-        print("POST ERROR:", res_fk.status_code, res_fk.json())
-    assert res_fk.status_code == 201
+    # Borrow の依存モデル展開
+    expanded = []
+    for d in deps:
+        expanded.append(d)
+        sub = schema["dependencies"].get(d, [])
+        expanded.extend(sub)
 
-    created_id = res_fk.json()["id"]
+    print("DEBUG: expanded deps =", expanded)
 
-    # 正方向 FK
-    for fname, fdef in ref["fields"].items():
-        if fdef.get("type") in ("ForeignKey", "OneToOneField") and fdef.get("to") == "{{ target }}":
-            fk_values[fname] = created_id
+    fk_create_order = [m for m in load_order if m in expanded]
+    print("DEBUG: fk_create_order =", fk_create_order)
 
-    # 逆方向 FK
-    for dep_model in reverse_deps.get("{{ target }}", []):
-        with open(f"../work/specs/{dep_model.lower()}.json", "r", encoding="utf-8") as fp2:
-            dep_ref = json.load(fp2)
+    # 依存モデルを順番に作成
+    for target in fk_create_order:
+        print("\n--- DEBUG: Creating FK model:", target, "---")
 
-        for fname, fdef in dep_ref["fields"].items():
-            if fdef.get("to") == "{{ target }}":
-                if fdef["type"] == "ManyToManyField":
-                    fk_values.setdefault(fname, []).append(created_id)
-                else:
-                    fk_values[fname] = created_id
+        with open(f"../work/specs/{target.lower()}.json", "r", encoding="utf-8") as fp:
+            ref = json.load(fp)
 
-    {% endfor %}
+        print("DEBUG: ref fields =", ref["fields"])
 
-    if debug :
-        print("[DEBUG] fk_values AFTER FK CREATION:", fk_values)
+        tbody = {}
+        for fname, fdef in ref["fields"].items():
+            ftype = fdef["type"]
+
+            if ftype in ("ForeignKey", "OneToOneField"):
+                dep_model = fdef["to"].lower()
+                tbody[fname] = fk_values.get(dep_model)
+            else:
+                tbody[fname] = _gen_dummy_value(fname, fdef)
+
+        print("DEBUG: FK POST BODY =", tbody)
+
+        res_fk = requests.post(
+            configs["base_url"] + f"/api/{target.lower()}s/",
+            json=tbody,
+        )
+
+        print("DEBUG: FK POST STATUS =", res_fk.status_code)
+        print("DEBUG: FK POST RESPONSE =", res_fk.text)
+
+        assert res_fk.status_code == 201
+
+        fk_values[target.lower()] = res_fk.json()["id"]
+        print("DEBUG: fk_values updated =", fk_values)
+
+    print("=== DEBUG: EXIT _create_fk_objects ===\n")
     return fk_values
 
 
@@ -142,19 +168,33 @@ def test_create_{{ model_lower }}(configs):
     base = configs["base_url"]
     url = base + "/api/{{ model_lower }}s/"
 
+    print("\n=== DEBUG: ENTER test_create_{{ model }} ===")
+    print("DEBUG: POST URL =", url)
+
+    # --- FK 生成 ---
     fk_values = _create_fk_objects(configs, fields)
+    print("DEBUG: fk_values =", fk_values)
 
+    # --- 本体生成 ---
     item = _gen_body(model, fields, fk_values)
+    print("DEBUG: _gen_body output =", item)
 
+    # --- FK 埋め込み（既存ロジック） ---
     for k, v in fk_values.items():
+        print(f"DEBUG: Embedding FK: field={k}, value={v}")
         item[k] = v
 
-    if debug :
-        print("=== FINAL POST BODY for {{ model }} ===")
-        print(item)
-        print("=======================================")
+    print("\n=== FINAL POST BODY for {{ model }} ===")
+    print(item)
+    print("=======================================\n")
 
+    # --- POST ---
     res = requests.post(url, json=item)
-    if res.status_code != 201:
-        print("POST ERROR:", res.status_code, res.json())
+
+    print("DEBUG: POST STATUS =", res.status_code)
+    try:
+        print("DEBUG: POST RESPONSE =", res.json())
+    except Exception:
+        print("DEBUG: POST RESPONSE (raw) =", res.text)
+
     assert res.status_code == 201

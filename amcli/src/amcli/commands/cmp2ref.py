@@ -46,6 +46,11 @@ def convert_primitive_field(fdef):
 
     elif ftype.startswith("List"):
         out["type"] = FieldType.JSON.value
+    elif ftype == "DateTime":
+        out["type"] = FieldType.DATETIME.value
+
+    elif ftype == "Date":
+        out["type"] = FieldType.DATE.value
 
     else:
         raise ValueError(f"Unknown primitive type: {ftype}")
@@ -94,7 +99,7 @@ def build_reference_model(models, target_model):
         ftype = fdef["type"]
 
         # プリミティブ型
-        if ftype in ["String", "Text", "Int", "Float", "Bool", "ID"] or ftype.startswith("List"):
+        if ftype in ["String", "Text", "Int", "Float", "Bool", "ID", "DateTime", "Date"] or ftype.startswith("List"):
             out["fields"][fname] = convert_primitive_field(fdef)
 
         # ManyToMany
@@ -174,7 +179,7 @@ def run(spec, output_file, input_files):
 
     if target_model is None:
         print(f"[amcli] ERROR: Model '{stem}' not found in YAML keys: {yaml_keys}")
-        return
+        raise RuntimeError(f"Model '{stem}' not found")
 
     # 参照モデルを構築
     result = build_reference_model(models, target_model)

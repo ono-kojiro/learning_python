@@ -1,7 +1,5 @@
 # amcli/utils/constants.py
-
 from enum import Enum
-
 
 class FieldType(str, Enum):
     FOREIGN_KEY = "ForeignKey"
@@ -15,6 +13,10 @@ class FieldType(str, Enum):
     BOOLEAN = "BooleanField"
     JSON = "JSONField"
 
+    # ★ 追加: 日付・日時フィールド
+    DATETIME = "DateTimeField"
+    DATE = "DateField"
+
 
 def normalize_field_type(ftype: str) -> FieldType:
     """
@@ -25,4 +27,3 @@ def normalize_field_type(ftype: str) -> FieldType:
         return FieldType(ftype)
     except ValueError:
         raise ValueError(f"Unknown field type: {ftype}")
-

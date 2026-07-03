@@ -127,15 +127,22 @@ def generate_model_lines(data):
     for fname, field_def in fields.items():
         ftype = normalize_field_type(field_def["type"])
 
-        # ForeignKey / OneToOne
-        if ftype in (FieldType.FOREIGN_KEY, FieldType.ONE_TO_ONE):
-            line = render_relation_field(fname, field_def, ftype)
+        # ForeignKey
+        if ftype == FieldType.FOREIGN_KEY:
+            line = render_relation_field(fname, field_def, FieldType.FOREIGN_KEY)
             field_lines.append(line)
 
+        # OneToOne
+        elif ftype == FieldType.ONE_TO_ONE:
+            line = render_relation_field(fname, field_def, FieldType.ONE_TO_ONE)
+            field_lines.append(line)
+
+        # ManyToMany
         elif ftype == FieldType.MANY_TO_MANY:
             line = render_many_to_many_field(fname, field_def, name)
             field_lines.append(line)
 
+        # その他のフィールド
         else:
             line = render_simple_field(fname, field_def)
             field_lines.append(line)
