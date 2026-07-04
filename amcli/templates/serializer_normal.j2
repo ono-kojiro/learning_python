@@ -4,12 +4,12 @@ from myapp.models import *
 
 class {{ model }}Serializer(serializers.ModelSerializer):
 {%- for fname, fdef in fields.items() %}
-    {%- if fdef.type in [FieldType.FOREIGN_KEY, FieldType.ONE_TO_ONE] %}
-    {{ fname }} = serializers.PrimaryKeyRelatedField(queryset={{ fdef.to }}.objects.all(), required=False)
-    {%- elif fdef.type == FieldType.JSON %}
+    {%- if fdef.type == FieldType.JSON %}
     {{ fname }} = serializers.JSONField(required=False)
-    {%- elif fdef.type == FieldType.DATE_TIME %}
+    {%- elif fdef.type == FieldType.DATETIME %}
     {{ fname }} = serializers.DateTimeField(required=False)
+    {%- elif fdef.type == FieldType.DATE %}
+    {{ fname }} = serializers.DateField(required=False)
     {%- else %}
     {{ fname }} = serializers.CharField(required=False)
     {%- endif %}

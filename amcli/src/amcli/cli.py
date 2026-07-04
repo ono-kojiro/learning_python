@@ -206,6 +206,36 @@ def maintainer_clean_cmd():
     path = run()
     click.echo(f"Maintainer clean completed: {path}")
 
+@main.command(name="gentestdata")
+@click.option("-s", "--schema", required=True, help="Path to schema.json")
+@click.option("-o", "--outdir", required=True, help="Output directory for testdata")
+@click.argument("ref_json", nargs=-1)
+def gentestdata_cmd(schema, outdir, ref_json):
+    """
+    Generate testdata JSON files for API testing.
+    """
+    from amcli.commands.generate_testdata.main import run
+    run(schema_path=schema, outdir=outdir, ref_json_paths=ref_json)
+    click.echo(f"Generated testdata in {outdir}")
+
+@main.command(name="gentestscript")
+@click.option("--action", required=True, type=click.Choice(["add", "get", "update", "delete"]))
+@click.option("-o", "--out", required=True)
+@click.option("-s", "--schema", "schema_path", required=False, help="Path to schema.json")
+@click.argument("json_files", nargs=-1)
+def gentestscript_cmd(action, out, schema_path, json_files):
+    """
+    Generate test scripts (add/get/update/delete).
+    """
+    from amcli.commands.generate_testscript.main import run
+
+    run(
+        action=action,
+        outpath=out,
+        json_files=json_files,
+        schema_path=schema_path
+    )
+
 @main.command()
 def generate():
     from amcli.commands.generate import run

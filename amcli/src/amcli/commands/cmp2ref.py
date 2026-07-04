@@ -1,10 +1,8 @@
-# amcli/commands/cmp2ref.py
-
 from pathlib import Path
 import yaml
 import json
 
-from amcli.utils.constants import FieldType, normalize_field_type
+from amcli.utils.constants import FieldType
 
 
 def load_owner_models(paths):
@@ -46,6 +44,7 @@ def convert_primitive_field(fdef):
 
     elif ftype.startswith("List"):
         out["type"] = FieldType.JSON.value
+
     elif ftype == "DateTime":
         out["type"] = FieldType.DATETIME.value
 
@@ -55,7 +54,6 @@ def convert_primitive_field(fdef):
     else:
         raise ValueError(f"Unknown primitive type: {ftype}")
 
-    # 共通属性
     if "unique" in fdef:
         out["unique"] = fdef["unique"]
 
@@ -98,11 +96,9 @@ def build_reference_model(models, target_model):
     for fname, fdef in models[target_model]["fields"].items():
         ftype = fdef["type"]
 
-        # プリミティブ型
         if ftype in ["String", "Text", "Int", "Float", "Bool", "ID", "DateTime", "Date"] or ftype.startswith("List"):
             out["fields"][fname] = convert_primitive_field(fdef)
 
-        # ManyToMany
         elif ftype == "ManyToMany":
             base = fname[:-1] if fname.endswith("s") else fname
             new_name = f"{base}_ids"
@@ -111,7 +107,6 @@ def build_reference_model(models, target_model):
                 "to": fdef["to"]
             }
 
-        # OneToOne
         elif ftype == "OneToOne":
             out["fields"][fname] = {
                 "type": FieldType.ONE_TO_ONE.value,
@@ -120,7 +115,6 @@ def build_reference_model(models, target_model):
                 "blank": fdef.get("nullable", False),
             }
 
-        # OneToMany は無視（逆参照で処理）
         elif ftype == "OneToMany":
             continue
 
@@ -132,13 +126,12 @@ def build_reference_model(models, target_model):
     # -------------------------------
     for model_name, model_def in models.items():
         for fname, fdef in model_def["fields"].items():
-            ftype = fdef["type"]
+            if fdef["type"] == "OneToMany" and fdef["to"] == target_model:
 
-            pk_name, pk_field = get_pk_field(models, model_name)
-
-            if ftype == "OneToMany" and fdef["to"] == target_model:
                 nullable = fdef.get("nullable", False)
-                field_name = f"{model_name.lower()}_id"
+
+                # ★ 修正：親モデル名を FK 名にする
+                field_name = model_name.lower()
 
                 out["fields"][field_name] = {
                     "type": FieldType.FOREIGN_KEY.value,
@@ -146,6 +139,7 @@ def build_reference_model(models, target_model):
                     "on_delete": "SET_NULL" if nullable else "CASCADE",
                 }
 
+                pk_name, pk_field = get_pk_field(models, model_name)
                 if pk_field and "max_length" in pk_field:
                     out["fields"][field_name]["max_length"] = pk_field["max_length"]
 
@@ -162,12 +156,10 @@ def build_reference_model(models, target_model):
 def run(spec, output_file, input_files):
     cmp_paths = [Path(f).resolve() for f in input_files]
 
-    # spec ファイル名からモデル名を抽出
     spec_path = Path(spec)
     stem = spec_path.stem
     target_lower = stem.lower()
 
-    # 入力 YAML 群からモデル名を case-insensitive で探す
     models = load_owner_models(cmp_paths)
     yaml_keys = list(models.keys())
 
@@ -181,7 +173,6 @@ def run(spec, output_file, input_files):
         print(f"[amcli] ERROR: Model '{stem}' not found in YAML keys: {yaml_keys}")
         raise RuntimeError(f"Model '{stem}' not found")
 
-    # 参照モデルを構築
     result = build_reference_model(models, target_model)
 
     output_path = Path(output_file).resolve()

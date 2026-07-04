@@ -4,41 +4,55 @@ from jinja2 import Environment, FileSystemLoader
 
 from amcli.utils.constants import FieldType
 
+
 def read_yaml(path):
     with open(path, "r", encoding="utf-8") as fp:
         return yaml.safe_load(fp)
 
 
-# ---------------------------------------------------------
-# amcli 用 run() 関数（修正版）
-# ---------------------------------------------------------
 def run(loader_dir, output_file, schema_yaml, ref_yaml):
-    # schema.yaml を読み込む
+    # schema.yaml 読み込み
     schema = read_yaml(schema_yaml)
     dependencies = schema["dependencies"]
     reverse_dependencies = schema["reverse_dependencies"]
     reverse_dependencies_detail = schema.get("reverse_dependencies_detail", {})
     dependency_categories = schema["dependency_categories"]
-    nested_map = schema.get("nested", {})   # ★ nested セクション
+    nested_map = schema.get("nested", {})
 
     # Jinja2 環境
     env = Environment(
         loader=FileSystemLoader(loader_dir),
         autoescape=False
     )
-
-    # ★ FieldType をテンプレートで使えるようにする
     env.globals["FieldType"] = FieldType
 
-    # ref_yaml 読み込み
+    # specs JSON 読み込み
     data = read_yaml(ref_yaml)
     model = data["name"]
     fields = data["fields"]
 
-    # カテゴリ判定
+    # ---------------------------------------------------------
+    # ForeignKey / OneToOne → *_id に変換
+    # ---------------------------------------------------------
+    converted_fields = {}
+    has_fk = False
+
+    for fname, fdef in fields.items():
+        if fdef["type"] in [FieldType.FOREIGN_KEY, FieldType.ONE_TO_ONE]:
+            has_fk = True
+            converted_fields[f"{fname}_id"] = {
+                "type": FieldType.CHAR,
+                "required": False,
+                "to": fdef["to"],   # ★ FK 先モデル名を保持
+            }
+        else:
+            converted_fields[fname] = fdef
+
+    # ---------------------------------------------------------
+    # テンプレート選択
+    # ---------------------------------------------------------
     dep_cat = dependency_categories.get(model)
 
-    # テンプレート自動選択
     if dep_cat == "m2m_owner":
         template_name = "serializer_m2m_owner.j2"
     elif dep_cat == "m2m_target":
@@ -46,32 +60,40 @@ def run(loader_dir, output_file, schema_yaml, ref_yaml):
     elif dep_cat == "fk_parent":
         template_name = "serializer_fk_parent.j2"
     else:
-        template_name = "serializer_normal.j2"
+        # ★ FK を持つモデルは専用テンプレートへ
+        if has_fk:
+            template_name = "serializer_normal_fk.j2"
+        else:
+            template_name = "serializer_normal.j2"
 
     template = env.get_template(template_name)
 
+    # ---------------------------------------------------------
     # fields_list の構築（Meta.fields 用）
-    fields_list = ["id"] + list(fields.keys())
+    # ---------------------------------------------------------
+    fields_list = ["id"]
+    for fname, fdef in fields.items():
+        if fdef["type"] in [FieldType.FOREIGN_KEY, FieldType.ONE_TO_ONE]:
+            fields_list.append(f"{fname}_id")
+        else:
+            fields_list.append(fname)
 
-    # ---------------------------------------------------------
-    # ★ 修正ポイント：逆参照フィールドは OneToMany のみ追加する
-    # ---------------------------------------------------------
+    # OneToMany の逆参照フィールド追加
     rev = reverse_dependencies.get(model, [])
-
     for other_model in rev:
         rel = reverse_dependencies_detail.get(other_model)
         if rel and rel.get("type") == "OneToMany":
             fields_list.append(f"{other_model.lower()}s")
 
-    # ★ nested 構造を schema.yaml から取得
     nested_fields = nested_map.get(model, [])
 
     # ---------------------------------------------------------
-    # ★ reverse_dependencies_detail をテンプレートへ渡す（必須）
+    # テンプレートへ渡す
     # ---------------------------------------------------------
     content = template.render(
         model=model,
-        fields=fields,
+        fields=fields,                    # ★ 元の fields を渡す
+        converted_fields=converted_fields, # ★ 追加で渡す
         fields_list=fields_list,
         reverse_dependencies=reverse_dependencies,
         reverse_dependencies_detail=reverse_dependencies_detail,
