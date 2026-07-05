@@ -6,31 +6,35 @@ all : spec schema model admin view serializer fixture importer testschema
 spec :
 	$(MAKE) -f spec.mk
 
-schema:
+schema: spec
 	$(MAKE) -f schema.mk
 
-testschema:
+testschema: schema
 	$(MAKE) -f testschema.mk
 
-model :
+model : spec
 	$(MAKE) -f model.mk
 
-admin :
+admin : spec schema
 	$(MAKE) -f admin.mk
 
-view :
+view : spec
 	$(MAKE) -f view.mk
 
-serializer :
+serializer : spec schema
 	$(MAKE) -f serializer.mk
 
-fixture :
+fixture : spec schema
 	$(MAKE) -f fixture.mk
 
-importer :
+importer : schema
 	$(MAKE) -f importer.mk
 
+testschema: schema
+	$(MAKE) -f testschema.mk
+
 clean :
+	$(MAKE) -f testschema.mk clean
 	$(MAKE) -f importer.mk   clean
 	$(MAKE) -f fixture.mk    clean
 	$(MAKE) -f serializer.mk clean
@@ -39,5 +43,4 @@ clean :
 	$(MAKE) -f model.mk      clean
 	$(MAKE) -f schema.mk     clean
 	$(MAKE) -f spec.mk       clean
-
 

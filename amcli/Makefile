@@ -1,7 +1,7 @@
 TOP_DIR = .
 include $(TOP_DIR)/common.mk
 	
-all : init generate migrate
+all : init generate migrate 
 	
 prepare :
 	if [ ! -d "myenv" ]; then \
@@ -41,16 +41,18 @@ spec :
 
 schema:
 	$(MAKE) -C components schema
+
+testschema:
 	$(MAKE) -C components testschema
 
-generate :
+generate : init
 	$(MAKE) -C components
 	$(MAKE) -C tests generate
 
-migrate :
+migrate : generate
 	$(MAKE) -C work migrate
 
-loaddata :
+loaddata : generate migrate
 	$(MAKE) -C work loaddata
 
 start :

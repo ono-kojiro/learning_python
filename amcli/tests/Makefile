@@ -11,7 +11,7 @@ testdata :
 	amcli gentestdata -s $(SCHEMA_JSON) \
 		-o testdata $(WORK_DIR)/specs/*.json
 
-testscript:
+testscript: testdata
 	amcli gentestscript -o testdata/add.sh --action add \
 		-s $(SCHEMA_JSON) testdata/*.json
 	amcli gentestscript -o testdata/get.sh --action get \
@@ -25,16 +25,16 @@ test-init:
 	cp -f $(TOP_DIR)/.env testdata/
 	echo "BASE_URL=https://localhost:8000" >> testdata/.env
 
-test-add :
+test-add : test-init
 	cd testdata && prove add.sh
 
-test-get :
+test-get : test-add
 	cd testdata && prove get.sh
 
-test-update :
+test-update : test-get
 	cd testdata && prove update.sh
 
-test-delete :
+test-delete : test-update
 	cd testdata && prove delete.sh
 
 clean :

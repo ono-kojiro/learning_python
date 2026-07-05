@@ -12,14 +12,14 @@ startproject :
 		echo "SKIP: startproject"; \
 	fi
 
-startapp :
+startapp : startproject
 	@if [ ! -d $(APPLICATION) ]; then \
 		python3 manage.py startapp $(APPLICATION); \
 	else \
 		echo "SKIP: startapp"; \
 	fi
 
-installapp :
+installapp : startapp
 	amcli installapp \
         --export-installed-apps $(WORK_DIR)/$(PROJECT)/installed_apps.yml \
         --project $(WORK_DIR)/$(PROJECT)/
@@ -31,7 +31,7 @@ installapp :
 	amcli installapp django_extensions --project $(WORK_DIR)/$(PROJECT)/
 	amcli installapp $(APPLICATION)    --project $(WORK_DIR)/$(PROJECT)/
 
-edit :
+edit : installapp
 	amcli edit --export $(ALLOWED_HOSTS_YML) \
 		--project $(WORK_DIR)/$(PROJECT) ALLOWED_HOSTS
 	
@@ -47,14 +47,14 @@ edit :
 		grep -q "path('api/', include('myapp.urls_api'))" $$urls_py || \
 		sed -i "/^]/i\    path('api/', include('myapp.urls_api'))," $$urls_py
 
-migrate :
+migrate : edit
 	rm -f db.sqlite3
 	python3 manage.py makemigrations
 	python3 manage.py migrate
 	env $$(grep -v '^#' $(TOP_DIR)/.env | xargs) \
 	python3 manage.py createsuperuser --noinput || true
 
-loaddata :
+loaddata : migrate
 	@models=`cat $(SCHEMA_JSON) | jq -r '.load_order[]' | tr '[:upper:]' '[:lower:]'`; \
 	for model in $${models}; do \
 		fixture=$(TOP_DIR)/tests/data/$${model}_fixture.yaml; \
