@@ -24,7 +24,6 @@ testscript:
 test-init:
 	cp -f $(TOP_DIR)/.env testdata/
 	echo "BASE_URL=https://localhost:8000" >> testdata/.env
-	cat testdata/*.json
 
 test-add :
 	cd testdata && prove add.sh
