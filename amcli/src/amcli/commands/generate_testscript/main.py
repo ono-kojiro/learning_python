@@ -40,7 +40,11 @@ def run(action, outpath, json_files, schema_path=None):
         run_update(outpath, json_files, schema)
 
     elif action == "delete":
-        run_delete(outpath, json_files, schema)
+        # ★ testschema.json を読み込む（dict）
+        with open(schema_path, "r", encoding="utf-8") as fp:
+            testschema = json.load(fp)
+
+        run_delete(outpath, json_files, testschema)
 
     else:
         raise ValueError(f"Unknown action: {action}")

@@ -41,6 +41,7 @@ spec :
 
 schema:
 	$(MAKE) -C components schema
+	$(MAKE) -C components testschema
 
 generate :
 	$(MAKE) -C components

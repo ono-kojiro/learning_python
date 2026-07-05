@@ -1,3 +1,5 @@
+# src/amcli/commands/generate_testscript/delete.py
+
 import os
 import json
 
@@ -5,15 +7,22 @@ DEBUG = True
 
 HEADER = """#!/bin/sh
 
+# Load environment variables
 . ./.env
+
+if [ -z "$BASE_URL" ]; then
+    echo "ERROR: BASE_URL is not set in .env"
+    exit 1
+fi
+
+if [ -z "$CERTFILE" ]; then
+    echo "ERROR: CERTFILE is not set in .env"
+    exit 1
+fi
 
 echo "Using BASE_URL=$BASE_URL"
 echo "Using CERTFILE=$CERTFILE"
 echo
-
-# default
-DRY_RUN=0
-
 """
 
 TEMPLATE = """
@@ -21,73 +30,47 @@ echo "=== Deleting {model} from {jsonfile} ==="
 
 body=$(cat "{jsonfile}")
 
-# *_id を抽出（Python が埋め込むので安全）
-value=$(echo "$body" | jq -r ".{key}")
+key="{key}"
+value=$(echo "$body" | jq -r --arg k "$key" '.[$k]')
 
-echo "Lookup: {key}=$value"
+echo "Lookup: $key=$value"
 
-# 内部 PK を検索
-list=$(curl -s -k \
-    "$BASE_URL/api/{model_plural}/?{key}=$value")
+# 全件取得して jq でフィルタ（API のフィルタリングに依存しない）
+list=$(curl -s -k --cert "$CERTFILE" \
+    "$BASE_URL/api/{model_plural}/")
 
-# 配列形式（list API）を試す（jqエラー抑止）
-id=$(echo "$list" | jq -r '.[0]? | .id // empty')
-
-# 単一オブジェクト形式を試す
-if [ -z "$id" ] || [ "$id" = "null" ]; then
-    id=$(echo "$list" | jq -r '.id // empty')
-fi
+id=$(echo "$list" | jq -r --arg k "$key" --arg v "$value" \
+    '.[] | select(.[$k] == $v) | .id')
 
 echo "Deleting {model} id=$id"
 
-# ============================
-# ★ dry-run オプション対応
-# ============================
-if [ "$DRY_RUN" = "1" ]; then
-    echo "[DRY-RUN] curl -s -k -X DELETE \\"$BASE_URL/api/{model_plural}/$id/\\""
-else
-    res=$(curl -s -k \
-        -X DELETE "$BASE_URL/api/{model_plural}/$id/")
-    echo "$res"
-fi
+res=$(curl -s -k --cert "$CERTFILE" \
+    -X DELETE "$BASE_URL/api/{model_plural}/$id/")
 
+echo "$res"
 echo
 """
 
 
-def run_delete(outpath, json_files, schema):
-
-    script = HEADER
-
-    # ----------------------------------------
-    # ★ schema.json の load_order を逆順にする
-    # ----------------------------------------
-    load_order = schema.get("load_order")
-
-    if not load_order:
-        if DEBUG:
-            print("[DEBUG] load_order missing, using json_files order")
-        load_order = [
-            os.path.basename(jf).split("_", 1)[1].replace(".json", "")
-            for jf in json_files
-        ]
-
-    # ★ 小文字化して delete_order を作る
-    delete_order = [m.lower() for m in reversed(load_order)]
+def run_delete(outpath, json_files, testschema):
+    delete_order = testschema.get("delete_order")
+    if not delete_order:
+        raise ValueError("testschema.json に delete_order がありません")
 
     if DEBUG:
-        print("[DEBUG] load_order =", load_order)
         print("[DEBUG] delete_order =", delete_order)
 
-    # json_files を model 名で引けるようにする（小文字）
+    # ---------------------------------------------------------
+    # ★ json_files を model 名で引けるようにする（小文字）
+    # ---------------------------------------------------------
     json_map = {
         os.path.basename(jf).split("_", 1)[1].replace(".json", "").lower(): jf
         for jf in json_files
     }
 
-    # ----------------------------------------
+    # ---------------------------------------------------------
     # ★ delete_order に従って json_files を並べ替える
-    # ----------------------------------------
+    # ---------------------------------------------------------
     ordered_json_files = []
     for model in delete_order:
         jf = json_map.get(model)
@@ -97,15 +80,21 @@ def run_delete(outpath, json_files, schema):
             if DEBUG:
                 print(f"[DEBUG] model {model} has no json file, skipping")
 
-    # ----------------------------------------
-    # ★ 並べ替えた順序で delete.sh を生成
-    # ----------------------------------------
+    # ---------------------------------------------------------
+    # ★ delete.sh を生成
+    # ---------------------------------------------------------
+    script = HEADER
+
     for jf in ordered_json_files:
         base = os.path.basename(jf)
         model = base.split("_", 1)[1].replace(".json", "")
-
         model_plural = model + "s"
         key = f"{model}_id"
+
+        print("[DEBUG] jsonfile =", jf)
+        print("[DEBUG] base =", base)
+        print("[DEBUG] model =", model)
+        print("[DEBUG] key =", key)
 
         script += TEMPLATE.format(
             model=model,
@@ -113,6 +102,7 @@ def run_delete(outpath, json_files, schema):
             jsonfile=base,
             key=key
         )
+
 
         if DEBUG:
             print(f"[DEBUG] delete script for {model} ({base})")

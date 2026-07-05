@@ -20,3 +20,9 @@ def genschema_cmd(output_file, application, project, ref_json_files):
     from amcli.commands.generate_schema import run
     run(output_file, ref_json_files, application=application, project=project)
 
+@click.command(name="gentestschema")
+@click.option("-s", "--schema", "schema_path", required=True)
+@click.option("-o", "--output", "output_path", required=True)
+def gentestschema_cmd(schema_path, output_path):
+    from amcli.commands.generate_testschema import run
+    run(schema_path=schema_path, output_path=output_path)

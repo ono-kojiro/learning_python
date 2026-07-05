@@ -1,4 +1,4 @@
-TOP_DIR = ../
+TOP_DIR = ..
 include $(TOP_DIR)/common.mk
 
 all : generate
@@ -19,10 +19,11 @@ testscript:
 	amcli gentestscript -o testdata/update.sh --action update \
 		-s $(SCHEMA_JSON) testdata/*.json
 	amcli gentestscript -o testdata/delete.sh --action delete \
-		-s $(SCHEMA_JSON) testdata/*.json
+		-s $(TESTSCHEMA_JSON) testdata/*.json
 
 test-init:
-	echo "BASE_URL=https://localhost:8000" > testdata/.env
+	cp -f $(TOP_DIR)/.env testdata/
+	echo "BASE_URL=https://localhost:8000" >> testdata/.env
 	cat testdata/*.json
 
 test-add :

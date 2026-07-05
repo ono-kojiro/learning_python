@@ -4,7 +4,7 @@ import click
 
 from amcli.cli.start_commands import startproject_cmd, startapp_cmd
 from amcli.cli.install_commands import installapp_cmd, edit_cmd
-from amcli.cli.schema_commands import cmp2ref_cmd, genschema_cmd
+from amcli.cli.schema_commands import cmp2ref_cmd, genschema_cmd, gentestschema_cmd
 from amcli.cli.generate_commands import (
     genmodel_cmd, genadmin_cmd, genview_cmd,
     genserializer_cmd, genfixture_cmd, genimporter_cmd
@@ -32,6 +32,7 @@ main.add_command(installapp_cmd)
 main.add_command(edit_cmd)
 main.add_command(cmp2ref_cmd)
 main.add_command(genschema_cmd)
+main.add_command(gentestschema_cmd)
 main.add_command(genmodel_cmd)
 main.add_command(genadmin_cmd)
 main.add_command(genview_cmd)

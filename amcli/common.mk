@@ -14,6 +14,10 @@ SPECS_JSON = $(addprefix $(SPEC_DIR)/, $(notdir $(SPECS_YML:.yml=.json)))
 SCHEMA_DIR  = $(WORK_DIR)/schema
 SCHEMA_JSON = $(SCHEMA_DIR)/schema.json
 
+TESTSCHEMA_DIR  = $(WORK_DIR)/schema
+TESTSCHEMA_JSON = $(SCHEMA_DIR)/testschema.json
+
+
 IMPORTER_DIR = $(TOP_DIR)/importers
 
 TEMPLATE_DIR = $(TOP_DIR)/templates
