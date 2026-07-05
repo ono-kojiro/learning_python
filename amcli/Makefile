@@ -31,7 +31,10 @@ init :
 	$(MAKE) -C work init
 
 pytest :
-	pytest -s
+	cd unittest && pytest
+
+spec :
+	$(MAKE) -C components spec
 
 generate :
 	$(MAKE) -C components
@@ -60,7 +63,7 @@ restart :
 #	pytest -s
 #	$(MAKE) stop
 
-test : test-init test-add test-get test-update test-delete
+test : pytest test-init test-add test-get test-update test-delete
 
 testdata :
 	amcli gentestdata -s $(SCHEMA_JSON) \
