@@ -6,6 +6,7 @@ from pathlib import Path
 from amcli.commands.cmp2ref import run as run_cmp2ref
 from amcli.commands.generate_schema import run as run_genschema
 
+spec_dir = "../../specs"
 
 # ------------------------------------------------------------
 # 共通：cmp2ref の specs 一覧
@@ -13,13 +14,13 @@ from amcli.commands.generate_schema import run as run_genschema
 @pytest.fixture
 def cmp2ref_specs():
     return [
-        "../specs/comment.yml",
-        "../specs/device.yml",
-        "../specs/ipv4.yml",
-        "../specs/manager.yml",
-        "../specs/netif.yml",
-        "../specs/os.yml",
-        "../specs/remark.yml",
+        f"{spec_dir}/comment.yml",
+        f"{spec_dir}/device.yml",
+        f"{spec_dir}/ipv4.yml",
+        f"{spec_dir}/manager.yml",
+        f"{spec_dir}/netif.yml",
+        f"{spec_dir}/os.yml",
+        f"{spec_dir}/remark.yml",
     ]
 
 
@@ -31,7 +32,7 @@ def device_ref(tmp_path, cmp2ref_specs):
     out = tmp_path / "device.json"
 
     run_cmp2ref(
-        spec="../specs/device.yml",
+        spec=f"{spec_dir}/device.yml",
         output_file=str(out),
         input_files=cmp2ref_specs,
     )
@@ -46,7 +47,7 @@ def netif_ref(tmp_path, cmp2ref_specs):
     out = tmp_path / "netif.json"
 
     run_cmp2ref(
-        spec="../specs/netif.yml",
+        spec=f"{spec_dir}/netif.yml",
         output_file=str(out),
         input_files=cmp2ref_specs,
     )
@@ -61,7 +62,7 @@ def ipv4_ref(tmp_path, cmp2ref_specs):
     out = tmp_path / "ipv4.json"
 
     run_cmp2ref(
-        spec="../specs/ipv4.yml",
+        spec=f"{spec_dir}/ipv4.yml",
         output_file=str(out),
         input_files=cmp2ref_specs,
     )
@@ -76,7 +77,7 @@ def comment_ref(tmp_path, cmp2ref_specs):
     out = tmp_path / "comment.json"
 
     run_cmp2ref(
-        spec="../specs/comment.yml",
+        spec=f"{spec_dir}/comment.yml",
         output_file=str(out),
         input_files=cmp2ref_specs,
     )
@@ -91,7 +92,7 @@ def manager_ref(tmp_path, cmp2ref_specs):
     out = tmp_path / "manager.json"
 
     run_cmp2ref(
-        spec="../specs/manager.yml",
+        spec=f"{spec_dir}/manager.yml",
         output_file=str(out),
         input_files=cmp2ref_specs,
     )
@@ -106,7 +107,7 @@ def os_ref(tmp_path, cmp2ref_specs):
     out = tmp_path / "os.json"
 
     run_cmp2ref(
-        spec="../specs/os.yml",
+        spec=f"{spec_dir}/os.yml",
         output_file=str(out),
         input_files=cmp2ref_specs,
     )
@@ -121,7 +122,7 @@ def remark_ref(tmp_path, cmp2ref_specs):
     out = tmp_path / "remark.json"
 
     run_cmp2ref(
-        spec="../specs/remark.yml",
+        spec=f"{spec_dir}/remark.yml",
         output_file=str(out),
         input_files=cmp2ref_specs,
     )
@@ -137,13 +138,13 @@ def remark_ref(tmp_path, cmp2ref_specs):
 @pytest.fixture
 def specs():
     return [
-        "../work/specs/comment.json",
-        "../work/specs/device.json",
-        "../work/specs/ipv4.json",
-        "../work/specs/manager.json",
-        "../work/specs/netif.json",
-        "../work/specs/os.json",
-        "../work/specs/remark.json",
+        "../../work/specs/comment.json",
+        "../../work/specs/device.json",
+        "../../work/specs/ipv4.json",
+        "../../work/specs/manager.json",
+        "../../work/specs/netif.json",
+        "../../work/specs/os.json",
+        "../../work/specs/remark.json",
     ]
 
 

@@ -31,7 +31,7 @@ init :
 	$(MAKE) -C work init
 
 pytest :
-	cd unittest && pytest
+	cd tests/unittest && pytest
 
 spec :
 	$(MAKE) -C components spec
