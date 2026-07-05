@@ -55,11 +55,14 @@ migrate : edit
 	python3 manage.py createsuperuser --noinput || true
 
 loaddata : migrate
-	@models=`cat $(SCHEMA_JSON) | jq -r '.load_order[]' | tr '[:upper:]' '[:lower:]'`; \
+	mkdir -p $(FIXTURE_DIR)
+	models=`cat $(TESTSCHEMA_JSON) | jq -r '.load_order[]'`; \
 	for model in $${models}; do \
-		fixture=$(TOP_DIR)/tests/data/$${model}_fixture.yaml; \
+		fixture=$(FIXTURE_DIR)/$${model}_fixture.yaml; \
+		echo "python3 manage.py loaddata $${fixture}"; \
 		python3 manage.py loaddata $${fixture}; \
 	done
+
 
 start :
 	@set -a; . $(TOP_DIR)/.env; set +a; \

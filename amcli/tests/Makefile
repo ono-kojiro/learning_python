@@ -40,6 +40,7 @@ test-delete : test-update
 clean :
 	rm -rf data
 	rm -rf testdata
+	rm -rf fixtures
 
 .PHONY : \
 	all clean test testdata

@@ -1,66 +1,47 @@
 # src/amcli/utils/fixture_builder.py
 
-from collections import defaultdict, deque
+import os
+from collections import defaultdict
 from amcli.utils.random_generators import (
     generate_random_value,
     generate_gateway_from_cidr,
 )
 
-
-def topological_sort(dependencies):
-    indegree = defaultdict(int)
-    graph = defaultdict(list)
-
-    for model, deps in dependencies.items():
-        for d in deps:
-            graph[d].append(model)
-            indegree[model] += 1
-
-    queue = deque([m for m in dependencies if indegree[m] == 0])
-    order = []
-
-    while queue:
-        m = queue.popleft()
-        order.append(m)
-        for nxt in graph[m]:
-            indegree[nxt] -= 1
-            if indegree[nxt] == 0:
-                queue.append(nxt)
-
-    return order
+DEBUG = os.environ.get("VERBOSE", "0") != "0"
 
 
-def collect_dependencies(targets, dependencies):
-    result = set()
+def build_fixtures(models, dependencies, name_data, count, include_deps, testschema=None):
+    """
+    CRUD と同じアルゴリズムで fixture を生成する。
+    testschema.json の load_order を使って依存関係順に生成する。
+    """
 
-    def dfs(model):
-        for dep in dependencies.get(model, []):
-            if dep not in result:
-                result.add(dep)
-                dfs(dep)
-
-    for t in targets:
-        dfs(t)
-
-    return result
-
-
-def build_fixtures(models, dependencies, name_data, count, include_deps):
-    target_models = list(models.keys())
-    deps = collect_dependencies(target_models, dependencies)
-
-    if include_deps:
-        generate_models = list(set(target_models) | deps)
+    # load_order を使う（最優先）
+    if testschema and "load_order" in testschema:
+        order = testschema["load_order"]
+        if DEBUG:
+            print("[DEBUG] Using testschema load_order:", order)
     else:
-        generate_models = target_models
-
-    order = topological_sort(dependencies)
-    order = [m for m in order if m in generate_models]
+        order = list(models.keys())
+        if DEBUG:
+            print("[DEBUG] Using fallback model order:", order)
 
     fixtures = []
 
+    # 参照先モデルの PK を保持する
+    pk_map = defaultdict(list)
+
     for model in order:
+        if model not in models:
+            if DEBUG:
+                print(f"[DEBUG] Model '{model}' not in models → skip")
+            continue
+
         fields = models[model]
+
+        if DEBUG:
+            print(f"\n[DEBUG] === Generating fixtures for model: {model} ===")
+
         for pk in range(1, count + 1):
             item = {
                 "model": f"myapp.{model.lower()}",
@@ -68,17 +49,62 @@ def build_fixtures(models, dependencies, name_data, count, include_deps):
                 "fields": {}
             }
 
-            for fname, fdef in fields.items():
-                item["fields"][fname] = generate_random_value(
-                    model, fname, fdef, count, pk, name_data
-                )
+            if DEBUG:
+                print(f"[DEBUG]   PK={pk}")
 
+            for fname, fdef in fields.items():
+                ftype = fdef["type"]
+
+                # ForeignKey / OneToOneField
+                if ftype in ("ForeignKey", "OneToOneField"):
+                    target = fdef["to"].lower()
+
+                    # CRUD と同じ：参照先の PK をそのまま使う
+                    fk_value = pk
+                    item["fields"][fname] = fk_value
+
+                    if DEBUG:
+                        print(f"[DEBUG]     FK field '{fname}' → target '{target}', assigned PK={fk_value}")
+
+                    continue
+
+                # ManyToManyField
+                if ftype == "ManyToManyField":
+                    target = fdef["to"].lower()
+                    item["fields"][fname] = [pk]
+
+                    if DEBUG:
+                        print(f"[DEBUG]     M2M field '{fname}' → target '{target}', assigned PK=[{pk}]")
+
+                    continue
+
+                # 通常フィールドはランダム生成
+                value = generate_random_value(model, fname, fdef, count, pk, name_data)
+                item["fields"][fname] = value
+
+                if DEBUG:
+                    print(f"[DEBUG]     Field '{fname}' → {value}")
+
+            # gateway の自動生成
             if "addresses" in item["fields"] and "gateway" in item["fields"]:
                 addrs = item["fields"]["addresses"]
                 if addrs:
-                    item["fields"]["gateway"] = generate_gateway_from_cidr(addrs[0])
+                    gw = generate_gateway_from_cidr(addrs[0])
+                    item["fields"]["gateway"] = gw
+
+                    if DEBUG:
+                        print(f"[DEBUG]     Auto gateway from {addrs[0]} → {gw}")
 
             fixtures.append(item)
 
-    return fixtures
+        # このモデルの PK を保存（FK 割り当てに使う）
+        pk_map[model.lower()] = list(range(1, count + 1))
 
+        if DEBUG:
+            print(f"[DEBUG]   PK map updated for {model}: {pk_map[model.lower()]}")
+
+    if DEBUG:
+        print("\n[DEBUG] === Fixture generation complete ===")
+        print(f"[DEBUG] Total fixtures: {len(fixtures)}")
+
+    return fixtures

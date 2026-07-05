@@ -1,7 +1,7 @@
 TOP_DIR = .
 include $(TOP_DIR)/common.mk
 	
-all : init generate migrate 
+all : init generate migrate loaddata
 	
 prepare :
 	if [ ! -d "myenv" ]; then \
@@ -53,7 +53,7 @@ migrate : generate
 	$(MAKE) -C work migrate
 
 loaddata : generate migrate
-	$(MAKE) -C work loaddata
+	VERBOSE=1 $(MAKE) -C work loaddata
 
 start :
 	$(MAKE) -C work start

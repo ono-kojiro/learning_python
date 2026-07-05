@@ -38,8 +38,7 @@ VIEW_DIR  = $(WORK_DIR)/$(APPLICATION)/views
 #SERIALIZER_DIR = $(TOP_DIR)/serializers
 SERIALIZER_DIR = $(WORK_DIR)/$(APPLICATION)/serializers/
 
-#FIXTURE_DIR = $(TOP_DIR)/fixtures
-FIXTURE_DIR = $(TEST_DIR)/data
+FIXTURE_DIR = $(TEST_DIR)/fixtures
 
 
 ALLOWED_HOSTS_YML = $(WORK_DIR)/$(PROJECT)/allowed_hosts.yml

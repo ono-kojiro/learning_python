@@ -1,4 +1,4 @@
 test_*.py
 data/
 testdata/
-
+fixtures/

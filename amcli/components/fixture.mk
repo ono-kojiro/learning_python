@@ -1,7 +1,10 @@
+# file: components/fixture.mk
 TOP_DIR = ..
 include ../common.mk
 
-FIXTURES_YML = $(addprefix $(FIXTURE_DIR)/, $(notdir $(SPECS_JSON:.json=_fixture.yaml)))
+#FIXTURES_YML = $(addprefix $(FIXTURE_DIR)/, $(notdir $(SPECS_JSON:.json=_fixture.yaml)))
+FIXTURE_ORDER = remark device netif ipv4 manager os comment
+FIXTURES_YML = $(addprefix $(FIXTURE_DIR)/, $(addsuffix _fixture.yaml, $(FIXTURE_ORDER)))
 
 $(shell mkdir -p $(FIXTURE_DIR))
 

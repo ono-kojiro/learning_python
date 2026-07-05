@@ -1,7 +1,8 @@
 import os
 import json
 
-DEBUG = True
+# VERBOSE が "0" 以外なら DEBUG 有効
+DEBUG = os.environ.get("VERBOSE", "0") != "0"
 
 HEADER = """#!/bin/sh
 
