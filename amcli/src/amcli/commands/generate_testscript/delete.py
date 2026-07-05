@@ -16,6 +16,12 @@ echo "Using BASE_URL=$BASE_URL"
 echo
 """
 
+# TAP のテスト件数を先頭に出力する
+def tap_header(delete_order):
+    count = len(delete_order)
+    return f"echo \"1..{count}\"\n\n"
+
+
 TEMPLATE = r"""
 echo "=== Deleting {model} from {jsonfile} ==="
 
@@ -27,14 +33,12 @@ value=$(echo "$body" | jq -r --arg k "$key" '.[$k]')
 echo "[DEBUG] key=$key"
 echo "[DEBUG] value=$value"
 
-# JSON のみ取得（-v を使わない）
 echo "[DEBUG] curl GET $BASE_URL/api/{model_plural}/"
 raw=$(curl -s -k "$BASE_URL/api/{model_plural}/")
 
 echo "[DEBUG] raw JSON:"
 echo "$raw"
 
-# jq が JSON を確実にパースできるようにする
 list="$raw"
 
 echo "[DEBUG] parsed JSON:"
@@ -52,6 +56,16 @@ res=$(curl -s -k -X DELETE "$BASE_URL/api/{model_plural}/$id/")
 
 echo "[DEBUG] delete response:"
 echo "$res"
+
+# TAP 出力
+if echo "$res" | grep -q "Not Found"; then
+    echo "not ok - delete {model} failed (404 Not Found)"
+elif [ -z "$id" ]; then
+    echo "not ok - delete {model} failed (id not found)"
+else
+    echo "ok - delete {model} succeeded"
+fi
+
 echo
 """
 
@@ -78,7 +92,11 @@ def run_delete(outpath, json_files, testschema):
             if DEBUG:
                 print(f"[DEBUG] model {model} has no json file, skipping")
 
+    # スクリプト生成
     script = HEADER
+
+    # TAP の件数を先頭に出力
+    script += tap_header(delete_order)
 
     for jf in ordered_json_files:
         base = os.path.basename(jf)

@@ -8,9 +8,14 @@ HEADER = """#!/bin/sh
 . ./.env
 
 echo "Using BASE_URL=$BASE_URL"
-echo "Using CERTFILE=$CERTFILE"
 echo
 """
+
+# TAP のテスト件数を先頭に出力
+def tap_header(json_files):
+    count = len(json_files)
+    return f"echo \"1..{count}\"\n\n"
+
 
 TEMPLATE = """
 echo "=== Updating {model} from {jsonfile} ==="
@@ -25,12 +30,22 @@ body=$(echo "$body" | jq 'del(.id)')
 
 id=$(cat ".id_{model}")
 
+echo "[DEBUG] PATCH $BASE_URL/api/{model_plural}/$id/"
 res=$(curl -s -k \
-  -X PATCH "${{BASE_URL}}/api/{model_plural}/${{id}}/" \
+  -X PATCH "$BASE_URL/api/{model_plural}/$id/" \
   -H "Content-Type: application/json" \
   -d "$body")
 
+echo "[DEBUG] response:"
 echo "$res"
+
+# TAP 出力
+if echo "$res" | jq -e .id >/dev/null 2>&1; then
+    echo "ok - update {model} succeeded"
+else
+    echo "not ok - update {model} failed (invalid JSON or missing id)"
+fi
+
 echo
 """
 
@@ -62,28 +77,23 @@ def fk_patch_for(model_cap, fields_def):
 
 
 def run_update(outpath, json_files, schema):
-    """
-    update.sh を生成する。
-    schema.json の fields_def を使う。
-    """
-
     script = HEADER
 
-    # ★ モデル名マッピング（小文字 → 正しいモデル名）
+    # TAP 件数出力
+    script += tap_header(json_files)
+
+    # モデル名マッピング（小文字 → 正しいモデル名）
     model_map = { key.lower(): key for key in schema["models"].keys() }
 
     for jf in json_files:
         base = os.path.basename(jf)
 
-        # 例: 001_netif.json → "netif"
         model = base.split("_", 1)[1].replace(".json", "")
 
-        # ★ 正しいモデル名に変換
         if model not in model_map:
             raise ValueError(f"Model '{model}' not found in schema.json")
 
-        model_cap = model_map[model]  # "NetIF" など
-
+        model_cap = model_map[model]
         model_plural = model + "s"
 
         fields_def = schema["models"][model_cap]["fields"]

@@ -27,16 +27,16 @@ test-init:
 	cat testdata/*.json
 
 test-add :
-	cd testdata && sh add.sh
+	cd testdata && prove add.sh
 
 test-get :
-	cd testdata && sh get.sh
+	cd testdata && prove get.sh
 
 test-update :
-	cd testdata && sh update.sh
+	cd testdata && prove update.sh
 
 test-delete :
-	cd testdata && sh delete.sh
+	cd testdata && prove delete.sh
 
 clean :
 	rm -rf data
