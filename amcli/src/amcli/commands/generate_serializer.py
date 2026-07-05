@@ -4,7 +4,6 @@ from jinja2 import Environment, FileSystemLoader
 
 from amcli.utils.constants import FieldType
 
-
 def read_yaml(path):
     with open(path, "r", encoding="utf-8") as fp:
         return yaml.safe_load(fp)
@@ -26,31 +25,51 @@ def run(loader_dir, output_file, schema_yaml, ref_yaml):
     )
     env.globals["FieldType"] = FieldType
 
+    print("[DEBUG] loader_dir =", loader_dir)
+    print("[DEBUG] templates found:", env.list_templates())
+
     # specs JSON 読み込み
     data = read_yaml(ref_yaml)
     model = data["name"]
     fields = data["fields"]
 
     # ---------------------------------------------------------
-    # ForeignKey / OneToOne → *_id に変換
+    # ForeignKey / OneToOne → *_id に変換（write用）
     # ---------------------------------------------------------
     converted_fields = {}
+    fk_info = {}   # read/write 両方の情報を保持
     has_fk = False
 
     for fname, fdef in fields.items():
-        if fdef["type"] in [FieldType.FOREIGN_KEY, FieldType.ONE_TO_ONE]:
+        ftype = fdef["type"]
+
+        if ftype in [FieldType.FOREIGN_KEY, FieldType.ONE_TO_ONE]:
             has_fk = True
+
+            # write 用 device_id
             converted_fields[f"{fname}_id"] = {
                 "type": FieldType.CHAR,
                 "required": False,
-                "to": fdef["to"],   # ★ FK 先モデル名を保持
+                "to": fdef["to"],
+                "source": fname,  # ★ serializer の source に使う
             }
+
+            # read 用 device
+            fk_info[fname] = {
+                "to": fdef["to"],
+                "type": ftype,
+            }
+
         else:
             converted_fields[fname] = fdef
 
     # ---------------------------------------------------------
-    # テンプレート選択
+    # ★★★ デバッグプリント：FK 判定とテンプレート選択 ★★★
     # ---------------------------------------------------------
+    fk_fields = list(fk_info.keys())
+    print(f"[DEBUG] model = {model}")
+    print(f"[DEBUG] fk fields = {fk_fields}")
+
     dep_cat = dependency_categories.get(model)
 
     if dep_cat == "m2m_owner":
@@ -60,11 +79,13 @@ def run(loader_dir, output_file, schema_yaml, ref_yaml):
     elif dep_cat == "fk_parent":
         template_name = "serializer_fk_parent.j2"
     else:
-        # ★ FK を持つモデルは専用テンプレートへ
+        # FK を持つモデルは専用テンプレートへ
         if has_fk:
             template_name = "serializer_normal_fk.j2"
         else:
             template_name = "serializer_normal.j2"
+
+    print(f"[DEBUG] using template = {template_name}")
 
     template = env.get_template(template_name)
 
@@ -72,8 +93,12 @@ def run(loader_dir, output_file, schema_yaml, ref_yaml):
     # fields_list の構築（Meta.fields 用）
     # ---------------------------------------------------------
     fields_list = ["id"]
+
     for fname, fdef in fields.items():
         if fdef["type"] in [FieldType.FOREIGN_KEY, FieldType.ONE_TO_ONE]:
+            # read 用
+            fields_list.append(fname)
+            # write 用
             fields_list.append(f"{fname}_id")
         else:
             fields_list.append(fname)
@@ -92,8 +117,9 @@ def run(loader_dir, output_file, schema_yaml, ref_yaml):
     # ---------------------------------------------------------
     content = template.render(
         model=model,
-        fields=fields,                    # ★ 元の fields を渡す
-        converted_fields=converted_fields, # ★ 追加で渡す
+        fields=fields,
+        converted_fields=converted_fields,
+        fk_info=fk_info,  # ★ read/write 両方の情報
         fields_list=fields_list,
         reverse_dependencies=reverse_dependencies,
         reverse_dependencies_detail=reverse_dependencies_detail,

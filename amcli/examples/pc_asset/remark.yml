@@ -1,0 +1,47 @@
+---
+# ============================================================
+# コンポジションモデル（Composition Model）
+# ------------------------------------------------------------
+# この YAML は Django モデルを直接記述するものではなく、
+# モデル間の関係を抽象化した「コンポジションモデル DSL」です。
+#
+# - OneToOne   → 1対1の関係（双方向）
+# - OneToMany → 親 → 子（複数）を表す抽象関係
+# - ManyToMany → 双方向の多対多関係
+#
+# ※ ForeignKey は Django の実装レベルの概念であり、
+#   specs/*.yml では使用しません（コンポジションモデルの原則）。
+#
+# この DSL を cmp2ref が Django モデル仕様へ変換し、
+# schema.json → generate_testdata → testdata → 結合テスト
+# という自動生成パイプラインに流れます。
+# ============================================================
+
+Remark:
+  meta:
+    verbose_name: "Remark"
+    verbose_name_plural: "Remarks"
+
+  fields:
+    remark_id:
+      type: String
+      unique: true
+      max_length: 100
+
+    text:
+      type: String
+      max_length: 500
+
+    # --------------------------------------------------------
+    # Composition Model の関係記述
+    # --------------------------------------------------------
+    # Remark は Device に属する（子 → 親）
+    # Device は複数の Remark を持つ可能性があるため OneToMany
+    #
+    # cmp2ref がこの OneToMany を読み取り、
+    # Device 側に逆参照フィールド（ForeignKey）を生成します。
+    # --------------------------------------------------------
+    device:
+      type: OneToMany
+      to: Device
+      nullable: true

@@ -36,6 +36,9 @@ pytest :
 spec :
 	$(MAKE) -C components spec
 
+schema:
+	$(MAKE) -C components schema
+
 generate :
 	$(MAKE) -C components
 	#$(MAKE) -C tests gentest
@@ -63,7 +66,8 @@ restart :
 #	pytest -s
 #	$(MAKE) stop
 
-test : pytest test-init test-add test-get test-update test-delete
+test : start pytest test-init test-add test-get test-update test-delete
+#test : start pytest test-init test-add test-get test-update
 
 testdata :
 	amcli gentestdata -s $(SCHEMA_JSON) \

@@ -3,8 +3,22 @@ from rest_framework import serializers
 from myapp.models import *
 
 class {{ model }}Serializer(serializers.ModelSerializer):
+
+{# --- read-only FK fields --- #}
+{%- for fname, info in fk_info.items() %}
+    {{ fname }} = serializers.PrimaryKeyRelatedField(read_only=True)
+{%- endfor %}
+
+{# --- write-only FK fields and normal fields --- #}
 {%- for fname, fdef in converted_fields.items() %}
-    {%- if fdef.type == FieldType.JSON %}
+    {%- if fname.endswith('_id') and fdef.to %}
+    {{ fname }} = serializers.PrimaryKeyRelatedField(
+        queryset={{ fdef.to }}.objects.all(),
+        write_only=True,
+        source='{{ fname[:-3] }}',
+        required=False
+    )
+    {%- elif fdef.type == FieldType.JSON %}
     {{ fname }} = serializers.JSONField(required=False)
     {%- elif fdef.type == FieldType.DATETIME %}
     {{ fname }} = serializers.DateTimeField(required=False)
@@ -20,9 +34,8 @@ class {{ model }}Serializer(serializers.ModelSerializer):
 
         {%- for fname, fdef in fields.items() %}
             {%- if fdef.type in [FieldType.FOREIGN_KEY, FieldType.ONE_TO_ONE] %}
-        fk_id = validated_data.pop('{{ fname }}_id', None)
-        if fk_id is not None:
-            fk_obj = {{ fdef.to }}.objects.get(id=fk_id)
+        fk_obj = validated_data.pop('{{ fname }}', None)
+        if fk_obj is not None:
             setattr(instance, '{{ fname }}', fk_obj)
             {%- else %}
         if '{{ fname }}' in validated_data:
@@ -36,9 +49,8 @@ class {{ model }}Serializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         {%- for fname, fdef in fields.items() %}
             {%- if fdef.type in [FieldType.FOREIGN_KEY, FieldType.ONE_TO_ONE] %}
-        fk_id = validated_data.pop('{{ fname }}_id', None)
-        if fk_id is not None:
-            fk_obj = {{ fdef.to }}.objects.get(id=fk_id)
+        fk_obj = validated_data.pop('{{ fname }}', None)
+        if fk_obj is not None:
             setattr(instance, '{{ fname }}', fk_obj)
             {%- else %}
         if '{{ fname }}' in validated_data:

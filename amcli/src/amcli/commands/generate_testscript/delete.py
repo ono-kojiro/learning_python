@@ -10,6 +10,10 @@ HEADER = """#!/bin/sh
 echo "Using BASE_URL=$BASE_URL"
 echo "Using CERTFILE=$CERTFILE"
 echo
+
+# default
+DRY_RUN=0
+
 """
 
 TEMPLATE = """
@@ -26,14 +30,27 @@ echo "Lookup: {key}=$value"
 list=$(curl -s -k --cert "$CERTFILE" \
     "$BASE_URL/api/{model_plural}/?{key}=$value")
 
-id=$(echo "$list" | jq -r '.[0].id')
+# 配列形式（list API）を試す（jqエラー抑止）
+id=$(echo "$list" | jq -r '.[0]? | .id // empty')
+
+# 単一オブジェクト形式を試す
+if [ -z "$id" ] || [ "$id" = "null" ]; then
+    id=$(echo "$list" | jq -r '.id // empty')
+fi
 
 echo "Deleting {model} id=$id"
 
-res=$(curl -s -k --cert "$CERTFILE" \
-    -X DELETE "$BASE_URL/api/{model_plural}/$id/")
+# ============================
+# ★ dry-run オプション対応
+# ============================
+if [ "$DRY_RUN" = "1" ]; then
+    echo "[DRY-RUN] curl -s -k --cert \\"$CERTFILE\\" -X DELETE \\"$BASE_URL/api/{model_plural}/$id/\\""
+else
+    res=$(curl -s -k --cert "$CERTFILE" \
+        -X DELETE "$BASE_URL/api/{model_plural}/$id/")
+    echo "$res"
+fi
 
-echo "$res"
 echo
 """
 
@@ -42,14 +59,50 @@ def run_delete(outpath, json_files, schema):
 
     script = HEADER
 
-    model_map = { key.lower(): key for key in schema["models"].keys() }
+    # ----------------------------------------
+    # ★ schema.json の load_order を逆順にする
+    # ----------------------------------------
+    load_order = schema.get("load_order")
 
-    for jf in json_files:
+    if not load_order:
+        if DEBUG:
+            print("[DEBUG] load_order missing, using json_files order")
+        load_order = [
+            os.path.basename(jf).split("_", 1)[1].replace(".json", "")
+            for jf in json_files
+        ]
+
+    # ★ 小文字化して delete_order を作る
+    delete_order = [m.lower() for m in reversed(load_order)]
+
+    if DEBUG:
+        print("[DEBUG] load_order =", load_order)
+        print("[DEBUG] delete_order =", delete_order)
+
+    # json_files を model 名で引けるようにする（小文字）
+    json_map = {
+        os.path.basename(jf).split("_", 1)[1].replace(".json", "").lower(): jf
+        for jf in json_files
+    }
+
+    # ----------------------------------------
+    # ★ delete_order に従って json_files を並べ替える
+    # ----------------------------------------
+    ordered_json_files = []
+    for model in delete_order:
+        jf = json_map.get(model)
+        if jf:
+            ordered_json_files.append(jf)
+        else:
+            if DEBUG:
+                print(f"[DEBUG] model {model} has no json file, skipping")
+
+    # ----------------------------------------
+    # ★ 並べ替えた順序で delete.sh を生成
+    # ----------------------------------------
+    for jf in ordered_json_files:
         base = os.path.basename(jf)
         model = base.split("_", 1)[1].replace(".json", "")
-
-        if model not in model_map:
-            raise ValueError(f"Model '{model}' not found in schema.json")
 
         model_plural = model + "s"
         key = f"{model}_id"

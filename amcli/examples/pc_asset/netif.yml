@@ -1,0 +1,23 @@
+---
+NetIF:
+  meta:
+    verbose_name: "NetIF"
+    verbose_name_plural: "NetIF"
+
+  fields:
+    netif_id:
+      type: String
+      unique: true
+      max_length: 100
+
+    name:
+      type: String
+      max_length: 64
+      help: "Interface name (ex. eth0)"
+
+    # NetIF owns many IPv4
+    ipv4_list:
+      type: OneToMany
+      to: IPv4
+      nullable: true   # NetIF が消えても IPv4 は残る（SET_NULL）
+

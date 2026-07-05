@@ -129,9 +129,9 @@ def test_field_categories(schema):
 def test_dependency_categories(schema):
     dc = schema["dependency_categories"]
     assert dc["Manager"] == "m2m_owner"
-    assert dc["Device"] == "m2m_target"
+    assert dc["Device"] == "fk_child"
     assert dc["IPv4"] == "fk_child"
     assert dc["Comment"] == "fk_parent"
     assert dc["Remark"] == "fk_parent"
-    assert dc["NetIF"] == "fk_parent"
-    assert dc["OS"] == "no_dependency"
+    assert dc["NetIF"] == "fk_child"
+    assert dc["OS"] == "fk_child"
