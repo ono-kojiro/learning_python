@@ -34,7 +34,6 @@ body=$(cat "{jsonfile}")
 
 # POST 実行
 res=$(curl -s -k \
-  --cert "${{CERTFILE}}" \
   -X POST "${{BASE_URL}}/api/{model_plural}/" \
   -H "Content-Type: application/json" \
   -d "$body")
@@ -94,7 +93,7 @@ def run_get(outpath, json_files):
 
         script += f"""
 id=$(cat .id_{model})
-curl -s -k --cert "${{CERTFILE}}" \
+curl -s -k \
   -X GET "${{BASE_URL}}/api/{model_plural}/${{id}}/"
 echo
 """

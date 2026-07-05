@@ -27,7 +27,7 @@ value=$(echo "$body" | jq -r ".{key}")
 echo "Lookup: {key}=$value"
 
 # 内部 PK を検索
-list=$(curl -s -k --cert "$CERTFILE" \
+list=$(curl -s -k \
     "$BASE_URL/api/{model_plural}/?{key}=$value")
 
 # 配列形式（list API）を試す（jqエラー抑止）
@@ -44,9 +44,9 @@ echo "Deleting {model} id=$id"
 # ★ dry-run オプション対応
 # ============================
 if [ "$DRY_RUN" = "1" ]; then
-    echo "[DRY-RUN] curl -s -k --cert \\"$CERTFILE\\" -X DELETE \\"$BASE_URL/api/{model_plural}/$id/\\""
+    echo "[DRY-RUN] curl -s -k -X DELETE \\"$BASE_URL/api/{model_plural}/$id/\\""
 else
-    res=$(curl -s -k --cert "$CERTFILE" \
+    res=$(curl -s -k \
         -X DELETE "$BASE_URL/api/{model_plural}/$id/")
     echo "$res"
 fi
