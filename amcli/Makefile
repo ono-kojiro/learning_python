@@ -1,10 +1,13 @@
 TOP_DIR = .
 include $(TOP_DIR)/common.mk
-
+	
 all : init generate migrate
 	
 prepare :
-	python3 -m pip install -r requirements.txt
+	if [ ! -d "myenv" ]; then \
+		python3 -m venv myenv; \
+	fi
+	. ./myenv/bin/activate && python3 -m pip install -r requirements.txt
 
 install :
 	python3 -m pip install -e .
@@ -41,9 +44,7 @@ schema:
 
 generate :
 	$(MAKE) -C components
-	#$(MAKE) -C tests gentest
-	$(MAKE) testdata 
-	$(MAKE) testscript
+	$(MAKE) -C tests generate
 
 migrate :
 	$(MAKE) -C work migrate
@@ -59,48 +60,13 @@ stop :
 
 restart :
 	$(MAKE) -C work restart
+status :
+	ps -aux | grep 'manage.py'
 
-#test :
-#	$(MAKE) start
-#	sleep 1
-#	pytest -s
-#	$(MAKE) stop
-
-test : start pytest test-init test-add test-get test-update test-delete
-#test : start pytest test-init test-add test-get test-update
-
-testdata :
-	amcli gentestdata -s $(SCHEMA_JSON) \
-		-o tests/testdata work/specs/*.json
-
-testscript:
-	amcli gentestscript -o tests/testdata/add.sh --action add \
-		-s $(SCHEMA_JSON) tests/testdata/*.json
-	amcli gentestscript -o tests/testdata/get.sh --action get \
-		-s $(SCHEMA_JSON) tests/testdata/*.json
-	amcli gentestscript -o tests/testdata/update.sh --action update \
-		-s $(SCHEMA_JSON) tests/testdata/*.json
-	amcli gentestscript -o tests/testdata/delete.sh --action delete \
-		-s $(SCHEMA_JSON) tests/testdata/*.json
-
-
-test-init:
-	echo "BASE_URL=https://localhost:8000" > tests/testdata/.env
-	echo "CERTFILE=luna2.pem" >> tests/testdata/.env
-	cp -f luna2.pem tests/testdata/
-	cat tests/testdata/*.json
-
-test-add :
-	cd tests/testdata && sh add.sh
-
-test-get :
-	cd tests/testdata && sh get.sh
-
-test-update :
-	cd tests/testdata && sh update.sh
-
-test-delete :
-	cd tests/testdata && sh delete.sh
+test :
+	$(MAKE) start
+	$(MAKE) pytest
+	$(MAKE) -C tests test
 
 clean :
 	$(MAKE) stop

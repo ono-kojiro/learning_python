@@ -1,3 +1,0 @@
-{% for name in spec_order %}
-build {{ outputdir }}/specs/{{ name }}.json: cmp2ref specs/{{ name }}.yml | {{ outputdir }}/.mkdir_specs
-{% endfor %}

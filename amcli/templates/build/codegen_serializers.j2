@@ -1,3 +1,0 @@
-{% for name in spec_order %}
-build work/{{ app }}/serializers/{{ name }}_serializer.py: genserializer work/specs/{{ name }}.json | work/schema/schema.json
-{% endfor %}

@@ -26,7 +26,6 @@ body=$(echo "$body" | jq 'del(.id)')
 id=$(cat ".id_{model}")
 
 res=$(curl -s -k \
-  --cert "${{CERTFILE}}" \
   -X PATCH "${{BASE_URL}}/api/{model_plural}/${{id}}/" \
   -H "Content-Type: application/json" \
   -d "$body")

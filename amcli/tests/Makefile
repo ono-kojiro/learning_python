@@ -1,46 +1,46 @@
-TOP_DIR = ..
+TOP_DIR = ../
 include $(TOP_DIR)/common.mk
 
-ENTITIES = $(notdir $(SPECS_JSON:.json=))
+all : generate
 
-# ex.
-#   in:  template/test_generated_get.j2
-#   out:    tests/test_generated_get_device.py
-#
-TEST_TEMPLATES_J2 = \
-    $(TEMPLATE_DIR)/test_generated_get.j2 \
-    $(TEMPLATE_DIR)/test_generated_create.j2 \
-    $(TEMPLATE_DIR)/test_generated_delete.j2 \
-    $(TEMPLATE_DIR)/test_generated_update.j2
+generate : testdata testscript
 
-TEST_SCRIPTS_PY = $(foreach tmpl,$(TEST_TEMPLATES_J2), \
-                    $(foreach e,$(ENTITIES), \
-                      ./$(basename $(notdir $(tmpl)))_$(e).py))
+test : test-init test-add test-get test-update test-delete
 
-all : gentest
+testdata :
+	amcli gentestdata -s $(SCHEMA_JSON) \
+		-o testdata $(WORK_DIR)/specs/*.json
 
-debug :
-	@echo $(ENTITIES)
+testscript:
+	amcli gentestscript -o testdata/add.sh --action add \
+		-s $(SCHEMA_JSON) testdata/*.json
+	amcli gentestscript -o testdata/get.sh --action get \
+		-s $(SCHEMA_JSON) testdata/*.json
+	amcli gentestscript -o testdata/update.sh --action update \
+		-s $(SCHEMA_JSON) testdata/*.json
+	amcli gentestscript -o testdata/delete.sh --action delete \
+		-s $(SCHEMA_JSON) testdata/*.json
 
-gentest : $(TEST_SCRIPTS_PY)
+test-init:
+	echo "BASE_URL=https://localhost:8000" > testdata/.env
+	cat testdata/*.json
 
-gentest : $(TEST_SCRIPTS_PY)
+test-add :
+	cd testdata && sh add.sh
 
-define GENTEST_RULE
-$(1)_rule:
-./$(basename $(notdir $(1)))_%.py : $(1)
-	amcli gentest \
-		--schema $(SCHEMA_JSON) \
-		--ref $(SPEC_DIR)/$$*.json \
-		--output $$@ \
-		$$<
-endef
+test-get :
+	cd testdata && sh get.sh
 
-# 各テンプレートに対してルールを生成
-$(foreach tmpl,$(TEST_TEMPLATES_J2),$(eval $(call GENTEST_RULE,$(tmpl))))
+test-update :
+	cd testdata && sh update.sh
+
+test-delete :
+	cd testdata && sh delete.sh
 
 clean :
-	rm -f $(TEST_SCRIPTS_PY)
-	rm -f test_generated_*.py
+	rm -rf data
 	rm -rf testdata
+
+.PHONY : \
+	all clean test testdata
 
