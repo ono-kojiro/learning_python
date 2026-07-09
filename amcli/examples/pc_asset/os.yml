@@ -2,7 +2,7 @@
 OS:
   meta:
     verbose_name: "OS"
-    verbose_name_plural: "OSs"
+    verbose_name_plural: "OS"
 
   fields:
     os_id:

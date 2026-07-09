@@ -4,7 +4,7 @@ Device:
 
   meta:
     verbose_name: "Device"
-    verbose_name_plural: "Devices"
+    verbose_name_plural: "Device"
 
   fields:
     device_id:
