@@ -6,7 +6,7 @@ LOADER_PY   = $(WORK_DIR)/$(APPLICATION)/loader.py
 APPS_PY     = $(WORK_DIR)/$(APPLICATION)/apps.py
 MODELS_INIT_PY = $(WORK_DIR)/$(APPLICATION)/models/__init__.py
 
-all : init url loader apps models_init
+all : url apps models_init
 
 url : $(URLS_API_PY)
 
@@ -27,13 +27,6 @@ $(APPS_PY) : $(TEMPLATE_DIR)/apps.j2 $(SCHEMA_JSON)
 
 $(MODELS_INIT_PY) : $(TEMPLATE_DIR)/models_init.j2 $(SCHEMA_JSON)
 	amcli genimporter -o $@ -s $(SCHEMA_JSON) $<
-
-init :
-	components="$(COMPONENTS)"; \
-	for component in $${components}; do \
-		mkdir -p $(WORK_DIR)/$(APPLICATION)/$${component}/ ; \
-		rm -rf   $(WORK_DIR)/$(APPLICATION)/$${component}.py ; \
-	done
 
 clean :
 	rm -f $(URLS_API_PY)

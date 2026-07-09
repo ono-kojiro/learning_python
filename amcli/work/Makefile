@@ -29,6 +29,7 @@ installapp : startapp
 	
 	amcli installapp rest_framework    --project $(WORK_DIR)/$(PROJECT)/
 	amcli installapp django_extensions --project $(WORK_DIR)/$(PROJECT)/
+	amcli installapp nested_admin      --project $(WORK_DIR)/$(PROJECT)/
 	amcli installapp $(APPLICATION)    --project $(WORK_DIR)/$(PROJECT)/
 
 edit : installapp

@@ -17,6 +17,7 @@ SCHEMA_JSON = $(SCHEMA_DIR)/schema.json
 TESTSCHEMA_DIR  = $(WORK_DIR)/schema
 TESTSCHEMA_JSON = $(SCHEMA_DIR)/testschema.json
 
+APP_DIR = $(WORK_DIR)/$(APPLICATION)
 
 IMPORTER_DIR = $(TOP_DIR)/importers
 

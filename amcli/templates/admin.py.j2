@@ -1,0 +1,41 @@
+import nested_admin
+from django.contrib import admin
+from ..models import (
+{% for model in models %}
+    {{ model }},
+{% endfor %}
+)
+
+{# ============================================================ #}
+{# Inline クラス（子 → 親の順番で生成）                      #}
+{# ============================================================ #}
+
+{% for inline in inlines %}
+class {{ inline.class_name }}(nested_admin.NestedStackedInline):
+    model = {{ inline.model }}
+    extra = 0
+    {% if inline.children and inline.children|length > 0 %}
+    inlines = [
+        {% for child in inline.children %}
+        {{ child }},
+        {% endfor %}
+    ]
+    {% endif %}
+{% endfor %}
+
+{# ============================================================ #}
+{# DeviceInline（root admin）                                  #}
+{# ============================================================ #}
+
+class DeviceInline(nested_admin.NestedModelAdmin):
+    inlines = [
+        {% for inline in inlines if inline.model != "Device" %}
+        {{ inline.class_name }},
+        {% endfor %}
+    ]
+
+{# ============================================================ #}
+{# register（必須）                                             #}
+{# ============================================================ #}
+
+admin.site.register(Device, DeviceInline)

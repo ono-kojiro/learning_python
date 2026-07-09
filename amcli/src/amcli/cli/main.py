@@ -18,6 +18,7 @@ from amcli.cli.maintenance_commands import (
 )
 from amcli.cli.run_commands import generate_cmd, runserver_cmd
 
+from amcli.cli.nestedadmin_commands import gennestedadmin_cmd
 
 @click.group()
 def main():
@@ -51,3 +52,4 @@ main.add_command(maintainer_clean_cmd)
 main.add_command(generate_cmd)
 main.add_command(runserver_cmd)
 
+main.add_command(gennestedadmin_cmd)
