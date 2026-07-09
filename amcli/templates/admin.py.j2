@@ -6,36 +6,30 @@ from ..models import (
 {% endfor %}
 )
 
-{# ============================================================ #}
-{# Inline クラス（子 → 親の順番で生成）                      #}
-{# ============================================================ #}
-
 {% for inline in inlines %}
 class {{ inline.class_name }}(nested_admin.NestedStackedInline):
     model = {{ inline.model }}
     extra = 0
-    {% if inline.children and inline.children|length > 0 %}
+{% if inline.children %}
     inlines = [
-        {% for child in inline.children %}
+{% for child in inline.children %}
         {{ child }},
-        {% endfor %}
+{% endfor %}
     ]
-    {% endif %}
+{% endif %}
+
 {% endfor %}
 
-{# ============================================================ #}
-{# DeviceInline（root admin）                                  #}
-{# ============================================================ #}
-
-class DeviceInline(nested_admin.NestedModelAdmin):
+{% for inline in inlines %}
+{% if not inline.parent %}
+class {{ inline.model }}Admin(nested_admin.NestedModelAdmin):
     inlines = [
-        {% for inline in inlines if inline.model != "Device" %}
-        {{ inline.class_name }},
-        {% endfor %}
+{% for child in inline.children %}
+        {{ child }},
+{% endfor %}
     ]
 
-{# ============================================================ #}
-{# register（必須）                                             #}
-{# ============================================================ #}
+admin.site.register({{ inline.model }}, {{ inline.model }}Admin)
 
-admin.site.register(Device, DeviceInline)
+{% endif %}
+{% endfor %}

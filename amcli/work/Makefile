@@ -48,7 +48,12 @@ edit : installapp
 		grep -q "path('api/', include('myapp.urls_api'))" $$urls_py || \
 		sed -i "/^]/i\    path('api/', include('myapp.urls_api'))," $$urls_py
 
-migrate : edit
+add-nested_admin : edit
+	urls_py="$(WORK_DIR)/$(PROJECT)/urls.py"; \
+	grep -q "path('_nested_admin/', include('nested_admin.urls'))" $$urls_py || \
+    sed -i "/^]/i\    path('_nested_admin/', include('nested_admin.urls'))," $$urls_py
+
+migrate : add-nested_admin
 	rm -f db.sqlite3
 	python3 manage.py makemigrations
 	python3 manage.py migrate
