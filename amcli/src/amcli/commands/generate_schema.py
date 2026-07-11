@@ -105,9 +105,6 @@ def run(output_file, input_files, application=None, project=None):
     reverse_dependencies = build_reverse_dependencies(dependencies)
     load_order = topo_sort(dependencies)
 
-    if "Device" in load_order:
-        load_order = ["Device"] + [m for m in load_order if m != "Device"]
-
     field_categories = collect_field_categories(models)
     general_categories = {m: categorize_general(m, models) for m in models}
     dependency_categories = determine_dependency_categories(models, reverse_dependencies)
