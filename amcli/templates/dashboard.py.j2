@@ -3,6 +3,7 @@
 #
 from django.contrib.admin import AdminSite
 from django.utils.translation import gettext_lazy as _
+from django.apps import apps
 from {{ application }} import models
 
 
@@ -14,7 +15,6 @@ class {{ site_class_name }}(AdminSite):
     def index(self, request, extra_context=None):
         extra_context = extra_context or {}
 
-        {# ★ load_order に従って統計情報を追加 #}
         {%- for model in dashboard_models %}
         extra_context["{{ model.name|lower }}_count"] = models.{{ model.name }}.objects.count()
         {%- endfor %}
@@ -25,7 +25,20 @@ class {{ site_class_name }}(AdminSite):
 {{ site_instance_name }} = {{ site_class_name }}(name="{{ site_url_name }}")
 
 
-{# ★ load_order に従ってモデル登録（依存関係順） #}
-{%- for model in dashboard_models %}
-{{ site_instance_name }}.register(models.{{ model.name }})
-{%- endfor %}
+# ★ migrate 時は ModelAdmin の再登録をスキップする
+import sys
+if "migrate" not in sys.argv:
+    try:
+        from {{ application }} import admin as app_admin
+
+        # Django の正しいモデル一覧取得
+        for model_cls in apps.get_app_config("{{ application }}").get_models():
+            model_name = model_cls.__name__
+            admin_cls_name = f"{model_name}Admin"
+
+            if hasattr(app_admin, admin_cls_name):
+                admin_cls = getattr(app_admin, admin_cls_name)
+                {{ site_instance_name }}.register(model_cls, admin_cls)
+
+    except Exception as e:
+        print("Dashboard ModelAdmin override failed:", e)
