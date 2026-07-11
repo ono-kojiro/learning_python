@@ -40,6 +40,22 @@ def genserializer_cmd(loader_dir, output_file, schema_yaml, ref_yaml):
     run(loader_dir, output_file, schema_yaml, ref_yaml)
 
 
+@click.command(name="gendashboard")
+@click.option("-l", "--loader", "loader_dir", required=True)
+@click.option("-o", "--output", "output_file", required=True)
+@click.option("-s", "--schema", "schema_yaml", required=True)
+def gendashboard_cmd(loader_dir, output_file, schema_yaml):
+    from amcli.commands.generate_dashboard import run
+    run(loader_dir, output_file, schema_yaml)
+
+@click.command(name="genprojecturls")
+@click.option("-l", "--loader", "loader_dir", required=True)
+@click.option("-o", "--output", "output_file", required=True)
+@click.option("-s", "--schema", "schema_yaml", required=True)
+def genprojecturls_cmd(loader_dir, output_file, schema_yaml):
+    from amcli.commands.generate_project_urls import run
+    run(loader_dir, output_file, schema_yaml)
+
 @click.command(name="genfixture")
 @click.option("-l", "--loader", "loader_dir", required=True)
 @click.option("-o", "--output", "output_file", required=True)

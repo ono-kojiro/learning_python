@@ -41,17 +41,8 @@ edit : installapp
 	amcli edit --import $(ALLOWED_HOSTS_YML) \
 		--project $(WORK_DIR)/$(PROJECT) ALLOWED_HOSTS
 	
-	urls_py="$(WORK_DIR)/$(PROJECT)/urls.py"; \
-		target="from django.urls import path, include"; \
-		grep -q "$$target" $$urls_py || \
-		sed -i "s/from django.urls import path/$$target/" $$urls_py; \
-		grep -q "path('api/', include('myapp.urls_api'))" $$urls_py || \
-		sed -i "/^]/i\    path('api/', include('myapp.urls_api'))," $$urls_py
-
 add-nested_admin : edit
-	urls_py="$(WORK_DIR)/$(PROJECT)/urls.py"; \
-	grep -q "path('_nested_admin/', include('nested_admin.urls'))" $$urls_py || \
-    sed -i "/^]/i\    path('_nested_admin/', include('nested_admin.urls'))," $$urls_py
+	echo "REMOVED"
 
 migrate : add-nested_admin
 	rm -f db.sqlite3

@@ -7,7 +7,9 @@ from amcli.cli.install_commands import installapp_cmd, edit_cmd
 from amcli.cli.schema_commands import cmp2ref_cmd, genschema_cmd, gentestschema_cmd
 from amcli.cli.generate_commands import (
     genmodel_cmd, genadmin_cmd, genview_cmd,
-    genserializer_cmd, genfixture_cmd, genimporter_cmd
+    genserializer_cmd, genfixture_cmd, genimporter_cmd,
+    gendashboard_cmd,
+    genprojecturls_cmd
 )
 from amcli.cli.test_commands import (
     gentest_cmd, gentestdata_cmd, gentestscript_cmd, test_cmd
@@ -53,3 +55,6 @@ main.add_command(generate_cmd)
 main.add_command(runserver_cmd)
 
 main.add_command(gennestedadmin_cmd)
+main.add_command(gendashboard_cmd)
+main.add_command(genprojecturls_cmd)
+

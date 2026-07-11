@@ -41,8 +41,9 @@ SERIALIZER_DIR = $(WORK_DIR)/$(APPLICATION)/serializers/
 
 FIXTURE_DIR = $(TEST_DIR)/fixtures
 
+PROJECT_DIR = $(WORK_DIR)/$(PROJECT)
 
-ALLOWED_HOSTS_YML = $(WORK_DIR)/$(PROJECT)/allowed_hosts.yml
+ALLOWED_HOSTS_YML = $(PROJECT_DIR)/allowed_hosts.yml
 
 TEST_DIR = $(TOP_DIR)/tests
 

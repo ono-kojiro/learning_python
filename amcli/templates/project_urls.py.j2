@@ -1,0 +1,20 @@
+{# project_urls.py.j2 #}
+from django.contrib import admin
+from django.urls import path, include
+from {{ application }}.dashboard import {{ project }}_dashboard
+
+urlpatterns = [
+    # Dashboard
+    #path("", {{ project }}_dashboard.urls),
+    path("dashboard/", {{ project }}_dashboard.urls),
+
+    # Django 標準 admin（残す）
+    path("admin/", admin.site.urls),
+
+    # API
+    path("api/", include("{{ application }}.urls_api")),
+
+    # nested_admin
+    path("_nested_admin/", include("nested_admin.urls")),
+]
+
