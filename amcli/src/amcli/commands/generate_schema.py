@@ -85,10 +85,10 @@ def topo_sort_inline(nested):
             dfs(child)
         order.append(model)
 
-    # Device を root として DFS
-    dfs("Device")
+    # ★ root を自動判定
+    root = find_root(nested)
+    dfs(root)
 
-    # ★ reversed(order) は不要（order がすでに子 → 親）
     return order
 
 
@@ -160,3 +160,18 @@ def run(output_file, input_files, application=None, project=None):
         json.dump(schema, fp, indent=2, ensure_ascii=False)
 
     print(f"[amcli] Generated schema: {output_path}")
+
+
+# ============================================================
+# ★ ルートモデル判定（nested から自動判定）
+# ============================================================
+def find_root(nested):
+    children = set()
+    for parent, items in nested.items():
+        for item in items:
+            model = item.get("model")
+            if model:
+                children.add(model)
+
+    roots = [m for m in nested.keys() if m not in children]
+    return roots[0] if roots else None
