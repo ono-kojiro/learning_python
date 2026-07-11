@@ -33,3 +33,17 @@ admin.site.register({{ inline.model }}, {{ inline.model }}Admin)
 
 {% endif %}
 {% endfor %}
+
+
+# ----- NestedModelAdmin 生成部分はここまで -----
+
+# DEBUG: normal_admin_models = {{ normal_admin_models }}
+
+{% for model in normal_admin_models %}
+class {{ model }}Admin(admin.ModelAdmin):
+    pass
+
+admin.site.register({{ model }}, {{ model }}Admin)
+{% endfor %}
+
+# ----- NormalModelAdmin 生成部分はここまで -----

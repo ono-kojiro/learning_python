@@ -74,7 +74,8 @@ def run(template_dir, output_file, schema_json):
     # DeviceAdmin の register は出力しない
     rendered = template.render(
         models=models,        # ★ これがなかったため import が空になっていた
-        inlines=ordered_inlines
+        inlines=ordered_inlines,
+        normal_admin_models=schema.get("normal_admin_models", [])
     )
 
     Path(output_file).write_text(rendered)

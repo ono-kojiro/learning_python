@@ -133,6 +133,8 @@ def run(output_file, input_files, application=None, project=None):
         if model:
             admin_order["Device"].append(model)
 
+    normal_admin_models = [m for m in models.keys() if m not in inline_order]
+
     # ============================================================
     # ★ schema.json の構築
     # ============================================================
@@ -150,6 +152,7 @@ def run(output_file, input_files, application=None, project=None):
         "nested": nested,
         "inline_order": inline_order,
         "admin_order": admin_order,
+        "normal_admin_models": normal_admin_models,
     }
 
     output_path = Path(output_file).resolve()
