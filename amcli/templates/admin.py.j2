@@ -21,29 +21,28 @@ class {{ inline.class_name }}(nested_admin.NestedStackedInline):
 {% endfor %}
 
 {% for inline in inlines %}
-{% if not inline.parent %}
-class {{ inline.model }}Admin(nested_admin.NestedModelAdmin):
+class {{ inline.class_name }}(nested_admin.NestedStackedInline):
+    model = {{ inline.model }}
+    extra = 0
+{% if inline.children %}
     inlines = [
-{% for child in inline.children %}
+        {% for child in inline.children %}
         {{ child }},
-{% endfor %}
+        {% endfor %}
     ]
-
-admin.site.register({{ inline.model }}, {{ inline.model }}Admin)
-
 {% endif %}
 {% endfor %}
 
+# ----- NestedModelAdmin 生成部分 -----
 
-# ----- NestedModelAdmin 生成部分はここまで -----
-
-# DEBUG: normal_admin_models = {{ normal_admin_models }}
-
-{% for model in normal_admin_models %}
-class {{ model }}Admin(admin.ModelAdmin):
-    pass
-
-admin.site.register({{ model }}, {{ model }}Admin)
+{% for inline in inlines %}
+class {{ inline.model }}Admin(nested_admin.NestedModelAdmin):
+    inlines = [
+        {% for child in inline.children %}
+        {{ child }},
+        {% endfor %}
+    ]
+admin.site.register({{ inline.model }}, {{ inline.model }}Admin)
 {% endfor %}
 
 # ----- NormalModelAdmin 生成部分はここまで -----
