@@ -21,10 +21,6 @@ def load_schema(schema_path):
 # 2. build_order の生成（旧 load_order）
 # ============================================================
 def build_build_order(schema):
-    """
-    build_order は API の登録順（POST 順）
-    schema.json の load_order をそのまま使う
-    """
     order = schema.get("load_order")
     if not order:
         raise ValueError("schema.json に load_order がありません")
@@ -42,30 +38,21 @@ def build_delete_order(build_order):
 # 4. 依存関係グラフの構築
 # ============================================================
 def build_dependency_graph(schema):
-    """
-    dependencies = {
-        "Device": ["Comment", "Remark"],
-        "NetIF": ["Device"],
-        ...
-    }
-    """
     return schema.get("dependencies", {})
 
 
 # ============================================================
-# 5. トポロジカルソート（依存関係順）
+# 5. トポロジカルソート
 # ============================================================
 def topological_sort(dependencies):
     indegree = defaultdict(int)
     graph = defaultdict(list)
 
-    # 親 → 子 のグラフを構築
     for model, parents in dependencies.items():
         for p in parents:
             graph[p].append(model)
             indegree[model] += 1
 
-    # 入次数 0 のノードから開始
     queue = deque([m for m in dependencies if indegree[m] == 0])
     order = []
 
@@ -81,16 +68,13 @@ def topological_sort(dependencies):
 
 
 # ============================================================
-# 6. load_order の生成（旧 loaddata_order）
+# 6. load_order の生成
 # ============================================================
 def build_load_order(schema):
-    """
-    load_order は FK の依存関係順（参照される側 → 参照する側）
-    dependencies を使って topological_sort で生成する
-    """
     dependencies = build_dependency_graph(schema)
     order = topological_sort(dependencies)
     return [m.lower() for m in order]
+
 
 def topo_sort(model_names, dependencies):
     visited = set()
@@ -103,34 +87,47 @@ def topo_sort(model_names, dependencies):
             return
         visited.add(model_l)
 
-        # 依存先（FK 参照先）を先に visit する
         for dep in dependencies.get(model, []):
             visit(dep)
 
-        # 自分自身を追加
         result.append(model_l)
 
-    # schema["models"].keys() は大文字なのでそのまま使う
     for model in model_names:
         visit(model)
 
     return result
 
+
 # ============================================================
-# 7. メイン処理
+# 7. reverse_relations の生成（OneToOneRel を自動検出）
+# ============================================================
+def build_reverse_relations(schema):
+    reverse = {}
+
+    for model_name, fields in schema["models"].items():
+        for fname, fdef in fields.items():
+            if fdef.get("type") == "OneToOneRel":
+                reverse.setdefault(model_name.lower(), []).append(fname)
+
+    return reverse
+
+
+# ============================================================
+# 8. メイン処理
 # ============================================================
 def run(schema_path, output_path):
     schema = load_schema(schema_path)
 
     build_order = build_build_order(schema)
     delete_order = build_delete_order(build_order)
-
     fixture_order = topo_sort(schema["models"].keys(), schema["dependencies"])
+    reverse_relations = build_reverse_relations(schema)
 
     test_schema = {
         "build_order": build_order,
         "delete_order": delete_order,
         "fixture_order": fixture_order,
+        "reverse_relations": reverse_relations,
     }
 
     out_file = Path(output_path)
@@ -140,6 +137,3 @@ def run(schema_path, output_path):
         json.dump(test_schema, fp, indent=2, ensure_ascii=False)
 
     print(f"[amcli] Generated test_schema: {out_file}")
-
-
-
