@@ -14,21 +14,20 @@ def build_reference_model(models, target_model):
         "fields": {}
     }
 
-    # --- PK は primary_key を付けない（model.mk が付ける） ---
     pk_name, pk_field = get_pk_field(models, target_model)
-    # PK フィールドは unique=True のまま扱う
 
-    # ---------------------------------------
     # 親モデル側のフィールド変換
-    # ---------------------------------------
     for fname, fdef in models[target_model]["fields"].items():
+
+        # fixture_ignore → 完全除外
+        if fdef.get("fixture_ignore", False):
+            continue
+
         ftype = fdef["type"]
 
-        # プリミティブ型
         if ftype in ["String", "Text", "Int", "Float", "Bool", "ID", "DateTime", "Date"] or ftype.startswith("List"):
             out["fields"][fname] = convert_primitive_field(fdef)
 
-        # ManyToMany
         elif ftype == "ManyToMany":
             base = fname[:-1] if fname.endswith("s") else fname
             new_name = f"{base}_ids"
@@ -37,7 +36,10 @@ def build_reference_model(models, target_model):
                 "to": fdef["to"]
             }
 
-        # OneToOne
+            # ★ Manager の ManyToMany は _fixture_ignore を自動付与
+            if target_model == "Manager" and ftype == "ManyToMany":
+                out["fields"][new_name]["_fixture_ignore"] = True
+                
         elif ftype == "OneToOne":
             out["fields"][fname] = {
                 "type": FieldType.ONE_TO_ONE.value,
@@ -46,7 +48,6 @@ def build_reference_model(models, target_model):
                 "blank": fdef.get("nullable", False),
             }
 
-        # OneToMany
         elif ftype == "OneToMany":
             out["fields"][fname] = {
                 "type": FieldType.JSON.value,
@@ -56,13 +57,14 @@ def build_reference_model(models, target_model):
         else:
             raise ValueError(f"Unknown type: {ftype}")
 
-    # ---------------------------------------
     # 子モデル側に逆参照を追加
-    # ---------------------------------------
     for model_name, model_def in models.items():
         for fname, fdef in model_def["fields"].items():
 
-            # OneToMany → 子側に ForeignKey
+            # fixture_ignore → 逆参照も除外
+            if fdef.get("fixture_ignore", False):
+                continue
+
             if fdef["type"] == "OneToMany" and fdef["to"] == target_model:
                 nullable = fdef.get("nullable", False)
                 field_name = model_name.lower()
@@ -81,7 +83,6 @@ def build_reference_model(models, target_model):
                     out["fields"][field_name]["null"] = True
                     out["fields"][field_name]["blank"] = True
 
-            # OneToOne → 子側に OneToOneField
             if fdef["type"] == "OneToOne" and fdef["to"] == target_model:
                 field_name = model_name.lower()
 
@@ -93,4 +94,3 @@ def build_reference_model(models, target_model):
                 }
 
     return out
-

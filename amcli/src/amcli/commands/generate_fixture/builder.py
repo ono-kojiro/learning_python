@@ -1,4 +1,8 @@
+# file: src/amcli/commands/generate_fixture/builder.py
+
 import os
+import random
+
 from collections import defaultdict
 from amcli.utils.random_generators import generate_random_value, generate_gateway_from_cidr
 from amcli.utils.debug import debug
@@ -68,21 +72,47 @@ def generate_item(model_l, pk_value, pk_index, fields, pk_map, name_data, count)
     for fname, fdef in fields.items():
         ftype = fdef["type"]
 
+        # ★ primary_key は fixture に書かない
         if fdef.get("primary_key", False):
             continue
 
+        # ★ OneToOneRel（逆参照）は fixture に書かない
+        if ftype == "OneToOneRel":
+            continue
+
+        # ★ 子側 OneToOneField（OS.device）は fixture に書かない
+        #   schema.json では OS.device が OneToOneField になっているが、
+        #   Django の正しい fixture では子側は書かない。
+        if model_l == "os" and fname == "device":
+            continue
+
+        # ForeignKey / OneToOneField（親側のみ）
         if ftype in ("ForeignKey", "OneToOneField"):
+
+            # OS.device は子側なので除外
+            if model_l == "os" and fname == "device":
+                continue
+
             target = fdef["to"].lower()
-            fk_value = pk_map[target][pk_index % len(pk_map[target])]
+
+            # ★ OneToOneField は 1対1 対応にする
+            if ftype == "OneToOneField":
+                fk_value = pk_map[target][pk_index % len(pk_map[target])]
+            else:
+                # ForeignKey はランダムでOK
+                fk_value = random.choice(pk_map[target])
+
             item["fields"][fname] = fk_value
             continue
 
+        # ManyToManyField
         if ftype == "ManyToManyField":
             target = fdef["to"].lower()
             m2m_value = [pk_map[target][pk_index % len(pk_map[target])]]
             item["fields"][fname] = m2m_value
             continue
 
+        # その他のフィールド
         value = generate_random_value(
             model_l,
             fname,
@@ -93,6 +123,7 @@ def generate_item(model_l, pk_value, pk_index, fields, pk_map, name_data, count)
         )
         item["fields"][fname] = value
 
+    # gateway の自動生成
     if "addresses" in item["fields"] and "gateway" in item["fields"]:
         addrs = item["fields"]["addresses"]
         if addrs:

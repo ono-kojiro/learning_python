@@ -52,13 +52,7 @@ migrate : add-nested_admin
 	python3 manage.py createsuperuser --noinput || true
 
 loaddata : migrate
-	mkdir -p $(FIXTURE_DIR)
-	models=`cat $(TESTSCHEMA_JSON) | jq -r '.fixture_order[]'`; \
-	for model in $${models}; do \
-		fixture=$(FIXTURE_DIR)/$${model}_fixture.yaml; \
-		echo "python3 manage.py loaddata $${fixture}"; \
-		python3 manage.py loaddata $${fixture}; \
-	done
+	python3 manage.py loaddata ../tests/fixtures/fixture_all.yaml
 
 
 start :
