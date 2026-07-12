@@ -1,8 +1,13 @@
+import os
 from pathlib import Path
 import yaml
 from jinja2 import Environment, FileSystemLoader
 
 from amcli.utils.constants import FieldType
+
+from amcli.utils.debug import debug
+
+DEBUG = os.environ.get("VERBOSE", "0") != "0"
 
 def read_yaml(path):
     with open(path, "r", encoding="utf-8") as fp:
@@ -25,8 +30,8 @@ def run(loader_dir, output_file, schema_yaml, ref_yaml):
     )
     env.globals["FieldType"] = FieldType
 
-    print("[DEBUG] loader_dir =", loader_dir)
-    print("[DEBUG] templates found:", env.list_templates())
+    debug("[DEBUG] loader_dir ={0}".format(loader_dir))
+    debug("[DEBUG] templates found: {0}".format(env.list_templates()))
 
     # specs JSON 読み込み
     data = read_yaml(ref_yaml)
@@ -67,8 +72,8 @@ def run(loader_dir, output_file, schema_yaml, ref_yaml):
     # ★★★ デバッグプリント：FK 判定とテンプレート選択 ★★★
     # ---------------------------------------------------------
     fk_fields = list(fk_info.keys())
-    print(f"[DEBUG] model = {model}")
-    print(f"[DEBUG] fk fields = {fk_fields}")
+    debug(f"[DEBUG] model = {model}")
+    debug(f"[DEBUG] fk fields = {fk_fields}")
 
     dep_cat = dependency_categories.get(model)
 
@@ -85,7 +90,7 @@ def run(loader_dir, output_file, schema_yaml, ref_yaml):
         else:
             template_name = "serializer_normal.j2"
 
-    print(f"[DEBUG] using template = {template_name}")
+    debug(f"[DEBUG] using template = {template_name}")
 
     template = env.get_template(template_name)
 
@@ -133,4 +138,4 @@ def run(loader_dir, output_file, schema_yaml, ref_yaml):
     with open(out_path, "w", encoding="utf-8") as fp:
         fp.write(content + "\n")
 
-    print(f"[amcli] Generated serializer: {out_path}")
+    debug(f"[amcli] Generated serializer: {out_path}")

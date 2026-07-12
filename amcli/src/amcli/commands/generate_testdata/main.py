@@ -2,7 +2,9 @@ import os
 import json
 import datetime
 
-DEBUG = True
+from amcli.utils.debug import debug
+
+DEBUG = os.environ.get("VERBOSE", "0") != "0"
 
 # ============================================================
 # Utility
@@ -126,8 +128,7 @@ def gen_json(model_name, fields_def, outdir, index):
         json.dump(body, f, indent=2, ensure_ascii=False)
         f.write("\n")  # 末尾改行
 
-    if DEBUG:
-        print(f"[DEBUG] wrote {path}")
+    debug(f"[DEBUG] wrote {path}")
 
 # ============================================================
 # Entry point called from cli.py
@@ -148,8 +149,7 @@ def run(schema_path, outdir, ref_json_paths):
     # ADD のみなので依存関係展開は必須
     ordered_models = get_dependency_order(schema, model_names)
 
-    if DEBUG:
-        print("[DEBUG] dependency order =", ordered_models)
+    debug("[DEBUG] dependency order ={0}".format(ordered_models))
 
     index = 1
 

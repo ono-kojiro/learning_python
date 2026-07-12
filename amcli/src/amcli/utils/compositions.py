@@ -1,18 +1,18 @@
 # amcli/utils/compositions.py
 
 import os
+import sys
+import json
 
-DEBUG = os.environ.get("VERBOSE", "0") != "0"
+from amcli.utils.debug import debug
 
-def debug(msg):
-    if DEBUG :
-        print(msg)
-
+#DEBUG = os.environ.get("VERBOSE", "0") != "0"
+DEBUG = True
 
 def collect_compositions(models):
     compositions = {}
 
-    print("=== collect_compositions DEBUG START ===")
+    debug("=== collect_compositions DEBUG START ===")
 
     # 親側の所有痕跡（JSONField / OneToOneField）
     for parent, model_def in models.items():
@@ -91,6 +91,15 @@ def build_load_order_from_compositions(compositions, root):
     order = []
     visited = set()
 
+    print("=== build_load_order_from_compositions start ===")
+    print(json.dumps(compositions, indent=2))
+
+    print("=== root ===")
+    print(root)
+
+    print("=== compositions.get(root) ===")
+    print(compositions.get(root))
+
     def dfs(model):
         if model in visited:
             return
@@ -100,4 +109,7 @@ def build_load_order_from_compositions(compositions, root):
         order.append(model)
 
     dfs(root)
+
+    print("=== build_load_order_from_compositions end ===")
+
     return order

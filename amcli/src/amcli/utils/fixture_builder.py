@@ -7,8 +7,9 @@ from amcli.utils.random_generators import (
     generate_gateway_from_cidr,
 )
 
-DEBUG = os.environ.get("VERBOSE", "0") != "0"
+from amcli.utils.debug import debug
 
+DEBUG = os.environ.get("VERBOSE", "0") != "0"
 
 def build_fixtures(models, dependencies, name_data, count, include_deps, testschema=None):
     """
@@ -21,12 +22,10 @@ def build_fixtures(models, dependencies, name_data, count, include_deps, testsch
     # load_order を使う（最優先）
     if testschema and "load_order" in testschema:
         order = testschema["load_order"]
-        if DEBUG:
-            print("[DEBUG] Using testschema load_order:", order)
+        debug("[DEBUG] Using testschema load_order: {0}".format(order))
     else:
         order = list(models.keys())
-        if DEBUG:
-            print("[DEBUG] Using fallback model order:", order)
+        debug("[DEBUG] Using fallback model order: {0}".format(order))
 
     fixtures = []
 
@@ -35,14 +34,12 @@ def build_fixtures(models, dependencies, name_data, count, include_deps, testsch
 
     for model in order:
         if model not in models:
-            if DEBUG:
-                print(f"[DEBUG] Model '{model}' not in models → skip")
+            debug(f"[DEBUG] Model '{model}' not in models → skip")
             continue
 
         fields = models[model]
 
-        if DEBUG:
-            print(f"\n[DEBUG] === Generating fixtures for model: {model} ===")
+        debug(f"\n[DEBUG] === Generating fixtures for model: {model} ===")
 
         # まず PK を count 個生成して pk_map に登録する
         model_pks = []
@@ -63,8 +60,7 @@ def build_fixtures(models, dependencies, name_data, count, include_deps, testsch
 
         pk_map[model.lower()] = model_pks
 
-        if DEBUG:
-            print(f"[DEBUG]   PK map updated for {model}: {pk_map[model.lower()]}")
+        debug(f"[DEBUG]   PK map updated for {model}: {pk_map[model.lower()]}")
 
         # PK を使って fixture を生成
         for pk_index, pk_value in enumerate(model_pks):
@@ -74,8 +70,7 @@ def build_fixtures(models, dependencies, name_data, count, include_deps, testsch
                 "fields": {}
             }
 
-            if DEBUG:
-                print(f"[DEBUG]   PK={pk_value}")
+            debug(f"[DEBUG]   PK={pk_value}")
 
             for fname, fdef in fields.items():
                 ftype = fdef["type"]
@@ -92,8 +87,7 @@ def build_fixtures(models, dependencies, name_data, count, include_deps, testsch
                     fk_value = pk_map[target][pk_index % len(pk_map[target])]
                     item["fields"][fname] = fk_value
 
-                    if DEBUG:
-                        print(f"[DEBUG]     FK field '{fname}' → target '{target}', assigned PK={fk_value}")
+                    debug(f"[DEBUG]     FK field '{fname}' → target '{target}', assigned PK={fk_value}")
 
                     continue
 
@@ -105,8 +99,7 @@ def build_fixtures(models, dependencies, name_data, count, include_deps, testsch
                     m2m_value = [pk_map[target][pk_index % len(pk_map[target])]]
                     item["fields"][fname] = m2m_value
 
-                    if DEBUG:
-                        print(f"[DEBUG]     M2M field '{fname}' → target '{target}', assigned PK list={m2m_value}")
+                    debug(f"[DEBUG]     M2M field '{fname}' → target '{target}', assigned PK list={m2m_value}")
 
                     continue
 
@@ -114,8 +107,7 @@ def build_fixtures(models, dependencies, name_data, count, include_deps, testsch
                 value = generate_random_value(model, fname, fdef, count, pk_index + 1, name_data)
                 item["fields"][fname] = value
 
-                if DEBUG:
-                    print(f"[DEBUG]     Field '{fname}' → {value}")
+                debug(f"[DEBUG]     Field '{fname}' → {value}")
 
             # gateway の自動生成
             if "addresses" in item["fields"] and "gateway" in item["fields"]:
@@ -124,13 +116,11 @@ def build_fixtures(models, dependencies, name_data, count, include_deps, testsch
                     gw = generate_gateway_from_cidr(addrs[0])
                     item["fields"]["gateway"] = gw
 
-                    if DEBUG:
-                        print(f"[DEBUG]     Auto gateway from {addrs[0]} → {gw}")
+                    debug(f"[DEBUG]     Auto gateway from {addrs[0]} → {gw}")
 
             fixtures.append(item)
 
-    if DEBUG:
-        print("\n[DEBUG] === Fixture generation complete ===")
-        print(f"[DEBUG] Total fixtures: {len(fixtures)}")
+    debug("\n[DEBUG] === Fixture generation complete ===")
+    debug(f"[DEBUG] Total fixtures: {len(fixtures)}")
 
     return fixtures

@@ -101,7 +101,7 @@ def run(schema_path, output_path):
 
     build_order = build_build_order(schema)
     delete_order = build_delete_order(build_order)
-    load_order = build_load_order(schema)
+    load_order = schema['load_order']
 
     test_schema = {
         "build_order": build_order,
