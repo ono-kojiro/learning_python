@@ -53,7 +53,7 @@ migrate : add-nested_admin
 
 loaddata : migrate
 	mkdir -p $(FIXTURE_DIR)
-	models=`cat $(TESTSCHEMA_JSON) | jq -r '.load_order[]'`; \
+	models=`cat $(TESTSCHEMA_JSON) | jq -r '.fixture_order[]'`; \
 	for model in $${models}; do \
 		fixture=$(FIXTURE_DIR)/$${model}_fixture.yaml; \
 		echo "python3 manage.py loaddata $${fixture}"; \

@@ -92,6 +92,29 @@ def build_load_order(schema):
     order = topological_sort(dependencies)
     return [m.lower() for m in order]
 
+def topo_sort(model_names, dependencies):
+    visited = set()
+    result = []
+
+    def visit(model):
+        model_l = model.lower()
+
+        if model_l in visited:
+            return
+        visited.add(model_l)
+
+        # 依存先（FK 参照先）を先に visit する
+        for dep in dependencies.get(model, []):
+            visit(dep)
+
+        # 自分自身を追加
+        result.append(model_l)
+
+    # schema["models"].keys() は大文字なのでそのまま使う
+    for model in model_names:
+        visit(model)
+
+    return result
 
 # ============================================================
 # 7. メイン処理
@@ -101,12 +124,13 @@ def run(schema_path, output_path):
 
     build_order = build_build_order(schema)
     delete_order = build_delete_order(build_order)
-    load_order = schema['load_order']
+
+    fixture_order = topo_sort(schema["models"].keys(), schema["dependencies"])
 
     test_schema = {
         "build_order": build_order,
         "delete_order": delete_order,
-        "load_order": load_order,
+        "fixture_order": fixture_order,
     }
 
     out_file = Path(output_path)
@@ -116,3 +140,6 @@ def run(schema_path, output_path):
         json.dump(test_schema, fp, indent=2, ensure_ascii=False)
 
     print(f"[amcli] Generated test_schema: {out_file}")
+
+
+

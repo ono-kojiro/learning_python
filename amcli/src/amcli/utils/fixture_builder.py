@@ -33,11 +33,13 @@ def build_fixtures(models, dependencies, name_data, count, include_deps, testsch
     pk_map = defaultdict(list)
 
     for model in order:
-        if model not in models:
+        model_l = model.lower()
+
+        if model_l not in models:
             debug(f"[DEBUG] Model '{model}' not in models → skip")
             continue
 
-        fields = models[model]
+        fields = models[model_l]
 
         debug(f"\n[DEBUG] === Generating fixtures for model: {model} ===")
 

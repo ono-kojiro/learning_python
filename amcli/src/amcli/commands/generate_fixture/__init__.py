@@ -1,6 +1,6 @@
 # src/amcli/commands/generate_fixture/__init__.py
 
-from .builder import run
+from .run import run
 
 __all__ = ["run"]
 

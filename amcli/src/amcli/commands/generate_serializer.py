@@ -30,8 +30,8 @@ def run(loader_dir, output_file, schema_yaml, ref_yaml):
     )
     env.globals["FieldType"] = FieldType
 
-    debug("[DEBUG] loader_dir ={0}".format(loader_dir))
-    debug("[DEBUG] templates found: {0}".format(env.list_templates()))
+    #debug("[DEBUG] loader_dir ={0}".format(loader_dir))
+    #debug("[DEBUG] templates found: {0}".format(env.list_templates()))
 
     # specs JSON 読み込み
     data = read_yaml(ref_yaml)
