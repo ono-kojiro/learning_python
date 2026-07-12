@@ -48,16 +48,15 @@ def collect_all_dependencies(deps):
     return all_deps
 
 
-def build_reverse_dependencies(deps):
-    """
-    逆方向依存を構築する。
-    """
-    rev = {m: [] for m in deps}
-    for model, parents in deps.items():
-        for p in parents:
-            rev[p].append(model)
-    return rev
+def build_reverse_dependencies(dependencies):
+    reverse = {model: [] for model in dependencies.keys()}
 
+    for model, deps in dependencies.items():
+        for dep in deps:
+            # dep を参照しているのは model なので
+            reverse[dep].append(model)
+
+    return reverse
 
 def topo_sort(dep_map):
     """

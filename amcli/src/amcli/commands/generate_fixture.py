@@ -13,8 +13,9 @@ def read_yaml(path):
         return yaml.safe_load(fp)
 
 
-def run(loader_dir, output_file, schema_yaml, names_yaml, ref_yaml_list, count=10, include_deps=False):
+def run(loader_dir, output_file, schema_yaml, testschema_yaml, names_yaml, ref_yaml_list, count=10, include_deps=False):
     schema = read_yaml(schema_yaml)
+    testschema = read_yaml(testschema_yaml)
     dependencies = schema["dependencies"]
 
     name_data = read_yaml(names_yaml) if names_yaml else {"first_names": [], "last_names": []}
@@ -30,6 +31,14 @@ def run(loader_dir, output_file, schema_yaml, names_yaml, ref_yaml_list, count=1
 
         models[model] = data["fields"]
 
-    fixtures = build_fixtures(models, dependencies, name_data, count, include_deps)
+    # ★ testschema=schema を渡す（load_order を使う）
+    fixtures = build_fixtures(
+        models,
+        dependencies,
+        name_data,
+        count,
+        include_deps,
+        testschema=testschema
+    )
 
     render_fixtures(loader_dir, output_file, fixtures)

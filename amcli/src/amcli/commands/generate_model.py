@@ -13,6 +13,24 @@ def read_json(filepath):
 
 
 # ------------------------------------------------------------
+# compositions の読み込み
+# ------------------------------------------------------------
+def load_compositions():
+    """
+    schema.json を読み込み、compositions を返す。
+    generate_model は schema.mk の後に呼ばれるので work/schema/schema.json が存在する。
+    """
+    schema_path = Path("../work/schema/schema.json")
+    if not schema_path.exists():
+        return {}
+
+    with open(schema_path, "r", encoding="utf-8") as fp:
+        schema = json.load(fp)
+
+    return schema.get("compositions", {})
+
+
+# ------------------------------------------------------------
 # フィールド行の生成
 # ------------------------------------------------------------
 def render_default(k, v):
@@ -122,6 +140,9 @@ def generate_model_lines(data):
     name = data["name"]
     fields = data["fields"]
 
+    # compositions を読み込む
+    compositions = load_compositions()
+
     field_lines = []
 
     for fname, field_def in fields.items():
@@ -132,10 +153,20 @@ def generate_model_lines(data):
             line = render_relation_field(fname, field_def, FieldType.FOREIGN_KEY)
             field_lines.append(line)
 
-        # OneToOne
+        # OneToOneField（親側だけ生成）
         elif ftype == FieldType.ONE_TO_ONE:
-            line = render_relation_field(fname, field_def, FieldType.ONE_TO_ONE)
-            field_lines.append(line)
+            child = field_def["to"]
+
+            # ★ 親側判定：compositions[name] に child が含まれている
+            is_parent_side = child in compositions.get(name, [])
+
+            if is_parent_side:
+                # 親側 → OneToOneField を生成
+                line = render_relation_field(fname, field_def, FieldType.ONE_TO_ONE)
+                field_lines.append(line)
+            else:
+                # 子側 → 生成しない（逆参照は Django が自動生成）
+                continue
 
         # ManyToMany
         elif ftype == FieldType.MANY_TO_MANY:

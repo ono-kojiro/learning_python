@@ -45,16 +45,29 @@ def gen_dummy_value(fname, fdef):
 # Dependency expansion
 # ============================================================
 
-def expand_dependencies(schema, model_name):
+def expand_dependencies(schema, model_name, visited=None):
+    if visited is None:
+        visited = set()
+
+    # ★ 循環依存を防止
+    if model_name in visited:
+        return []
+
+    visited.add(model_name)
+
     deps = schema["dependencies"].get(model_name, [])
     expanded = []
+
     for d in deps:
-        expanded.extend(expand_dependencies(schema, d))
+        expanded.extend(expand_dependencies(schema, d, visited))
         expanded.append(d)
+
+    # ★ uniq 化
     uniq = []
     for x in expanded:
         if x not in uniq:
             uniq.append(x)
+
     return uniq
 
 def get_dependency_order(schema, model_names):

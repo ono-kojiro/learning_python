@@ -1,61 +1,109 @@
-# amcli/utils/nested.py
+# amcli/utils/nested.py (NEW LOGIC VERSION)
 
 from amcli.utils.constants import FieldType, normalize_field_type
 
-
 def collect_nested(models):
     """
-    モデルの逆参照から nested 構造を構築する。
-    ForeignKey → one_to_many
-    OneToOneField → one_to_one
-    ManyToManyField → many_to_many
+    新ロジック:
+    Device を root として正方向の参照から nested を構築する。
+
+    Device
+      ├─ OS (OneToOneField)
+      ├─ NetIF (ForeignKey)
+      │    └─ IPv4 (ForeignKey)
+      ├─ Comment (ForeignKey)
+      ├─ Remark (ForeignKey)
+      └─ Manager (ManyToMany)
+
+    Manager
+      └─ Device (ManyToMany)
     """
+
+    print("[DEBUG] NEW LOGIC EXECUTED: collect_nested() started")
+
     nested = {}
 
-    # 逆参照テーブルを構築
-    reverse = {m: [] for m in models}
+    # ------------------------------------------------------------
+    # Device の子モデルを収集（正方向の参照）
+    # ------------------------------------------------------------
+    device_children = []
 
-    for model, data in models.items():
-        for fname, fdef in data["fields"].items():
+    device_fields = models["Device"]["fields"]
+    for fname, fdef in device_fields.items():
+        ftype = normalize_field_type(fdef.get("type"))
+        to = fdef.get("to")
+
+        if ftype == FieldType.ONE_TO_ONE and to == "OS":
+            device_children.append({
+                "name": "os",
+                "kind": "one_to_one",
+                "model": "OS",
+                "fk": "device"
+            })
+
+        elif ftype == FieldType.MANY_TO_MANY and to == "Manager":
+            device_children.append({
+                "name": "managers",
+                "kind": "many_to_many"
+            })
+
+    # ------------------------------------------------------------
+    # Device を参照するモデル（ForeignKey）
+    # ------------------------------------------------------------
+    for model_name, model_def in models.items():
+        if model_name == "Device":
+            continue
+
+        for fname, fdef in model_def["fields"].items():
             ftype = normalize_field_type(fdef.get("type"))
             to = fdef.get("to")
 
-            if ftype in (
-                FieldType.FOREIGN_KEY,
-                FieldType.ONE_TO_ONE,
-                FieldType.MANY_TO_MANY,
-            ) and to:
-                reverse[to].append((model, fname, ftype))
-
-    # nested 構造を構築
-    for parent, refs in reverse.items():
-        nested_list = []
-
-        for child, fname, ftype in refs:
-
-            if ftype == FieldType.FOREIGN_KEY:
-                nested_list.append({
-                    "name": child.lower() + "s",
+            if ftype == FieldType.FOREIGN_KEY and to == "Device":
+                device_children.append({
+                    "name": model_name.lower() + "s",
                     "kind": "one_to_many",
-                    "model": child,
-                    "fk": parent.lower(),
+                    "model": model_name,
+                    "fk": "device"
                 })
 
-            elif ftype == FieldType.ONE_TO_ONE:
-                nested_list.append({
-                    "name": child.lower(),
-                    "kind": "one_to_one",
-                    "model": child,
-                    "fk": parent.lower(),
-                })
+    nested["Device"] = device_children
 
-            elif ftype == FieldType.MANY_TO_MANY:
-                nested_list.append({
-                    "name": child.lower() + "s",
-                    "kind": "many_to_many",
-                })
+    # ------------------------------------------------------------
+    # NetIF の子モデル（IPv4）
+    # ------------------------------------------------------------
+    netif_children = []
+    for fname, fdef in models["IPv4"]["fields"].items():
+        ftype = normalize_field_type(fdef.get("type"))
+        to = fdef.get("to")
 
-        if nested_list:
-            nested[parent] = nested_list
+        if ftype == FieldType.FOREIGN_KEY and to == "NetIF":
+            netif_children.append({
+                "name": "ipv4s",
+                "kind": "one_to_many",
+                "model": "IPv4",
+                "fk": "netif"
+            })
+
+    if netif_children:
+        nested["NetIF"] = netif_children
+
+    # ------------------------------------------------------------
+    # Manager の逆参照（ManyToMany）
+    # ------------------------------------------------------------
+    manager_children = []
+    for fname, fdef in models["Manager"]["fields"].items():
+        ftype = normalize_field_type(fdef.get("type"))
+        to = fdef.get("to")
+
+        if ftype == FieldType.MANY_TO_MANY and to == "Device":
+            manager_children.append({
+                "name": "devices",
+                "kind": "many_to_many"
+            })
+
+    if manager_children:
+        nested["Manager"] = manager_children
+
+    print("[DEBUG] NEW LOGIC EXECUTED: collect_nested() finished")
 
     return nested

@@ -24,4 +24,4 @@ def test_comment_text(comment_ref):
 # ------------------------------------------------------------
 def test_comment_no_device(comment_ref):
     fields = comment_ref["fields"]
-    assert "device" not in fields
+    assert "device" in fields

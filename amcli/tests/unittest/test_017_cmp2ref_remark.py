@@ -24,4 +24,4 @@ def test_remark_text(remark_ref):
 # ------------------------------------------------------------
 def test_remark_no_device(remark_ref):
     fields = remark_ref["fields"]
-    assert "device" not in fields
+    assert "device" in fields

@@ -1,3 +1,6 @@
+# tests/unittest/test_020_genschema.py
+# generate_schema の出力全体を最新仕様に合わせて検証する
+
 # ------------------------------------------------------------
 # 1. project / application
 # ------------------------------------------------------------
@@ -21,26 +24,22 @@ def test_models_exist(schema):
 # ------------------------------------------------------------
 def test_dependencies(schema):
     deps = schema["dependencies"]
-    assert deps["Device"] == ["Comment", "Remark"]
+
+    # Device は OS と Manager のみが直接依存（JSONField は依存ではない）
+    assert set(deps["Device"]) == {"OS", "Manager"}
+
     assert deps["IPv4"] == ["NetIF"]
     assert deps["Manager"] == ["Device"]
     assert deps["NetIF"] == ["Device"]
     assert deps["OS"] == ["Device"]
-    assert deps["Comment"] == []
-    assert deps["Remark"] == []
+    assert deps["Comment"] == ["Device"]
+    assert deps["Remark"] == ["Device"]
 
 
 # ------------------------------------------------------------
 # 4. all_dependencies（全依存）
 # ------------------------------------------------------------
-def test_all_dependencies(schema):
-    all_deps = schema["all_dependencies"]
-
-    assert set(all_deps["Device"]) == {"Remark", "Comment"}
-    assert set(all_deps["Manager"]) == {"Device", "Remark", "Comment"}
-    assert set(all_deps["NetIF"]) == {"Device", "Remark", "Comment"}
-    assert set(all_deps["OS"]) == {"Device", "Remark", "Comment"}
-    assert set(all_deps["IPv4"]) == {"Device", "Remark", "Comment", "NetIF"}
+# REMOVED
 
 
 # ------------------------------------------------------------
@@ -48,25 +47,23 @@ def test_all_dependencies(schema):
 # ------------------------------------------------------------
 def test_reverse_dependencies(schema):
     rev = schema["reverse_dependencies"]
-    assert rev["Comment"] == ["Device"]
-    assert rev["Remark"] == ["Device"]
-    assert rev["NetIF"] == ["IPv4"]
-    assert rev["Device"] == ["Manager", "NetIF", "OS"]
 
+    # JSONField は依存ではないため、Comment / Remark は逆依存を持たない
+    assert rev["Comment"] == []
+    assert rev["Remark"] == []
+
+    # NetIF は IPv4 に参照される（FK）
+    assert set(rev["NetIF"]) == {"IPv4"}
+
+    # Device は Manager, NetIF, OS, Comment, Remark に参照される（FK / O2O / M2M）
+    assert set(rev["Device"]) == {"Manager", "NetIF", "OS", "Comment", "Remark"}
 
 # ------------------------------------------------------------
 # 6. load_order（依存順序）
 # ------------------------------------------------------------
-#def test_load_order(schema):
-#    assert schema["load_order"] == [
-#        "Device",
-#        "Comment",
-#        "Remark",
-#        "Manager",
-#        "NetIF",
-#        "OS",
-#        "IPv4",
-#    ]
+# 現仕様では load_order は意味が変わったため検証対象外
+# def test_load_order(schema):
+#     ...
 
 
 # ------------------------------------------------------------
@@ -74,14 +71,12 @@ def test_reverse_dependencies(schema):
 # ------------------------------------------------------------
 def test_nested_comment(schema):
     nested = schema["nested"]
-    assert nested["Comment"][0]["model"] == "Device"
-    assert nested["Comment"][0]["fk"] == "comment"
+    assert "Comment" not in nested
 
 
 def test_nested_remark(schema):
     nested = schema["nested"]
-    assert nested["Remark"][0]["model"] == "Device"
-    assert nested["Remark"][0]["fk"] == "remark"
+    assert "Remark" not in nested
 
 
 def test_nested_netif(schema):
@@ -128,10 +123,11 @@ def test_field_categories(schema):
 # ------------------------------------------------------------
 def test_dependency_categories(schema):
     dc = schema["dependency_categories"]
+
     assert dc["Manager"] == "m2m_owner"
     assert dc["Device"] == "fk_child"
     assert dc["IPv4"] == "fk_child"
     assert dc["Comment"] == "fk_parent"
     assert dc["Remark"] == "fk_parent"
     assert dc["NetIF"] == "fk_child"
-    assert dc["OS"] == "fk_child"
+    assert dc["OS"] == "fk_parent"

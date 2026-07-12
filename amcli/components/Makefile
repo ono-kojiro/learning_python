@@ -7,7 +7,7 @@ all : init spec schema model admin view serializer dashboard project_urls \
 init :
 	$(MAKE) -f init.mk
 
-spec :
+spec : init
 	$(MAKE) -f spec.mk
 
 schema: spec
@@ -34,7 +34,7 @@ dashboard : spec schema
 project_urls : spec schema
 	$(MAKE) -f project_urls.mk
 
-fixture : spec schema
+fixture : spec schema testschema
 	$(MAKE) -f fixture.mk
 
 importer : schema
