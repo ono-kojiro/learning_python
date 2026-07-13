@@ -80,12 +80,6 @@ def generate_item(model_l, pk_value, pk_index, fields, pk_map, name_data, count)
         if ftype == "OneToOneRel":
             continue
 
-        # ★ 子側 OneToOneField（OS.device）は fixture に書かない
-        #   schema.json では OS.device が OneToOneField になっているが、
-        #   Django の正しい fixture では子側は書かない。
-        if model_l == "os" and fname == "device":
-            continue
-
         # ForeignKey / OneToOneField（親側のみ）
         if ftype in ("ForeignKey", "OneToOneField"):
 

@@ -82,15 +82,4 @@ def build_reference_model(models, target_model):
                 if nullable:
                     out["fields"][field_name]["null"] = True
                     out["fields"][field_name]["blank"] = True
-
-            if fdef["type"] == "OneToOne" and fdef["to"] == target_model:
-                field_name = model_name.lower()
-
-                out["fields"][field_name] = {
-                    "type": FieldType.ONE_TO_ONE.value,
-                    "to": model_name,
-                    "null": fdef.get("nullable", False),
-                    "blank": fdef.get("nullable", False),
-                }
-
     return out
