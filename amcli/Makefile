@@ -49,6 +49,11 @@ generate : init
 	$(MAKE) -C components
 	$(MAKE) -C tests generate
 
+admin_init :
+	python3 tools/generate_admin_init.py \
+    	-o work/myapp/admin/__init__.py \
+    	work/schema/schema.json
+
 migrate : generate
 	$(MAKE) -C work migrate
 
