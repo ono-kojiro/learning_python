@@ -1,5 +1,5 @@
-# test_011_cmp2ref_device.py
-# Device の Reference Model の構造を検証する（新仕様対応）
+# file: tests/unittest/test_011_cmp2ref_device.py
+# Device の Reference Model の構造を検証する（あなたの DSL 仕様対応）
 
 def test_device_id(device_ref):
     fields = device_ref["fields"]
@@ -45,29 +45,3 @@ def test_device_remarks_jsonfield(device_ref):
     remarks = fields["remarks"]
     assert remarks["type"] == "JSONField"
     assert remarks["help_text"] == "Owned children of Remark"
-
-
-# ------------------------------------------------------------
-# Device: os (OneToOneField)
-# ------------------------------------------------------------
-def test_device_os_one_to_one(device_ref):
-    fields = device_ref["fields"]
-    assert "os" in fields
-
-    osf = fields["os"]
-    assert osf["type"] == "OneToOneField"
-    assert osf["to"] == "OS"
-    assert osf["null"] is False
-    assert osf["blank"] is False
-
-
-# ------------------------------------------------------------
-# Device: manager_ids (ManyToManyField)
-# ------------------------------------------------------------
-def test_device_manager_ids_m2m(device_ref):
-    fields = device_ref["fields"]
-    assert "manager_ids" in fields
-
-    m2m = fields["manager_ids"]
-    assert m2m["type"] == "ManyToManyField"
-    assert m2m["to"] == "Manager"

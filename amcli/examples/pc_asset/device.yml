@@ -26,12 +26,25 @@ Device:
       to: NetIF
       nullable: false   # Device が消えたら NetIF も消える（CASCADE）
 
+    # Device owns many Comment
     comments:
       type: OneToMany
       to: Comment
       nullable: false
 
+    # Device owns many Remark
     remarks:
       type: OneToMany
       to: Remark
       nullable: false
+
+    # Device owns one OS
+    os:
+      type: OneToOne
+      to: OS
+      nullable: false
+
+    # Device is associated with many Manager (not ownership)
+    manager_ids:
+      type: ManyToMany
+      to: Manager

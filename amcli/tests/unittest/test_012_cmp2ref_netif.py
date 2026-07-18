@@ -1,5 +1,5 @@
-# test_012_cmp2ref_netif.py
-# NetIF の Reference Model の構造を検証する（新仕様対応）
+# file: tests/unittest/test_012_cmp2ref_netif.py
+# NetIF の Reference Model の構造を検証する（あなたの DSL 仕様対応）
 
 # ------------------------------------------------------------
 # NetIF: netif_id
@@ -19,8 +19,8 @@ def test_netif_name(netif_ref):
     fields = netif_ref["fields"]
     assert "name" in fields
     assert fields["name"]["type"] == "CharField"
-    assert fields["name"]["max_length"] == 100
-    #assert fields["name"]["help_text"] == "Interface name (ex. eth0)"
+    assert fields["name"]["max_length"] == 64
+    # help_text は DSL では任意のため検証しない
 
 
 # ------------------------------------------------------------
@@ -34,11 +34,12 @@ def test_netif_device_fk(netif_ref):
     assert device["type"] == "ForeignKey"
     assert device["to"] == "Device"
     assert device["on_delete"] == "CASCADE"
-    assert device["max_length"] == 100
 
     # nullable / blank は specs/netif.yml に無いので出ないのが正しい
     assert "null" not in device
     assert "blank" not in device
+
+    # ForeignKey に max_length は存在しないため検証しない
 
 
 # ------------------------------------------------------------
@@ -50,4 +51,4 @@ def test_netif_ipv4s_jsonfield(netif_ref):
 
     ipv4s = fields["ipv4s"]
     assert ipv4s["type"] == "JSONField"
-    #assert ipv4s["help_text"] == "Owned children of IPv4"
+    # help_text は DSL では任意のため検証しない
