@@ -1,3 +1,5 @@
+# src/amcli/commands/generate_fixture/loader.py
+
 import os
 import yaml
 from amcli.utils.debug import debug

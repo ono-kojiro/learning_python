@@ -131,10 +131,6 @@ def main():
                 if ftype == "OneToOneRel":
                     continue
 
-                # OS.device（子側 OneToOne）除外
-                if model == "os" and fname == "device":
-                    continue
-
                 # ManyToManyRel（逆参照）除外
                 if ftype == "ManyToManyRel":
                     continue
@@ -152,21 +148,21 @@ def main():
                 # OneToOneField → index 対応
                 if ftype == "OneToOneField":
                     target = fdef["to"].lower()
-                    fk_value = pk_map[target][idx]
+                    fk_value = pk_map[target][idx % len(pk_map[target])]
                     item["fields"][fname] = fk_value
                     continue
 
-                # ForeignKey → ランダム
+                # ForeignKey → fixture_order に従って割り当て
                 if ftype == "ForeignKey":
                     target = fdef["to"].lower()
-                    fk_value = random.choice(pk_map[target])
+                    fk_value = pk_map[target][idx % len(pk_map[target])]
                     item["fields"][fname] = fk_value
                     continue
 
                 # ManyToManyField → 正方向のみ
                 if ftype == "ManyToManyField":
                     target = fdef["to"].lower()
-                    fk_value = random.choice(pk_map[target])
+                    fk_value = pk_map[target][idx % len(pk_map[target])]
                     item["fields"][fname] = [fk_value]
                     continue
 

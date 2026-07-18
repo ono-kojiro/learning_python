@@ -25,7 +25,7 @@ def test_models_exist(schema):
 def test_dependencies(schema):
     deps = schema["dependencies"]
 
-    assert deps["Device"] == ["OS", "Manager"]
+    assert deps["Device"] == ["Manager"]
 
     # IPv4 → NetIF（FK）
     assert deps["IPv4"] == ["NetIF"]

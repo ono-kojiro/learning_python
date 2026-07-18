@@ -39,12 +39,12 @@ Device:
       nullable: false
 
     # Device owns one OS
-    os:
-      type: OneToOne
+    oss:
+      type: OneToMany
       to: OS
       nullable: false
 
     # Device is associated with many Manager (not ownership)
-    manager_ids:
+    managers:
       type: ManyToMany
       to: Manager

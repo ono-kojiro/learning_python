@@ -13,10 +13,3 @@ OS:
     text:
       type: String
       max_length: 500
-
-    device:
-      type: OneToOne
-      to: Device
-      nullable: false
-
-
