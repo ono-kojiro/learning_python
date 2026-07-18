@@ -103,6 +103,13 @@ class {py_model}Inline(nested_admin.NestedStackedInline):
             ]
             print(f"  nested one_to_many children={children}")
 
+        # exclude の生成（many_to_many + one_to_many 全て）
+        exclude_fields = [
+            item["name"]
+            for item in nested.get(model, [])
+        ]
+        print(f"  exclude_fields={exclude_fields}")
+
         child_inline_list = [
             f"        {safe(child)}Inline,"
             for child in children
@@ -124,6 +131,7 @@ admin.site.register({py_model}, {py_model}Admin)
             admin_defs.append(
                 f"""
 class {py_model}Admin(nested_admin.NestedModelAdmin):
+    exclude = {exclude_fields}
     inlines = [
 {inlines_block}
     ]
