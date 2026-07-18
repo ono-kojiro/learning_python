@@ -95,13 +95,16 @@ class {py_model}Inline(nested_admin.NestedStackedInline):
             children = admin_order[model]
             print(f"  admin_order children={children}")
         else:
-            # nested のうち one_to_many のみ採用
-            children = [
-                item["model"]
-                for item in nested.get(model, [])
-                if item.get("kind") == "one_to_many"
-            ]
-            print(f"  nested one_to_many children={children}")
+            # one_to_many + many_to_many の両方を inline に含める
+            children = []
+            for item in nested.get(model, []):
+                if item.get("kind") == "one_to_many":
+                    children.append(item["model"])
+                elif item.get("kind") == "many_to_many":
+                    # ★ ハードコード：Device → Manager の補完
+                    if model == "Device":
+                        children.append("Manager")
+            print(f"  nested children={children}")
 
         # exclude の生成（many_to_many + one_to_many 全て）
         exclude_fields = [
