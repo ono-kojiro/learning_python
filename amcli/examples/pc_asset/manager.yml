@@ -2,7 +2,7 @@
 Manager:
   meta:
     verbose_name: "Manager"
-    verbose_name_plural: "Managers"
+    verbose_name_plural: "Manager"
 
   fields:
     manager_id:

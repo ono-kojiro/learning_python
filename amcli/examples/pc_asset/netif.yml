@@ -16,7 +16,7 @@ NetIF:
       help: "Interface name (ex. eth0)"
 
     # NetIF owns many IPv4
-    ipv4_list:
+    ipv4s:
       type: OneToMany
       to: IPv4
       nullable: true   # NetIF が消えても IPv4 は残る（SET_NULL）

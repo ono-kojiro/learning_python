@@ -20,7 +20,7 @@
 Remark:
   meta:
     verbose_name: "Remark"
-    verbose_name_plural: "Remarks"
+    verbose_name_plural: "Remark"
 
   fields:
     remark_id:
@@ -31,17 +31,3 @@ Remark:
     text:
       type: String
       max_length: 500
-
-    # --------------------------------------------------------
-    # Composition Model の関係記述
-    # --------------------------------------------------------
-    # Remark は Device に属する（子 → 親）
-    # Device は複数の Remark を持つ可能性があるため OneToMany
-    #
-    # cmp2ref がこの OneToMany を読み取り、
-    # Device 側に逆参照フィールド（ForeignKey）を生成します。
-    # --------------------------------------------------------
-    device:
-      type: OneToMany
-      to: Device
-      nullable: true

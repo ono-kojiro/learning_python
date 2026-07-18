@@ -25,3 +25,13 @@ Device:
       type: OneToMany
       to: NetIF
       nullable: false   # Device が消えたら NetIF も消える（CASCADE）
+
+    comments:
+      type: OneToMany
+      to: Comment
+      nullable: false
+
+    remarks:
+      type: OneToMany
+      to: Remark
+      nullable: false

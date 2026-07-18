@@ -2,7 +2,7 @@
 Comment:
   meta:
     verbose_name: "Comment"
-    verbose_name_plural: "Comments"
+    verbose_name_plural: "Comment"
 
   fields:
     comment_id:
@@ -13,9 +13,3 @@ Comment:
     text:
       type: String
       max_length: 500
-
-    device:
-      type: OneToMany
-      to: Device
-      nullable: true
-
