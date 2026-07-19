@@ -1,7 +1,9 @@
 TOP_DIR = ..
 include ../common.mk
 
-VIEWS_PY = $(addprefix $(VIEW_DIR)/, $(notdir $(SPECS_JSON:.json=_view.py)))
+VIEWS_PY = \
+	$(addprefix $(VIEW_DIR)/, $(notdir $(SPECS_JSON:.json=_view.py))) \
+	$(VIEW_DIR)/devicemanager_view.py
 
 $(shell mkdir -p $(VIEW_DIR))
 

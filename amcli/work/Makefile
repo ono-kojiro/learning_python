@@ -3,7 +3,7 @@ include $(TOP_DIR)/common.mk
 
 all : init
 	
-init : startproject startapp installapp edit
+init : startproject startapp installapp edit enable-debug
 
 startproject :
 	@if [ ! -e manage.py ]; then \
@@ -40,6 +40,9 @@ edit : installapp
 	
 	amcli edit --import $(ALLOWED_HOSTS_YML) \
 		--project $(WORK_DIR)/$(PROJECT) ALLOWED_HOSTS
+
+enable-debug :
+	cat logging_conf.py >> $(WORK_DIR)/$(PROJECT)/settings.py
 	
 add-nested_admin : edit
 	echo "REMOVED"

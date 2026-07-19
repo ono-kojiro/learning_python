@@ -62,9 +62,7 @@ echo "=== Registering {model} (FK injected) ==="
 
 json_fk=$(cat <<EOF
 {{
-  "{pk_field}": "{pk_value}",
-  {extra_fields}
-  "device_id": $(cat .id_device)
+  {json_body}
 }}
 EOF
 )
@@ -137,6 +135,8 @@ def run_add(outpath, json_files, schema):
 
     # models + through_models を model_map に登録
     model_map = { key.lower(): key for key in schema["models"].keys() }
+    through_names = [tm["name"] for tm in schema.get("through_models", [])]
+
     for tm in schema.get("through_models", []):
         name = tm["name"]
         model_map[name.lower()] = name
@@ -150,40 +150,37 @@ def run_add(outpath, json_files, schema):
 
         model_cap = model_map[model]
 
-        # through_models の PK は常に "id"
-        if model_cap in [tm["name"] for tm in schema.get("through_models", [])]:
-            pk_field = "id"
-        else:
-            pk_field = schema["primary_keys"][model_cap]
+        # through_models は TEMPLATE_DM で処理するのでスキップ
+        if model_cap in through_names:
+            continue
 
+        pk_field = schema["primary_keys"][model_cap]
         model_plural = model + "s"
 
         with open(jf, "r", encoding="utf-8") as fp:
             data = json.load(fp)
 
-        # through_models の JSON には id が無いので pk_value は空
-        if model_cap in [tm["name"] for tm in schema.get("through_models", [])]:
-            pk_value = ""
-        else:
-            pk_value = data[pk_field]
+        pk_value = data[pk_field]
 
+        # FK を持つモデル
         if model in ("comment", "netif", "os", "remark"):
 
-            extra_fields = ",\n  ".join(
-                f"\"{k}\": {normalize_value(k, v)}"
-                for k, v in data.items()
-                if k not in (pk_field, "device_id")
-            )
+            # JSON body を安全に生成
+            body_items = []
+            for k, v in data.items():
+                if k not in (pk_field, "device_id"):
+                    body_items.append(f"\"{k}\": {normalize_value(k, v)}")
 
-            if extra_fields:
-                extra_fields = extra_fields + ","
+            body_items.append(f"\"device_id\": $(cat .id_device)")
+
+            json_body = ",\n  ".join(body_items)
 
             script += TEMPLATE_MODEL_FK.format(
                 model=model,
                 model_plural=model_plural,
                 pk_field=pk_field,
                 pk_value=pk_value,
-                extra_fields=extra_fields,
+                json_body=json_body,
             )
 
         else:
@@ -199,6 +196,7 @@ def run_add(outpath, json_files, schema):
         if model == "manager":
             manager_id_var = ".id_manager"
 
+    # DeviceManager の登録
     if device_id_var and manager_id_var:
         script += TEMPLATE_DM.format(
             device=f"$(cat {device_id_var})",
