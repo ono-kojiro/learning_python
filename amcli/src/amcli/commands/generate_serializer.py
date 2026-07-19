@@ -4,7 +4,6 @@ import yaml
 from jinja2 import Environment, FileSystemLoader
 
 from amcli.utils.constants import FieldType
-
 from amcli.utils.debug import debug
 
 DEBUG = os.environ.get("VERBOSE", "0") != "0"
@@ -30,9 +29,6 @@ def run(loader_dir, output_file, schema_yaml, ref_yaml):
     )
     env.globals["FieldType"] = FieldType
 
-    #debug("[DEBUG] loader_dir ={0}".format(loader_dir))
-    #debug("[DEBUG] templates found: {0}".format(env.list_templates()))
-
     # specs JSON 読み込み
     data = read_yaml(ref_yaml)
     model = data["name"]
@@ -56,7 +52,7 @@ def run(loader_dir, output_file, schema_yaml, ref_yaml):
                 "type": FieldType.CHAR,
                 "required": False,
                 "to": fdef["to"],
-                "source": fname,  # ★ serializer の source に使う
+                "source": fname,
             }
 
             # read 用 device
@@ -69,7 +65,7 @@ def run(loader_dir, output_file, schema_yaml, ref_yaml):
             converted_fields[fname] = fdef
 
     # ---------------------------------------------------------
-    # ★★★ デバッグプリント：FK 判定とテンプレート選択 ★★★
+    # デバッグプリント
     # ---------------------------------------------------------
     fk_fields = list(fk_info.keys())
     debug(f"[DEBUG] model = {model}")
@@ -84,7 +80,6 @@ def run(loader_dir, output_file, schema_yaml, ref_yaml):
     elif dep_cat == "fk_parent":
         template_name = "serializer_fk_parent.j2"
     else:
-        # FK を持つモデルは専用テンプレートへ
         if has_fk:
             template_name = "serializer_normal_fk.j2"
         else:
@@ -101,14 +96,12 @@ def run(loader_dir, output_file, schema_yaml, ref_yaml):
 
     for fname, fdef in fields.items():
         if fdef["type"] in [FieldType.FOREIGN_KEY, FieldType.ONE_TO_ONE]:
-            # read 用
             fields_list.append(fname)
-            # write 用
             fields_list.append(f"{fname}_id")
         else:
             fields_list.append(fname)
 
-    # OneToMany の逆参照フィールド追加
+    # OneToMany の逆参照フィールド追加（★ required=False を明示）
     rev = reverse_dependencies.get(model, [])
     for other_model in rev:
         rel = reverse_dependencies_detail.get(other_model)
@@ -124,11 +117,13 @@ def run(loader_dir, output_file, schema_yaml, ref_yaml):
         model=model,
         fields=fields,
         converted_fields=converted_fields,
-        fk_info=fk_info,  # ★ read/write 両方の情報
+        fk_info=fk_info,
         fields_list=fields_list,
         reverse_dependencies=reverse_dependencies,
         reverse_dependencies_detail=reverse_dependencies_detail,
         nested_fields=nested_fields,
+        # ★ テンプレート側で OneToMany を生成する際に required=False を使えるようにする
+        one_to_many_required_false=True,
     )
 
     # 出力

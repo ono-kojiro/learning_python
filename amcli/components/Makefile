@@ -12,7 +12,7 @@ spec : init
 	$(MAKE) -f spec.mk
 
 schema: spec
-	$(MAKE) -f schema.mk
+	$(MAKE) -f schema.mk | tee schema.log
 
 through: schema
 	$(MAKE) -f through.mk
@@ -30,7 +30,7 @@ view : spec
 	$(MAKE) -f view.mk
 
 serializer : spec schema
-	$(MAKE) -f serializer.mk
+	$(MAKE) -f serializer.mk 2>&1 | tee serializer.log
 
 dashboard : spec schema
 	$(MAKE) -f dashboard.mk

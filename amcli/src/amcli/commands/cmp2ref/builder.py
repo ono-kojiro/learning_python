@@ -1,4 +1,4 @@
-# src/amcli/commands/cmp2ref/builder.py
+# file: src/amcli/commands/cmp2ref/builder.py
 
 from amcli.utils.constants import FieldType
 from .convert import convert_primitive_field
@@ -55,7 +55,8 @@ def build_reference_model(models, target_model):
         elif ftype == "OneToMany":
             out["fields"][fname] = {
                 "type": FieldType.JSON.value,
-                "help_text": f"Owned children of {fdef['to']}"
+                "help_text": f"Owned children of {fdef['to']}",
+                "default": [],
             }
 
         else:
@@ -89,3 +90,4 @@ def build_reference_model(models, target_model):
 
     return out
 
+# end of file: src/amcli/commands/cmp2ref/builder.py

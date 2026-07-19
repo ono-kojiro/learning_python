@@ -25,6 +25,43 @@ from .schema_builder import build_schema
 from .through_model import collect_through_models
 
 
+def build_reverse_dependencies_detail_mod(models, reverse_dependencies):
+    """
+    暫定対応：
+    reverse_dependencies_detail_mod を生成する。
+    ForeignKey の逆参照のみを OneToMany として扱う。
+    （親モデル側には付けない）
+    """
+
+    print("[DEBUG] === build_reverse_dependencies_detail_mod START ===")
+
+    detail = {}
+
+    # reverse_dependencies は { Parent: [Child1, Child2, ...] }
+    for parent, children in reverse_dependencies.items():
+        print(f"[DEBUG] Parent={parent}, Children={children}")
+
+        for child in children:
+            print(f"[DEBUG]   Checking child={child}")
+
+            fields = models[child]["fields"]
+            print(f"[DEBUG]     Fields of {child}: {list(fields.keys())}")
+
+            for fname, fdef in fields.items():
+                print(f"[DEBUG]       Field={fname}, type={fdef['type']}, to={fdef.get('to')}")
+
+                # ForeignKey で parent を参照している場合のみ OneToMany
+                if fdef["type"] == "ForeignKey" and fdef.get("to") == parent:
+                    print(f"[DEBUG]         → MATCH: {child}.{fname} is FK to {parent}")
+                    detail[child] = {"type": "OneToMany"}
+                else:
+                    print(f"[DEBUG]         → SKIP")
+
+    print(f"[DEBUG] === RESULT reverse_dependencies_detail_mod = {detail} ===")
+    print("[DEBUG] === build_reverse_dependencies_detail_mod END ===")
+
+    return detail
+
 def run(output_file, input_files, application=None, project=None):
     ref_paths = [Path(f).resolve() for f in input_files]
 
@@ -76,6 +113,10 @@ def run(output_file, input_files, application=None, project=None):
         inline_order=inline_order,
         through_models=through_models,   # ← 追加
     )
+
+    # ★ 暫定対応：reverse_dependencies_detail_mod を生成して schema に追加
+    reverse_dependencies_detail_mod = build_reverse_dependencies_detail_mod(models, reverse_dependencies)
+    schema["reverse_dependencies_detail_mod"] = reverse_dependencies_detail_mod
 
     output_path = Path(output_file).resolve()
     with open(output_path, "w", encoding="utf-8") as fp:
