@@ -58,12 +58,38 @@ admin_init :
 	
 	python3 tools/generate_serializer.py \
     	-s work/schema/schema.json \
-    	-r work/specs/device.json \
-    	-o work/myapp/serializers/device_serializer.py
-	python3 tools/generate_serializer.py \
-    	-s work/schema/schema.json \
     	-r work/specs/comment.json \
     	-o work/myapp/serializers/comment_serializer.py
+	
+	python3 tools/generate_serializer.py \
+    	-s work/schema/schema.json \
+    	-r work/specs/device.json \
+    	-o work/myapp/serializers/device_serializer.py
+	
+	python3 tools/generate_serializer.py \
+    	-s work/schema/schema.json \
+    	-r work/specs/ipv4.json \
+    	-o work/myapp/serializers/ipv4_serializer.py
+	
+	python3 tools/generate_serializer.py \
+    	-s work/schema/schema.json \
+    	-r work/specs/manager.json \
+    	-o work/myapp/serializers/manager_serializer.py
+	
+	python3 tools/generate_serializer.py \
+    	-s work/schema/schema.json \
+    	-r work/specs/netif.json \
+    	-o work/myapp/serializers/netif_serializer.py
+		
+	python3 tools/generate_serializer.py \
+    	-s work/schema/schema.json \
+    	-r work/specs/os.json \
+    	-o work/myapp/serializers/os_serializer.py
+
+	python3 tools/generate_serializer.py \
+    	-s work/schema/schema.json \
+    	-r work/specs/remark.json \
+    	-o work/myapp/serializers/remark_serializer.py
 
 migrate : generate
 	$(MAKE) -C work migrate
