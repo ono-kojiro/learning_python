@@ -1,4 +1,4 @@
-# src/amcli/commands/generate_testscript/main.py
+# file: src/amcli/commands/generate_testscript/main.py
 
 import os
 import json
@@ -48,3 +48,5 @@ def run(action, outpath, json_files, schema_path=None):
 
     else:
         raise ValueError(f"Unknown action: {action}")
+
+# End of file: src/amcli/commands/generate_testscript/main.py

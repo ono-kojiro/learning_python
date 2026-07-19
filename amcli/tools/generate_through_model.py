@@ -37,8 +37,8 @@ def main():
 
     through_models = schema.get("through_models", [])
 
-    print("=== DEBUG: through_models ===")
-    print(json.dumps(through_models, indent=2))
+    #print("=== DEBUG: through_models ===")
+    #print(json.dumps(through_models, indent=2))
 
     if not through_models:
         print("=== DEBUG: no through_models found ===")

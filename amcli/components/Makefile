@@ -1,7 +1,8 @@
 TOP_DIR = ..
 include $(TOP_DIR)/common.mk
 
-all : init spec schema model admin view serializer dashboard project_urls \
+all : init spec schema model through \
+	admin view serializer dashboard project_urls \
 	fixture importer testschema
 
 init :
@@ -12,6 +13,9 @@ spec : init
 
 schema: spec
 	$(MAKE) -f schema.mk
+
+through: schema
+	$(MAKE) -f through.mk
 
 testschema: schema
 	$(MAKE) -f testschema.mk
@@ -49,6 +53,7 @@ clean :
 	$(MAKE) -f view.mk       clean
 	$(MAKE) -f admin.mk      clean
 	$(MAKE) -f model.mk      clean
+	$(MAKE) -f through.mk    clean
 	$(MAKE) -f schema.mk     clean
 	$(MAKE) -f spec.mk       clean
 

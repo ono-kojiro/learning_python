@@ -27,24 +27,44 @@ def read_json(path):
         return json.load(fp)
 
 
-def build_serializer(model, fields, reverse_dependencies, reverse_detail):
-    """
-    現行モデル構造に完全対応した Serializer コードを生成する。
-    JSONField は使わず、DRF の PrimaryKeyRelatedField を使用する。
-    """
+def build_serializer(model, fields, reverse_dependencies, reverse_detail, all_models):
 
     lines = []
     lines.append(HEADER.format(model=model))
     lines.append(f"class {model}Serializer(serializers.ModelSerializer):")
 
+    fk_fields = []
+    write_fk_fields = []
+
     # -------------------------
-    # ForeignKey / OneToOne → read 用フィールド
+    # ForeignKey / OneToOne → read-only + write-only の両方を生成
     # -------------------------
     for fname, fdef in fields.items():
         ftype = fdef["type"]
 
         if ftype in (FieldType.FOREIGN_KEY, FieldType.ONE_TO_ONE):
+            # read-only
             lines.append(f"    {fname} = serializers.PrimaryKeyRelatedField(read_only=True)")
+
+            # ★ schema["models"] から正しいモデル名を逆引きする
+            related_model = None
+            for mname in all_models.keys():
+                if mname.lower() == fname.lower():
+                    related_model = mname
+                    break
+
+            if related_model is None:
+                raise RuntimeError(f"Cannot find related model for FK field '{fname}'")
+
+            # write-only: {fname}_id
+            write_name = f"{fname}_id"
+            write_fk_fields.append((write_name, fname))
+            lines.append(
+                f"    {write_name} = serializers.PrimaryKeyRelatedField("
+                f"queryset={related_model}.objects.all(), write_only=True)"
+            )
+
+            fk_fields.append((fname, write_name))
 
     # -------------------------
     # 逆参照 OneToMany
@@ -75,6 +95,10 @@ def build_serializer(model, fields, reverse_dependencies, reverse_detail):
     for fname in fields.keys():
         lines.append(f'            "{fname}",')
 
+    # write-only FK フィールド
+    for write_name, _orig in write_fk_fields:
+        lines.append(f'            "{write_name}",')
+
     # 逆参照フィールド
     for other_model in rev:
         rel = reverse_detail.get(other_model)
@@ -88,6 +112,19 @@ def build_serializer(model, fields, reverse_dependencies, reverse_detail):
             lines.append(f'            "{fname}",')
 
     lines.append("        ]")
+    lines.append("")
+
+    # -------------------------
+    # create() を自動生成
+    # -------------------------
+    lines.append("    def create(self, validated_data):")
+
+    for fname, write_name in fk_fields:
+        lines.append(f"        {fname} = validated_data.pop('{write_name}', None)")
+        lines.append(f"        if {fname} is not None:")
+        lines.append(f"            validated_data['{fname}'] = {fname}")
+
+    lines.append(f"        return {model}.objects.create(**validated_data)")
     lines.append("")
     lines.append("# End of file (tools/generate_serializer.py)")
     lines.append("")
@@ -124,11 +161,13 @@ def main():
     model = data["name"]
     fields = data["fields"]
 
+    # ★ all_models を渡す
     content = build_serializer(
         model=model,
         fields=fields,
         reverse_dependencies=reverse_dependencies,
         reverse_detail=reverse_detail,
+        all_models=schema["models"],
     )
 
     out_path = Path(output_file)

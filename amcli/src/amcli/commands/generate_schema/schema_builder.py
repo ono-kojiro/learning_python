@@ -1,5 +1,7 @@
 # src/amcli/commands/generate_schema/schema_builder.py
 
+from .primary_key import collect_primary_keys
+
 def build_schema(
     project,
     application,
@@ -17,6 +19,9 @@ def build_schema(
     inline_order,
     through_models=None,
 ):
+    # ★ 追加：primary_keys を抽出（models は変更しない）
+    primary_keys = collect_primary_keys(models)
+
     device_children = nested.get("Device", [])
     admin_order = {"Device": []}
     for item in device_children:
@@ -32,7 +37,8 @@ def build_schema(
         "application": application,
         "compositions": compositions,
         "composition_root": composition_root,
-        "models": models,
+        "models": models,  # ← 入力データをそのまま保持
+        "primary_keys": primary_keys,  # ★ 追加        
         "dependencies": dependencies,
         "all_dependencies": all_dependencies,
         "reverse_dependencies": reverse_dependencies,

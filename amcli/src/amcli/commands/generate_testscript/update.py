@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# file: src/amcli/commands/generate_testscript/update.py
+
 import os
 import json
 
@@ -80,11 +83,26 @@ def fk_patch_for(model_cap, fields_def):
 def run_update(outpath, json_files, schema):
     script = HEADER
 
+    # ---------------------------------------------------------
+    # ★ DeviceManager は update 対象外なので除外する
+    # ---------------------------------------------------------
+    json_files = [
+        jf for jf in json_files
+        if not jf.endswith("devicemanager.json")
+    ]
+
     # TAP 件数出力
     script += tap_header(json_files)
 
-    # モデル名マッピング（小文字 → 正しいモデル名）
+    # ---------------------------------------------------------
+    # ★ モデル名マッピング（through_models を追加）
+    # ---------------------------------------------------------
     model_map = { key.lower(): key for key in schema["models"].keys() }
+
+    for tm in schema.get("through_models", []):
+        name = tm["name"]
+        model_map[name.lower()] = name
+    # ---------------------------------------------------------
 
     for jf in json_files:
         base = os.path.basename(jf)
@@ -117,3 +135,5 @@ def run_update(outpath, json_files, schema):
     os.chmod(outpath, 0o755)
 
     print(f"Generated update script: {outpath}")
+
+# end of file: src/amcli/commands/generate_testscript/update.py

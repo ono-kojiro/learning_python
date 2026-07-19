@@ -53,8 +53,10 @@ admin_init :
 	python3 tools/generate_admin_init.py \
     	-o work/myapp/admin/__init__.py \
     	work/schema/schema.json
-	python3 tools/generate_through_model.py \
-		-o work/myapp/models/through_models.py work/schema/schema.json
+	#python3 tools/generate_through_spec.py \
+	#	-o work/specs/through.json work/schema/schema.json
+	#python3 tools/generate_through_model.py \
+	#	-o work/myapp/models/through_models.py work/schema/schema.json
 
 migrate : generate
 	$(MAKE) -C work migrate
