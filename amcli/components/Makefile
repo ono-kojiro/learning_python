@@ -1,7 +1,7 @@
 TOP_DIR = ..
 include $(TOP_DIR)/common.mk
 
-all : init spec schema model through \
+all : init spec schema model \
 	admin view serializer dashboard project_urls \
 	fixture importer testschema
 

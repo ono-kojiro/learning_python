@@ -88,61 +88,19 @@ echo
 """
 
 
-TEMPLATE_DM = """
-echo "=== Registering DeviceManager (device_id={device}, manager_id={manager}) ==="
-
-json_dm=$(cat <<EOF
-{{
-  "device_id": "{device}",
-  "manager_id": "{manager}"
-}}
-EOF
-)
-
-res=$(curl -s -k \
-  -X POST "${{BASE_URL}}/api/devicemanager/" \
-  -H "Content-Type: application/json" \
-  -d "$json_dm")
-
-echo "[DEBUG] POST response:"
-echo "$res"
-
-id=$(echo "$res" | jq -r '.id')
-
-if [ "$id" = "null" ] || [ -z "$id" ]; then
-    echo "not ok - add devicemanager failed"
-else
-    echo "ok - add devicemanager succeeded"
-fi
-
-echo
-"""
-
-
 def run_add(outpath, json_files, schema):
 
     script = HEADER
 
+    # through_models は API 非公開なので除外
+    through_names = []
+
+    # テスト数は純粋に JSON ファイル数のみ
     total_tests = len(json_files)
-
-    has_device = any("device" in jf for jf in json_files)
-    has_manager = any("manager" in jf for jf in json_files)
-
-    if has_device and has_manager:
-        total_tests += 1
-
     script += tap_header(total_tests)
 
-    # models + through_models を model_map に登録
+    # モデル名マップ（through_models は含めない）
     model_map = { key.lower(): key for key in schema["models"].keys() }
-    through_names = [tm["name"] for tm in schema.get("through_models", [])]
-
-    for tm in schema.get("through_models", []):
-        name = tm["name"]
-        model_map[name.lower()] = name
-
-    device_id_var = None
-    manager_id_var = None
 
     for jf in json_files:
         base = os.path.basename(jf)
@@ -150,22 +108,15 @@ def run_add(outpath, json_files, schema):
 
         model_cap = model_map[model]
 
-        # through_models は TEMPLATE_DM で処理するのでスキップ
-        if model_cap in through_names:
-            continue
-
         pk_field = schema["primary_keys"][model_cap]
         model_plural = model + "s"
 
         with open(jf, "r", encoding="utf-8") as fp:
             data = json.load(fp)
 
-        pk_value = data[pk_field]
-
         # FK を持つモデル
         if model in ("comment", "netif", "os", "remark"):
 
-            # JSON body を安全に生成
             body_items = []
             for k, v in data.items():
                 if k not in (pk_field, "device_id"):
@@ -179,7 +130,6 @@ def run_add(outpath, json_files, schema):
                 model=model,
                 model_plural=model_plural,
                 pk_field=pk_field,
-                pk_value=pk_value,
                 json_body=json_body,
             )
 
@@ -190,18 +140,6 @@ def run_add(outpath, json_files, schema):
                 jsonfile=base,
                 pk_field=pk_field
             )
-
-        if model == "device":
-            device_id_var = ".id_device"
-        if model == "manager":
-            manager_id_var = ".id_manager"
-
-    # DeviceManager の登録
-    if device_id_var and manager_id_var:
-        script += TEMPLATE_DM.format(
-            device=f"$(cat {device_id_var})",
-            manager=f"$(cat {manager_id_var})"
-        )
 
     script += "\n# End of file (generate_testscript/add.py)\n"
 
