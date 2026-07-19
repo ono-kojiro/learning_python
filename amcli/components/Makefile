@@ -16,7 +16,7 @@ schema: spec
 testschema: schema
 	$(MAKE) -f testschema.mk
 
-model : spec
+model : spec schema
 	$(MAKE) -f model.mk
 
 admin : spec schema

@@ -1,7 +1,7 @@
 TOP_DIR = .
 include $(TOP_DIR)/common.mk
 	
-all : init generate migrate loaddata
+all : init generate admin_init migrate loaddata
 	
 prepare :
 	if [ ! -d "myenv" ]; then \
@@ -54,7 +54,16 @@ admin_init :
     	-o work/myapp/admin/__init__.py \
     	work/schema/schema.json
 	python3 tools/generate_through_model.py \
-		-o work/myapp/models/through.py work/schema/schema.json
+		-o work/myapp/models/through_models.py work/schema/schema.json
+	
+	python3 tools/generate_serializer.py \
+    	-s work/schema/schema.json \
+    	-r work/specs/device.json \
+    	-o work/myapp/serializers/device_serializer.py
+	python3 tools/generate_serializer.py \
+    	-s work/schema/schema.json \
+    	-r work/specs/comment.json \
+    	-o work/myapp/serializers/comment_serializer.py
 
 migrate : generate
 	$(MAKE) -C work migrate

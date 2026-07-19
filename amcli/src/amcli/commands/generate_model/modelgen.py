@@ -1,3 +1,5 @@
+# file: /src/amcli/commands/generate_model/modelgen.py
+
 from amcli.utils.constants import FieldType, normalize_field_type
 from .reader import load_compositions
 from .fields import (
@@ -18,8 +20,21 @@ def generate_model_lines(data):
 
     for fname, field_def in fields.items():
 
-        # ★ アンダースコアで始まるキーを除外する（ここが重要）
+        # ★ アンダースコアで始まるキーを除外する
         field_def = {k: v for k, v in field_def.items() if not k.startswith("_")}
+
+        # ★ through_models に含まれている「from→to」の逆側 M2M は生成しない
+        skip_m2m = False
+        through_models = data.get("through_models", [])
+        for tm in through_models:
+            # 例: tm = {"name": "DeviceManager", "from": "Device", "to": "Manager", "field": "managers"}
+            # → Manager.devices をスキップしたい
+            if name == tm["to"] and fname == tm["from"].lower() + "s":
+                skip_m2m = True
+                break
+
+        if skip_m2m:
+            continue
 
         ftype = normalize_field_type(field_def["type"])
 
@@ -55,3 +70,4 @@ def generate_model_lines(data):
 
     return field_lines, str_method, meta_lines
 
+# End of file

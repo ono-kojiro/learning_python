@@ -5,10 +5,11 @@ import click
 @click.command(name="genmodel")
 @click.option("-l", "--loader", "loader_dir", required=True)
 @click.option("-o", "--output", "output_file", required=True)
+@click.option("-s", "--schema", "schema_json", required=True)
 @click.argument("input_files", nargs=-1)
-def genmodel_cmd(loader_dir, output_file, input_files):
+def genmodel_cmd(loader_dir, output_file, input_files, schema_json):
     from amcli.commands.generate_model import run
-    run(loader_dir, output_file, input_files)
+    run(loader_dir, output_file, input_files, schema_json)
 
 
 @click.command(name="genadmin")

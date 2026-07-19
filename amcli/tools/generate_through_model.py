@@ -11,13 +11,6 @@ def safe(name):
     return re.sub(r'\W+', '_', name)
 
 
-HEADER = """from django.db import models
-from .device_model import Device
-from .manager_model import Manager
-
-"""
-
-
 def usage():
     print("Usage: generate_through_model.py -o OUTPUT_FILE schema.json")
     sys.exit(1)
@@ -42,35 +35,43 @@ def main():
     with open(schema_path, "r") as f:
         schema = json.load(f)
 
-    nested = schema["nested"]
+    through_models = schema.get("through_models", [])
 
-    print("=== DEBUG: nested ===")
-    print(json.dumps(nested, indent=2))
+    print("=== DEBUG: through_models ===")
+    print(json.dumps(through_models, indent=2))
 
-    # Device.managers の many_to_many があれば DeviceManager を生成
-    generate_device_manager = False
+    if not through_models:
+        print("=== DEBUG: no through_models found ===")
+        with open(output_file, "w") as f:
+            f.write("# No through models\n")
+        return
 
-    for item in nested.get("Device", []):
-        if item.get("kind") == "many_to_many" and item.get("name") == "managers":
-            generate_device_manager = True
+    # ★ through_models が複数あっても対応
+    imports = set()
+    body = ""
 
-    if generate_device_manager:
-        print("=== DEBUG: many_to_many detected: Device.managers ===")
-        through_def = """
-class DeviceManager(models.Model):
-    device = models.ForeignKey(Device, on_delete=models.CASCADE)
-    manager = models.ForeignKey(Manager, on_delete=models.CASCADE)
+    for tm in through_models:
+        from_model = tm["from"]
+        to_model = tm["to"]
+        name = tm["name"]
+
+        imports.add(f"from .{from_model.lower()}_model import {from_model}")
+        imports.add(f"from .{to_model.lower()}_model import {to_model}")
+
+        body += f"""
+class {name}(models.Model):
+    {from_model.lower()} = models.ForeignKey({from_model}, on_delete=models.CASCADE)
+    {to_model.lower()} = models.ForeignKey({to_model}, on_delete=models.CASCADE)
 
     class Meta:
-        unique_together = ("device", "manager")
+        unique_together = ("{from_model.lower()}", "{to_model.lower()}")
 """
-    else:
-        print("=== DEBUG: no many_to_many(Device.managers) found ===")
-        through_def = ""
+
+    header = "from django.db import models\n" + "\n".join(imports) + "\n\n"
 
     with open(output_file, "w") as f:
-        f.write(HEADER)
-        f.write(through_def)
+        f.write(header)
+        f.write(body)
 
     print(f"[OK] Generated through model: {output_file}")
 

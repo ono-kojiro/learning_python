@@ -10,7 +10,7 @@ all : model
 model : $(MODELS_PY)
 
 $(MODEL_DIR)/%_model.py : $(SPEC_DIR)/%.json
-	amcli genmodel -l $(TEMPLATE_DIR) -o $@ $<
+	amcli genmodel -l $(TEMPLATE_DIR) -o $@ -s $(SCHEMA_JSON) $<
 
 clean :
 	rm -f $(MODELS_PY)

@@ -29,17 +29,21 @@ def build_reference_model(models, target_model):
             out["fields"][fname] = convert_primitive_field(fdef)
 
         elif ftype == "ManyToMany":
+            # ★★★ 修正：ref.json に ManyToMany をそのまま出力する（_ids にしない）
+            # 既存の構造を壊さず、行数も維持する
             base = fname[:-1] if fname.endswith("s") else fname
-            new_name = f"{base}_ids"
-            out["fields"][new_name] = {
-                "type": FieldType.MANY_TO_MANY.value,
+            new_name = f"{base}_ids"  # ← 既存行は残す（削除しない）
+
+            # ★ ここで new_name ではなく fname を使う（追記のみ）
+            out["fields"][fname] = {
+                "type": FieldType.MANY_TO_MANY.value,   # ← normalize_field_type と整合
                 "to": fdef["to"]
             }
 
-            # ★ Manager の ManyToMany は _fixture_ignore を自動付与
-            if target_model == "Manager" and ftype == "ManyToMany":
-                out["fields"][new_name]["_fixture_ignore"] = True
-                
+            # ★ Manager の ManyToMany は _fixture_ignore を自動付与（既存ロジック維持）
+            if target_model == "Manager":
+                out["fields"][fname]["_fixture_ignore"] = True
+
         elif ftype == "OneToOne":
             out["fields"][fname] = {
                 "type": FieldType.ONE_TO_ONE.value,
@@ -82,4 +86,6 @@ def build_reference_model(models, target_model):
                 if nullable:
                     out["fields"][field_name]["null"] = True
                     out["fields"][field_name]["blank"] = True
+
     return out
+

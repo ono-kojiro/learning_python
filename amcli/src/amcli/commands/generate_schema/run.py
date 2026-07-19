@@ -1,5 +1,3 @@
-# src/amcli/commands/generate_schema/run.py
-
 from pathlib import Path
 import json
 
@@ -23,11 +21,18 @@ from .inline_order import topo_sort_inline
 from .dependency_categories import determine_dependency_categories
 from .schema_builder import build_schema
 
+# ★ 追加：through_models を生成するロジック
+from .through_model import collect_through_models
+
 
 def run(output_file, input_files, application=None, project=None):
     ref_paths = [Path(f).resolve() for f in input_files]
 
+    # ref/*.json を読み込む
     models = collect_models(ref_paths)
+
+    # ★ 追加：through_models を生成
+    through_models = collect_through_models(models)
 
     compositions = collect_compositions(models)
     composition_root = find_composition_root(compositions)
@@ -53,6 +58,7 @@ def run(output_file, input_files, application=None, project=None):
     nested = collect_nested(models)
     inline_order = topo_sort_inline(nested, composition_root)
 
+    # ★ 追加：through_models を schema に含める
     schema = build_schema(
         project=project,
         application=application,
@@ -68,6 +74,7 @@ def run(output_file, input_files, application=None, project=None):
         dependency_categories=dependency_categories,
         nested=nested,
         inline_order=inline_order,
+        through_models=through_models,   # ← 追加
     )
 
     output_path = Path(output_file).resolve()

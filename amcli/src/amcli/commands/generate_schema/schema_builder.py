@@ -15,6 +15,7 @@ def build_schema(
     dependency_categories,
     nested,
     inline_order,
+    through_models=None,
 ):
     device_children = nested.get("Device", [])
     admin_order = {"Device": []}
@@ -25,7 +26,8 @@ def build_schema(
 
     normal_admin_models = [m for m in models.keys() if m not in inline_order]
 
-    return {
+
+    schema = {
         "project": project,
         "application": application,
         "compositions": compositions,
@@ -43,4 +45,11 @@ def build_schema(
         "admin_order": admin_order,
         "normal_admin_models": normal_admin_models,
     }
+
+    # ★ 追加：through_models を schema.json に含める
+    if through_models is not None:
+        schema["through_models"] = through_models
+
+    return schema
+
 
