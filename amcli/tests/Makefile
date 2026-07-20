@@ -13,7 +13,7 @@ all : generate
 
 generate : testdata testscript
 
-test : test-init test-add test-get test-update test-delete
+test : test-init test-add
 
 debug :
 	@echo MODELS are $(MODELS)
@@ -30,21 +30,15 @@ testdata/%.json : $(SCHEMA_JSON) $(DATA_GENERATOR)
 #		-o testdata $(WORK_DIR)/specs/*.json
 
 testscript: testdata
-	amcli gentestscript -o testdata/add.sh --action add \
-		-s $(SCHEMA_JSON) testdata/*.json
-	amcli gentestscript -o testdata/get.sh --action get \
-		-s $(SCHEMA_JSON) testdata/*.json
-	amcli gentestscript -o testdata/update.sh --action update \
-		-s $(SCHEMA_JSON) testdata/*.json
-	amcli gentestscript -o testdata/delete.sh --action delete \
-		-s $(TESTSCHEMA_JSON) testdata/*.json
+	python3 $(TOP_DIR)/tools/generate_testscript.py \
+		-o test_add_all.sh $(TOP_DIR)/work/schema/schema.json
+	chmod +x test_add_all.sh
 
 test-init:
-	cp -f $(TOP_DIR)/.env testdata/
-	echo "BASE_URL=https://localhost:8000" >> testdata/.env
+	cp -f $(TOP_DIR)/.env .
 
 test-add : test-init
-	cd testdata && prove -v add.sh | tee add.log
+	prove test_add_all.sh | tee test_add_all.log
 
 test-get : test-add
 	cd testdata && prove -v get.sh | tee get.log
