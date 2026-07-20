@@ -56,7 +56,7 @@ def build_reference_model(models, target_model):
             out["fields"][fname] = {
                 "type": FieldType.JSON.value,
                 "help_text": f"Owned children of {fdef['to']}",
-                "default": [],
+                "default": "list",
             }
 
         else:
