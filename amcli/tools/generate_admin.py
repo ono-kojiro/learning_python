@@ -39,7 +39,7 @@ def main():
 
     for opt, val in opts:
         if opt in ("-m", "--model"):
-            model_name = val.lower()   # ★ 小文字化して保持
+            model_name = val.lower()
         elif opt in ("-o", "--output"):
             output_file = val
 
@@ -56,58 +56,65 @@ def main():
     admin_order = schema.get("admin_order", {})
     normal_admin_models = schema.get("normal_admin_models", [])
 
-    # ★ schema.json のモデル名も小文字化して比較
     normalized_models = {m.lower(): m for m in models.keys()}
 
     if model_name not in normalized_models:
         print(f"Error: model '{model_name}' not found in schema.json")
         sys.exit(1)
 
-    # ★ 実際のモデル名（大文字含む）を取得
     actual_model_name = normalized_models[model_name]
     py_model = safe(actual_model_name)
 
     debug(f"[DEBUG] Generating admin for model={actual_model_name}")
 
-    # ------------------------------------------------------------
+    # ルートモデル判定
+    parent_set = set(nested.keys())
+    child_set = set()
+    for parent, children in nested.items():
+        for item in children:
+            m = item.get("model")
+            if m:
+                child_set.add(m)
+    root_models = parent_set - child_set
+    is_root = actual_model_name in root_models
+
     # Inline の決定
-    # ------------------------------------------------------------
     if actual_model_name in admin_order:
-        # admin_order に従う
         children = admin_order[actual_model_name]
         debug(f"  admin_order children={children}")
     else:
-        # nested の one_to_many / many_to_many を使う
         children = []
         for item in nested.get(actual_model_name, []):
             if item.get("kind") == "one_to_many":
                 children.append(item["model"])
-            elif item.get("kind") == "many_to_many":
-                # ManyToMany は Inline ではなく filter_horizontal が正しい
-                pass
-
         debug(f"  nested children={children}")
 
-    # Inline import の生成
     inline_imports = "\n".join(
         [f"from .{child.lower()}_inline import {safe(child)}Inline" for child in children]
     )
 
-    # Inline ブロック
     inline_block = "\n".join(
         [f"        {safe(child)}Inline," for child in children]
     )
 
-    # ------------------------------------------------------------
-    # exclude の生成（nested の name を除外）
-    # ------------------------------------------------------------
-    exclude_fields = [item["name"] for item in nested.get(actual_model_name, [])]
+    # exclude は one_to_many のみ
+    exclude_fields = [
+        item["name"]
+        for item in nested.get(actual_model_name, [])
+        if item.get("kind") != "many_to_many"
+    ]
 
-    # ------------------------------------------------------------
-    # Admin クラス生成
-    # ------------------------------------------------------------
+    # ルートモデルの many_to_many を filter_horizontal に
+    many_to_many_fields = [
+        item["name"]
+        for item in nested.get(actual_model_name, [])
+        if item.get("kind") == "many_to_many"
+    ]
+    filter_horizontal_block = ""
+    if is_root and many_to_many_fields:
+        filter_horizontal_block = f"    filter_horizontal = {many_to_many_fields}\n"
+
     if actual_model_name in normal_admin_models:
-        # 通常の ModelAdmin
         admin_class = f"""
 class {py_model}Admin(admin.ModelAdmin):
     pass
@@ -115,20 +122,16 @@ class {py_model}Admin(admin.ModelAdmin):
 admin.site.register({py_model}, {py_model}Admin)
 """
     else:
-        # NestedModelAdmin
         admin_class = f"""
 class {py_model}Admin(nested_admin.NestedModelAdmin):
     exclude = {exclude_fields}
-    inlines = [
+{filter_horizontal_block}    inlines = [
 {inline_block}
     ]
 
 admin.site.register({py_model}, {py_model}Admin)
 """
 
-    # ------------------------------------------------------------
-    # 出力
-    # ------------------------------------------------------------
     out_dir = os.path.dirname(output_file)
     if out_dir:
         os.makedirs(out_dir, exist_ok=True)
@@ -147,4 +150,3 @@ admin.site.register({py_model}, {py_model}Admin)
 
 if __name__ == "__main__":
     main()
-
