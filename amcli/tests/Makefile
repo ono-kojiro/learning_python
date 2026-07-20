@@ -4,6 +4,8 @@ include $(TOP_DIR)/common.mk
 MODELS = $(shell cat $(SCHEMA_JSON) | jq -r ".models | keys[] | ascii_downcase")
 
 TESTDATA_JSON = $(addprefix testdata/, $(MODELS:=.json))
+	
+DATA_GENERATOR = $(TOP_DIR)/tools/generate_testdata.py
 
 $(shell mkdir -p testdata)
 
@@ -21,9 +23,8 @@ debug :
 
 testdata : $(TESTDATA_JSON)
 
-testdata/%.json : $(SCHEMA_JSON)
-	python3 $(TOP_DIR)/tools/generate_testdata.py \
-		-m $* -o testdata/$*.json $(SCHEMA_JSON)
+testdata/%.json : $(SCHEMA_JSON) $(DATA_GENERATOR)
+	python3 $(DATA_GENERATOR) -m $* -o $@ $<
 
 #	amcli gentestdata -s $(SCHEMA_JSON) \
 #		-o testdata $(WORK_DIR)/specs/*.json
@@ -43,21 +44,21 @@ test-init:
 	echo "BASE_URL=https://localhost:8000" >> testdata/.env
 
 test-add : test-init
-	cd testdata && prove add.sh | tee add.log
+	cd testdata && prove -v add.sh | tee add.log
 
 test-get : test-add
-	cd testdata && prove get.sh | tee get.log
+	cd testdata && prove -v get.sh | tee get.log
 
 test-update : test-get
-	cd testdata && prove update.sh | tee update.log
+	cd testdata && prove -v update.sh | tee update.log
 
 test-delete : test-update
-	cd testdata && prove delete.sh | tee delete.log
+	cd testdata && prove -v delete.sh | tee delete.log
 
 clean :
-	rm -rf data
-	rm -rf testdata
-	rm -rf fixtures
+	rm -rf data/*
+	rm -rf testdata/*
+	rm -rf fixtures/*
 
 .PHONY : \
 	all clean test testdata debug

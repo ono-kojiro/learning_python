@@ -50,13 +50,18 @@ def gen_dummy_value(fname, fdef):
 # JSON generator
 # ============================================================
 
+def singularize(name: str) -> str:
+    """単純な単数化: 末尾の s を除去する（あなたの schema の命名規則に一致）"""
+    return name[:-1] if name.endswith("s") else name
+
+
 def gen_json(model_name, fields_def, output_file):
     """
     Generate JSON for ADD phase:
     - No PK
     - FK → *_id = null
     - OneToOne → null
-    - M2M → *_ids = []
+    - M2M → singular(fname) + '_ids'
     - JSONField → []
     """
     body = {}
@@ -79,9 +84,10 @@ def gen_json(model_name, fields_def, output_file):
             body[fname] = None
             continue
 
-        # ManyToMany
+        # ManyToManyField
         if ftype == "ManyToManyField":
-            body[f"{fname}_ids"] = []
+            singular = singularize(fname)
+            body[f"{singular}_ids"] = []
             continue
 
         # 通常フィールド
@@ -145,3 +151,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# end of file: tools/generate_testdata.py

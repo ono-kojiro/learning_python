@@ -80,6 +80,12 @@ test :
 	$(MAKE) pytest
 	$(MAKE) -C tests test
 
+debug :
+	python3 tools/generate_testscript.py \
+		-o test_add_all.sh work/schema/schema.json
+	chmod +x test_add_all.sh
+	./test_add_all.sh
+
 clean :
 	$(MAKE) stop
 	$(MAKE) -C components clean
