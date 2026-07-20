@@ -117,11 +117,11 @@ def main():
         if cap in schema["models"]:
             ordered_models.append((lower, cap))
 
-    total_tests = len(ordered_models) * 3  # ADD + UPDATE + DELETE
+    total_tests = len(ordered_models) * 4  # ADD + GET + UPDATE + DELETE
 
     with open(output_file, "w", encoding="utf-8") as out:
         out.write("#!/bin/sh\n")
-        out.write("# Auto-generated TAP-compatible ADD/UPDATE/DELETE test script\n\n")
+        out.write("# Auto-generated TAP-compatible ADD/GET/UPDATE/DELETE test script\n\n")
         out.write(". ./.env\n")
         out.write('if [ -z "$BASE_URL" ]; then echo "ERROR: BASE_URL is not set"; exit 1; fi\n\n')
         out.write('echo "Using BASE_URL=$BASE_URL"\n\n')
@@ -191,6 +191,28 @@ def main():
             out.write("    exit 1\n")
             out.write("else\n")
             out.write(f'    echo "ok {test_num} - add {model_lower} succeeded"\n')
+            out.write("fi\n\n")
+
+            test_num += 1
+
+        # -----------------------------
+        # GET フェーズ（ADD の直後）
+        # -----------------------------
+        for model_lower, model_cap in ordered_models:
+            pk_field = primary_keys[model_cap]
+            var_name = f"id_{model_lower}"
+            api_path = f"/api/{model_lower}s/${{{var_name}}}/"
+
+            out.write(f'echo "=== Getting {model_lower} ==="\n')
+
+            out.write(f'res=$(curl -s -k -X GET "${{BASE_URL}}{api_path}")\n')
+            out.write('echo "$res"\n\n')
+
+            out.write(f'if echo "$res" | jq -e ".{pk_field}" >/dev/null; then\n')
+            out.write(f'    echo "ok {test_num} - get {model_lower} succeeded"\n')
+            out.write("else\n")
+            out.write(f'    echo "not ok {test_num} - get {model_lower} failed"\n')
+            out.write("    exit 1\n")
             out.write("fi\n\n")
 
             test_num += 1
