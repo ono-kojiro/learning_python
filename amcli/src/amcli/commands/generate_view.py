@@ -31,7 +31,8 @@ def run(loader_dir, output_file, ref_yaml):
     content = template.render(
         model=model,
         model_lower=model.lower(),
-        pk_field=pk_field,     # ★ 追加
+        pk_field=pk_field,
+        depth_param=True,   # ★ 追加：テンプレート側で depth を動的に扱うため
     )
 
     out_path = Path(output_file)
