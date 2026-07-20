@@ -53,11 +53,12 @@ def build_reference_model(models, target_model):
             }
 
         elif ftype == "OneToMany":
-            out["fields"][fname] = {
-                "type": FieldType.JSON.value,
-                "help_text": f"Owned children of {fdef['to']}",
-                "default": "list",
-            }
+            #out["fields"][fname] = {
+            #    "type": FieldType.JSON.value,
+            #    "help_text": f"Owned children of {fdef['to']}",
+            #    "default": "list",
+            #}
+            pass
 
         else:
             raise ValueError(f"Unknown type: {ftype}")

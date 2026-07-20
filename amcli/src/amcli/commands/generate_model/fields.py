@@ -34,16 +34,24 @@ def render_relation_field(fname, field_def, ftype: FieldType):
 
     args = []
 
-    args.append(f"to={repr(field_def['to'])}")
+    # to=
+    args.append(f"{repr(field_def['to'])}")
 
+    # on_delete=
     val = field_def.get("on_delete", "CASCADE")
     if isinstance(val, str) and val.startswith("models."):
         args.append(f"on_delete={val}")
     else:
         args.append(f"on_delete=models.{val}")
 
+    # ★ related_name を反映
+    related_name = field_def.get("related_name")
+    if related_name:
+        args.append(f"related_name='{related_name}'")
+
+    # その他の引数
     for k, v in field_def.items():
-        if k in ["type", "to", "on_delete"]:
+        if k in ["type", "to", "on_delete", "related_name"]:
             continue
         if k is None:
             k = "null"
@@ -60,12 +68,18 @@ def render_many_to_many_field(fname, field_def, model_name):
     args = []
     args.append(repr(field_def["to"]))
 
+    # その他の引数
     for k, v in field_def.items():
         if k in ["type", "to"]:
             continue
         args.append(render_default(k, v))
 
-    if not any(a.startswith("related_name=") for a in args):
+    # ★ related_name を反映（modelgen.py が設定した場合）
+    related_name = field_def.get("related_name")
+    if related_name:
+        args.append(f"related_name='{related_name}'")
+    else:
+        # fallback
         args.append(f"related_name='{model_name.lower()}s'")
 
     arg_str = ", ".join(args)

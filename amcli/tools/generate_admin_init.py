@@ -6,6 +6,9 @@ import json
 import getopt
 import re
 
+import os
+
+DEBUG = os.environ.get("VERBOSE", "0") != "0"
 
 def safe(name):
     return re.sub(r'\W+', '_', name)
@@ -48,14 +51,15 @@ def main():
     admin_order = schema.get("admin_order", {})
     normal_admin = schema.get("normal_admin_models", [])
 
-    print("=== DEBUG: nested ===")
-    print(json.dumps(nested, indent=2))
+    if DEBUG :
+        print("=== DEBUG: nested ===")
+        print(json.dumps(nested, indent=2))
 
-    print("=== DEBUG: admin_order ===")
-    print(json.dumps(admin_order, indent=2))
+        print("=== DEBUG: admin_order ===")
+        print(json.dumps(admin_order, indent=2))
 
-    print("=== DEBUG: normal_admin_models ===")
-    print(json.dumps(normal_admin, indent=2))
+        print("=== DEBUG: normal_admin_models ===")
+        print(json.dumps(normal_admin, indent=2))
 
     # -----------------------------
     # import models
@@ -70,7 +74,8 @@ def main():
     for model in models.keys():
         py_model = safe(model)
 
-        print(f"\n=== DEBUG: Inline for model={model} ===")
+        if DEBUG :
+            print(f"\n=== DEBUG: Inline for model={model} ===")
 
         inline_defs.append(
             f"""
@@ -88,7 +93,8 @@ class {py_model}Inline(nested_admin.NestedStackedInline):
     for model in models.keys():
         py_model = safe(model)
 
-        print(f"\n=== DEBUG: Admin for model={model} ===")
+        if DEBUG :
+            print(f"\n=== DEBUG: Admin for model={model} ===")
 
         # DeviceAdmin の inline は admin_order に従う
         if model in admin_order:
