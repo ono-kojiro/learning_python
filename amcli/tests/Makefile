@@ -38,7 +38,7 @@ test-init:
 	cp -f $(TOP_DIR)/.env .
 
 test-add : test-init
-	prove test_add_all.sh | tee test_add_all.log
+	prove -v test_add_all.sh | tee test_add_all.log
 
 test-get : test-add
 	cd testdata && prove -v get.sh | tee get.log

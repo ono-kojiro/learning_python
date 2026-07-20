@@ -3,7 +3,7 @@ include $(TOP_DIR)/common.mk
 
 all : init
 	
-init : startproject startapp installapp edit enable-debug
+init : startproject startapp installapp edit
 
 startproject :
 	@if [ ! -e manage.py ]; then \
