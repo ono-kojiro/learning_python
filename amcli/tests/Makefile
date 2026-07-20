@@ -5,6 +5,8 @@ MODELS = $(shell cat $(SCHEMA_JSON) | jq -r ".models | keys[] | ascii_downcase")
 
 TESTDATA_JSON = $(addprefix testdata/, $(MODELS:=.json))
 
+$(shell mkdir -p testdata)
+
 all : generate
 
 generate : testdata testscript

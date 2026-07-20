@@ -3,7 +3,8 @@ include ../common.mk
 
 SERIALIZERS_PY = $(addprefix $(SERIALIZER_DIR)/, $(notdir $(SPECS_JSON:.json=_serializer.py)))
 
-THROUGH_PY = $(SERIALIZER_DIR)/devicemanager_serializer.py
+#THROUGH_PY = $(SERIALIZER_DIR)/devicemanager_serializer.py
+THROUGH_PY =
 	
 GENERATOR = $(TOP_DIR)/tools/generate_serializer.py
 

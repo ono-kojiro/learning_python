@@ -80,7 +80,7 @@ def run_delete(outpath, json_files, testschema):
         print("[DEBUG] delete_order =", delete_order)
 
     json_map = {
-        os.path.basename(jf).split("_", 1)[1].replace(".json", "").lower(): jf
+        os.path.basename(jf).replace(".json", "").lower(): jf
         for jf in json_files
     }
 
@@ -101,7 +101,7 @@ def run_delete(outpath, json_files, testschema):
 
     for jf in ordered_json_files:
         base = os.path.basename(jf)
-        model = base.split("_", 1)[1].replace(".json", "")
+        model = base.replace(".json", "")
         model_plural = model + "s"
         key = f"{model}_id"
 

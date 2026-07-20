@@ -54,7 +54,8 @@ def run_get(outpath, json_files):
 
     for jf in json_files:
         base = os.path.basename(jf)
-        model = base.split("_", 1)[1].replace(".json", "")
+        #model = base.split("_", 1)[1].replace(".json", "")
+        model = base.replace(".json", "")
         model_plural = model + "s"
 
         script += TEMPLATE.format(

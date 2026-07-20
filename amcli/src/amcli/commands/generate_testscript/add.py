@@ -104,8 +104,9 @@ def run_add(outpath, json_files, schema):
 
     for jf in json_files:
         base = os.path.basename(jf)
-        model = base.split("_", 1)[1].replace(".json", "")
-
+        #model = base.split("_", 1)[1].replace(".json", "")
+        model = base.replace(".json", "")
+        
         model_cap = model_map[model]
 
         pk_field = schema["primary_keys"][model_cap]

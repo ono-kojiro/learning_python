@@ -107,7 +107,8 @@ def run_update(outpath, json_files, schema):
     for jf in json_files:
         base = os.path.basename(jf)
 
-        model = base.split("_", 1)[1].replace(".json", "")
+        #model = base.split("_", 1)[1].replace(".json", "")
+        model = base.replace(".json", "")
 
         if model not in model_map:
             raise ValueError(f"Model '{model}' not found in schema.json")
