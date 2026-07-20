@@ -38,6 +38,24 @@ def gen_dummy_value_str(fname, fdef):
     return "null"
 
 
+def gen_update_value_str(fname, fdef):
+    ftype = fdef.get("type")
+
+    if ftype == "CharField":
+        return f"\"UPDATED-{os.urandom(4).hex()}\""
+
+    if ftype == "IntegerField":
+        return "999"
+
+    if ftype == "DateTimeField":
+        return f"\"{datetime.datetime.now().isoformat()}\""
+
+    if ftype == "JSONField":
+        return "[\"updated\"]"
+
+    return "null"
+
+
 def build_order(schema):
     compositions = schema.get("compositions", {})
     root = schema.get("composition_root")
@@ -99,11 +117,11 @@ def main():
         if cap in schema["models"]:
             ordered_models.append((lower, cap))
 
-    total_tests = len(ordered_models) * 2  # ADD + DELETE
+    total_tests = len(ordered_models) * 3  # ADD + UPDATE + DELETE
 
     with open(output_file, "w", encoding="utf-8") as out:
         out.write("#!/bin/sh\n")
-        out.write("# Auto-generated TAP-compatible ADD/DELETE test script\n\n")
+        out.write("# Auto-generated TAP-compatible ADD/UPDATE/DELETE test script\n\n")
         out.write(". ./.env\n")
         out.write('if [ -z "$BASE_URL" ]; then echo "ERROR: BASE_URL is not set"; exit 1; fi\n\n')
         out.write('echo "Using BASE_URL=$BASE_URL"\n\n')
@@ -178,12 +196,63 @@ def main():
             test_num += 1
 
         # -----------------------------
+        # UPDATE フェーズ
+        # -----------------------------
+        for model_lower, model_cap in ordered_models:
+            fields_def = schema["models"][model_cap]["fields"]
+            pk_field = primary_keys[model_cap]
+            var_name = f"id_{model_lower}"
+
+            out.write(f'echo "=== Updating {model_lower} ==="\n\n')
+
+            out.write("update_data=$(cat <<EOF\n")
+            out.write("{\n")
+
+            update_lines = []
+            for fname, fdef in fields_def.items():
+                if fname == "id":
+                    continue
+
+                ftype = fdef["type"]
+
+                if ftype in ("ForeignKey", "ManyToManyField"):
+                    continue
+
+                key = fname
+                value = gen_update_value_str(fname, fdef)
+                update_lines.append(f'  "{key}": {value}')
+
+            for i, line in enumerate(update_lines):
+                if i < len(update_lines) - 1:
+                    out.write(line + ",\n")
+                else:
+                    out.write(line + "\n")
+
+            out.write("}\n")
+            out.write("EOF\n)\n\n")
+
+            api_path = f"/api/{model_lower}s/${{{var_name}}}/"
+
+            out.write(f'res=$(curl -s -k -X PATCH "${{BASE_URL}}{api_path}" \\\n')
+            out.write('    -H "Content-Type: application/json" \\\n')
+            out.write('    -d "$update_data")\n\n')
+
+            out.write('echo "$res"\n\n')
+
+            out.write(f'if echo "$res" | jq -e ".{pk_field}" >/dev/null; then\n')
+            out.write(f'    echo "ok {test_num} - update {model_lower} succeeded"\n')
+            out.write("else\n")
+            out.write(f'    echo "not ok {test_num} - update {model_lower} failed"\n')
+            out.write("    exit 1\n")
+            out.write("fi\n\n")
+
+            test_num += 1
+
+        # -----------------------------
         # DELETE フェーズ（逆順）
         # -----------------------------
         for model_lower, model_cap in reversed(ordered_models):
             var_name = f"id_{model_lower}"
-
-            # ★ 末尾スラッシュを追加（APPEND_SLASH=True 対応）
             api_path = f"/api/{model_lower}s/${{{var_name}}}/"
 
             out.write(f'echo "=== Deleting {model_lower} ==="\n')
