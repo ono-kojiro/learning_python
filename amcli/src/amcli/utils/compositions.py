@@ -6,9 +6,6 @@ import json
 
 from amcli.utils.debug import debug
 
-#DEBUG = os.environ.get("VERBOSE", "0") != "0"
-DEBUG = True
-
 def collect_compositions(models):
     compositions = {}
 
@@ -91,14 +88,14 @@ def build_load_order_from_compositions(compositions, root):
     order = []
     visited = set()
 
-    print("=== build_load_order_from_compositions start ===")
-    print(json.dumps(compositions, indent=2))
+    debug("=== build_load_order_from_compositions start ===")
+    debug(json.dumps(compositions, indent=2))
 
-    print("=== root ===")
-    print(root)
+    debug("=== root ===")
+    debug(root)
 
-    print("=== compositions.get(root) ===")
-    print(compositions.get(root))
+    debug("=== compositions.get(root) ===")
+    debug(compositions.get(root))
 
     def dfs(model):
         if model in visited:
@@ -110,6 +107,6 @@ def build_load_order_from_compositions(compositions, root):
 
     dfs(root)
 
-    print("=== build_load_order_from_compositions end ===")
+    debug("=== build_load_order_from_compositions end ===")
 
     return order

@@ -8,7 +8,7 @@ import re
 
 import os
 
-DEBUG = os.environ.get("VERBOSE", "0") != "0"
+from amcli.utils.debug import debug
 
 def safe(name):
     return re.sub(r'\W+', '_', name)
@@ -51,15 +51,14 @@ def main():
     admin_order = schema.get("admin_order", {})
     normal_admin = schema.get("normal_admin_models", [])
 
-    if DEBUG :
-        print("=== DEBUG: nested ===")
-        print(json.dumps(nested, indent=2))
+    debug("=== DEBUG: nested ===")
+    debug(json.dumps(nested, indent=2))
 
-        print("=== DEBUG: admin_order ===")
-        print(json.dumps(admin_order, indent=2))
+    debug("=== DEBUG: admin_order ===")
+    debug(json.dumps(admin_order, indent=2))
 
-        print("=== DEBUG: normal_admin_models ===")
-        print(json.dumps(normal_admin, indent=2))
+    debug("=== DEBUG: normal_admin_models ===")
+    debug(json.dumps(normal_admin, indent=2))
 
     # -----------------------------
     # import models
@@ -74,8 +73,7 @@ def main():
     for model in models.keys():
         py_model = safe(model)
 
-        if DEBUG :
-            print(f"\n=== DEBUG: Inline for model={model} ===")
+        debug(f"\n=== DEBUG: Inline for model={model} ===")
 
         inline_defs.append(
             f"""
@@ -93,13 +91,12 @@ class {py_model}Inline(nested_admin.NestedStackedInline):
     for model in models.keys():
         py_model = safe(model)
 
-        if DEBUG :
-            print(f"\n=== DEBUG: Admin for model={model} ===")
+        debug(f"\n=== DEBUG: Admin for model={model} ===")
 
         # DeviceAdmin の inline は admin_order に従う
         if model in admin_order:
             children = admin_order[model]
-            print(f"  admin_order children={children}")
+            debug(f"  admin_order children={children}")
         else:
             # one_to_many + many_to_many の両方を inline に含める
             children = []
@@ -110,14 +107,15 @@ class {py_model}Inline(nested_admin.NestedStackedInline):
                     # ★ ハードコード：Device → Manager の補完
                     if model == "Device":
                         children.append("Manager")
-            print(f"  nested children={children}")
+            debug(f"  nested children={children}")
 
         # exclude の生成（many_to_many + one_to_many 全て）
         exclude_fields = [
             item["name"]
             for item in nested.get(model, [])
         ]
-        print(f"  exclude_fields={exclude_fields}")
+
+        debug(f"  exclude_fields={exclude_fields}")
 
         child_inline_list = [
             f"        {safe(child)}Inline,"
@@ -128,7 +126,7 @@ class {py_model}Inline(nested_admin.NestedStackedInline):
 
         # Manager は normal_admin_models に従う
         if model in normal_admin:
-            print("  → normal_admin_models: using ModelAdmin")
+            debug("  → normal_admin_models: using ModelAdmin")
             admin_defs.append(
                 f"""
 class {py_model}Admin(admin.ModelAdmin):
@@ -156,7 +154,7 @@ admin.site.register({py_model}, {py_model}Admin)
         f.write("\n".join(inline_defs))
         f.write("\n".join(admin_defs))
 
-    print(f"[OK] Generated admin init: {output_file}")
+    debug(f"[OK] Generated admin init: {output_file}")
 
 
 if __name__ == "__main__":
