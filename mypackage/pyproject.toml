@@ -1,13 +1,25 @@
 [project]
-name = "mymodule"
-#res-python = ">=3.9"
+name = "mypackage"
 version = "0.0.1"
+description = "Python Package example"
+authors = [
+    { name = "Kojiro", email = "ono.kojiro@gmail.com" }
+]
+readme = "README.md"
+requires-python = ">=3.10"
 
 dependencies = [
-  "json",
+    "pip>=25.1.1",
 ]
 
-[tool.pytest.ini_options]
-pythonpath = "src"
-testpaths = [ "tests", ]
+[project.scripts]
+mypackage = "mypackage.main:main"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
 
