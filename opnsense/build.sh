@@ -92,7 +92,7 @@ lower()
 
   cd $srcdir
 
-  find . -depth -name "*Controller.php" | while read filepath; do
+  find . -depth -path "*/Api/*Controller.php" | while read filepath; do
     lower=`echo "$filepath" | tr '[:upper:]' '[:lower:]'`
     echo "INFO: filepath is $filepath"
     
