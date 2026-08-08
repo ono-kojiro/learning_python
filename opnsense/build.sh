@@ -5,7 +5,11 @@ cd $top_dir
 
 flags=""
   
-. ./apikey.bashrc
+if [ -f ./myenv/bin/activate ]; then
+  . ./myenv/bin/activate
+fi
+  
+. ./apikey.shrc
 opnsense_host="localhost"
 opnsense_port="8443"
 
@@ -22,7 +26,19 @@ usage()
 usage : $0 [options] target1 target2 ...
 
   target:
+    prepare
+    init
+
+    fetch
+    extract
+
+    lower
+    spec
+    api
+
     pytest
+
+    mclean
 EOS
 
 }
@@ -34,12 +50,97 @@ all()
 
 prepare()
 {
+  sudo apt -y install python3-pip python3-venv
+}
+
+init()
+{
+  if [ ! -d myenv ]; then
+    python3 -m venv myenv
+  fi
+
+  . ./myenv/bin/activate
   python3 -m pip install -r requirements.txt
+}
+
+fetch()
+{
+  mkdir -p work/archive/
+  ssh firewall -l root \
+    tar -C /usr/local/opnsense/mvc/app/controllers \
+      -cJf /tmp/OPNsense.tar.xz OPNsense
+  scp root@firewall:/tmp/OPNsense.tar.xz ./work/archive/
+  ssh firewall -l root rm -f /tmp/OPNsense.tar.xz
+}
+
+extract()
+{
+  mkdir -p work/original
+  cd work/original
+  tar -xJvf ../archive/OPNsense.tar.xz
+  cd ${top_dir}
+}
+
+lower()
+{
+  cd work
+  srcdir="original"
+  dstdir="source"
+
+  rm -rf $dstdir
+  mkdir -p $dstdir
+
+  cd $srcdir
+
+  find . -depth -name "*Controller.php" | while read filepath; do
+    lower=`echo "$filepath" | tr '[:upper:]' '[:lower:]'`
+    echo "INFO: filepath is $filepath"
+    
+    dstpath="../$dstdir/$lower"
+    mkdir -p `dirname $dstpath`
+    cp -f "$filepath" "../$dstdir/$lower"
+  done
+
+  cd ${top_dir}
+}
+
+spec()
+{
+  cd work
+
+  rm -rf specs
+  mkdir -p specs
+
+  {
+     echo "CONTROLLERS_PHP = \\" 
+     find ./source/opnsense/ -name "*controller.php" \
+        | sed 's/\(.*\)/  \1 \\/'
+     echo ""
+
+  } > controllers.mk
+
+  make -f ${top_dir}/generate_spec.mk
+
+  cd ${top_dir}
+}
+
+api()
+{
+  cd work
+  rm -rf api
+  make -f ${top_dir}/generate_api.mk
+  cd ${top_dir}
 }
 
 test()
 {
-  pytest
+  cp -f apikey.shrc .env
+  PYTHONPATH=`pwd`/work/api/opnsense/core/api python3 example.py | jq .
+}
+
+mclean()
+{
+  rm -f ./work/OPNsense.tar.xz
 }
 
 args=""
