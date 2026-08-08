@@ -5,6 +5,42 @@ import yaml
 import os
 from string import Template
 
+# Python の予約語や衝突しやすい名前を安全な名前に変換する
+RESERVED_WORDS = {
+    "del": "delete",
+#    "class": "class_",
+#    "def": "def_",
+#    "pass": "pass_",
+#    "global": "global_",
+#    "from": "from_",
+#    "import": "import_",
+#    "lambda": "lambda_",
+#    "yield": "yield_",
+#    "return": "return_",
+#    "raise": "raise_",
+#    "try": "try_",
+#    "except": "except_",
+#    "finally": "finally_",
+#    "with": "with_",
+#    "as": "as_",
+#    "if": "if_",
+#    "elif": "elif_",
+#    "else": "else_",
+#    "while": "while_",
+#    "for": "for_",
+#    "break": "break_",
+#    "continue": "continue_",
+#    "assert": "assert_",
+#    "nonlocal": "nonlocal_",
+#    "True": "true_",
+#    "False": "false_",
+#    "None": "none_",
+}
+
+def sanitize_func_name(name: str) -> str:
+    """予約語を安全な名前に変換する"""
+    return RESERVED_WORDS.get(name, name)
+
 TEMPLATE = Template("""
 import requests
 
@@ -80,6 +116,10 @@ def main():
     for path, methods in paths.items():
         for method, info in methods.items():
             func = info.get("operationId", "unknown")
+
+            # ★ 予約語を安全な名前に変換
+            func = sanitize_func_name(func)
+
             summary = info.get("summary", "")
             methods_code += METHOD_TEMPLATE.substitute(
                 func=func,
