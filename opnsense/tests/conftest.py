@@ -1,40 +1,37 @@
+# tests/conftest.py
+
 import os
 import pytest
-from dotenv import load_dotenv
-from opnsense.python import OPNsenseClient, FirewallAPI
+from dotenv import dotenv_values
 
+import urllib3
 
-# プロジェクトルートの .env を読み込む
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", ".env"))
+def pytest_configure(config):
+    # 自己署名証明書の警告を抑制
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+    # Requests の CA バンドル設定（必要なら）
+    os.environ["REQUESTS_CA_BUNDLE"] = "/etc/ssl/certs/ca-certificates.crt"
+
+@pytest.fixture(autouse=True)
+def change_working_directory(monkeypatch, request):
+    """
+    以前のテスト環境と互換性を保つために残す。
+    テストファイルのディレクトリをカレントにする。
+    """
+    monkeypatch.chdir(request.fspath.dirname)
+    yield
 
 
 @pytest.fixture(scope="session")
-def opnsense_credentials():
-    key = os.getenv("OPNSENSE_KEY")
-    secret = os.getenv("OPNSENSE_SECRET")
-    base_url = os.getenv("OPNSENSE_BASE_URL", "https://localhost:8443")
+def api_config():
+    config = dotenv_values(".env")
 
-    if not key or not secret:
-        raise RuntimeError("OPNSENSE_KEY / OPNSENSE_SECRET が .env に設定されていません")
+    key = config.get("key")
+    secret = config.get("secret")
+    base_url = config.get("base_url")
 
-    return {
-        "key": key,
-        "secret": secret,
-        "base_url": base_url,
-    }
+    if not base_url:
+        raise RuntimeError("ERROR: .env に base_url が設定されていません。")
 
-
-@pytest.fixture
-def opnsense_client(opnsense_credentials):
-    return OPNsenseClient(
-        base_url=opnsense_credentials["base_url"],
-        key=opnsense_credentials["key"],
-        secret=opnsense_credentials["secret"],
-        verify_ssl=False,
-    )
-
-
-@pytest.fixture
-def firewall(opnsense_client):
-    return FirewallAPI(opnsense_client)
-
+    return base_url, key, secret

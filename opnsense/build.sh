@@ -97,8 +97,9 @@ lower()
     echo "INFO: filepath is $filepath"
     
     dstpath="../$dstdir/$lower"
+    #dstpath=`echo $dstpath | sed 's|/api/|/|'`
     mkdir -p `dirname $dstpath`
-    cp -f "$filepath" "../$dstdir/$lower"
+    cp -f "$filepath" "$dstpath"
   done
 
   cd ${top_dir}
@@ -108,8 +109,8 @@ spec()
 {
   cd work
 
-  rm -rf specs
-  mkdir -p specs
+  rm -rf spec
+  mkdir -p spec
 
   {
      echo "CONTROLLERS_PHP = \\" 
@@ -135,12 +136,22 @@ api()
 test()
 {
   cp -f apikey.shrc .env
+  echo "base_url=\"https://192.168.122.99\"" >> .env
   PYTHONPATH=`pwd`/work/api/opnsense/core/api python3 example.py | jq .
+
+  pytest
 }
 
 install()
 {
   python3 -m pip install -e .
+}
+
+clean()
+{
+  rm -rf ./src/
+  rm -rf ./work/spec/
+  rm -rf ./work/source/
 }
 
 mclean()
