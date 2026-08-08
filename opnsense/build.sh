@@ -138,6 +138,11 @@ test()
   PYTHONPATH=`pwd`/work/api/opnsense/core/api python3 example.py | jq .
 }
 
+install()
+{
+  python3 -m pip install -e .
+}
+
 mclean()
 {
   rm -f ./work/OPNsense.tar.xz

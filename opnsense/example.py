@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from system import System
+from opnsense.core.api.system import System
 
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)

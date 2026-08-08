@@ -1,6 +1,6 @@
 SOURCE_DIR = ./source
 SPEC_DIR   = ./spec
-API_DIR    = ./api
+API_DIR    = $(TOP_DIR)/src
 
 SPECS_YML = $(subst $(SOURCE_DIR),$(SPEC_DIR),$(CONTROLLERS_PHP:controller.php=.yml))
 
