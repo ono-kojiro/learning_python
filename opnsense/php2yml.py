@@ -10,15 +10,10 @@ def usage():
 
 
 def extract_function_body(php, func):
-    """
-    function <func>Action (...) { ... } の本体を
-    正規表現ではなくブレースカウントで安全に抽出する
-    """
     start = php.find(f"function {func}Action")
     if start == -1:
         return ""
 
-    # 関数開始位置から最初の '{' を探す
     brace_start = php.find("{", start)
     if brace_start == -1:
         return ""
@@ -27,14 +22,12 @@ def extract_function_body(php, func):
     i = brace_start
     length = len(php)
 
-    # 本体抽出
     while i < length:
         if php[i] == "{":
             depth += 1
         elif php[i] == "}":
             depth -= 1
             if depth == 0:
-                # 関数本体終了
                 return php[brace_start+1:i]
         i += 1
 
@@ -56,10 +49,8 @@ def extract_api_info(filepath):
     for func in actions:
         action = func.replace("Action", "").lower()
 
-        # 関数本体をブレースカウントで抽出
         body = extract_function_body(php, func)
 
-        # HTTPメソッド判定（誤判定防止）
         if "isPost()" in body or "getPost(" in body:
             http_method = "POST"
         elif "$this->request->get(" in body:
@@ -67,7 +58,8 @@ def extract_api_info(filepath):
         else:
             http_method = "GET"
 
-        api_path = f"/api/{module}/{controller}/{action}"
+        # ★ /api を削除した OpenAPI 標準形式
+        api_path = f"/{module}/{controller}/{action}"
 
         api_list.append({
             "function": func,
@@ -138,15 +130,15 @@ def main():
             out.close()
         return
 
-    # コメントとして API 一覧を出力
+    # ★ コメント出力も /api を削除
     for api in api_list:
         out.write(f"# {api['method']:5}  {api['path']:35}  {api['summary']}\n")
 
     out.write("\n")
 
     # OpenAPI YAML 出力
-    module = api_list[0]['path'].split('/')[2].capitalize()
-    controller = api_list[0]['path'].split('/')[3].capitalize()
+    module = api_list[0]['path'].split('/')[1].capitalize()
+    controller = api_list[0]['path'].split('/')[2].capitalize()
     title = f"OPNsense {module} {controller} API"
 
     out.write(generate_openapi(api_list, title) + "\n")
@@ -157,4 +149,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

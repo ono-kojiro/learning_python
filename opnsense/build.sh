@@ -139,7 +139,7 @@ api()
 test()
 {
   cp -f apikey.shrc .env
-  echo "base_url=\"https://192.168.122.99\"" >> .env
+  echo "base_url=\"https://192.168.122.99/api\"" >> .env
   #PYTHONPATH=`pwd`/work/api/opnsense/core/api python3 example.py | jq .
 
   pytest
@@ -148,7 +148,7 @@ test()
 debug()
 {
   cp -f apikey.shrc .env
-  echo "base_url=\"https://192.168.122.99\"" >> .env
+  echo "base_url=\"https://192.168.122.99/api\"" >> .env
   pytest tests/test_core.py
 }
 
