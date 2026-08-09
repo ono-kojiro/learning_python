@@ -1,5 +1,5 @@
 import json
-from opnsense.dnsmasq.api.settings import Settings
+from opnsense.dnsmasq.settings import Settings
 
 def test_dnsmasq_get(api_config):
     base_url, key, secret = api_config

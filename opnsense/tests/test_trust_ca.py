@@ -1,4 +1,4 @@
-from opnsense.trust.api.ca import Ca
+from opnsense.trust.ca import Ca
 import json
 
 

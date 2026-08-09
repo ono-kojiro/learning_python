@@ -1,4 +1,4 @@
-from opnsense.ipsec.api.settings import Settings
+from opnsense.ipsec.settings import Settings
 
 
 def test_ipsec_get(api_config):

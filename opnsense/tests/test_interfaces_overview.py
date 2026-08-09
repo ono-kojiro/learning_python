@@ -1,4 +1,4 @@
-from opnsense.interfaces.api.overview import Overview
+from opnsense.interfaces.overview import Overview
 
 
 def test_interfaces_interfacesinfo(api_config):

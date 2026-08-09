@@ -1,5 +1,5 @@
 import json
-from opnsense.captiveportal.api.settings import Settings
+from opnsense.captiveportal.settings import Settings
 
 def test_captiveportal_searchzones(api_config):
     base_url, key, secret = api_config

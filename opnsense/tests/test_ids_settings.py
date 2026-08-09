@@ -1,5 +1,5 @@
 import json
-from opnsense.ids.api.settings import Settings
+from opnsense.ids.settings import Settings
 
 
 def test_ids_getruleinfo(api_config):

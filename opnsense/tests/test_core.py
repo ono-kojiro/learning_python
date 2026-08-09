@@ -1,5 +1,5 @@
 import json
-from opnsense.core.api.system import System
+from opnsense.core.system import System
 
 def test_core_system_status(api_config):
     base_url, key, secret = api_config

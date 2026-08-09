@@ -1,4 +1,4 @@
-from opnsense.monit.api.status import Status
+from opnsense.monit.status import Status
 
 
 def test_monit_status_get(api_config):

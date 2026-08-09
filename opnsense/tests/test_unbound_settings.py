@@ -1,4 +1,4 @@
-from opnsense.unbound.api.settings import Settings
+from opnsense.unbound.settings import Settings
 
 
 def _assert_common(data):

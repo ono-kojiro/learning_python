@@ -1,4 +1,4 @@
-from opnsense.kea.api.ddns import Ddns
+from opnsense.kea.ddns import Ddns
 
 
 def test_kea_ddns_get(api_config):

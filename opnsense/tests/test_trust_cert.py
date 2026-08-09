@@ -1,4 +1,4 @@
-from opnsense.trust.api.cert import Cert
+from opnsense.trust.cert import Cert
 import json
 
 

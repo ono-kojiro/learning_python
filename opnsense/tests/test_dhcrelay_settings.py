@@ -1,5 +1,5 @@
 import json
-from opnsense.dhcrelay.api.settings import Settings
+from opnsense.dhcrelay.settings import Settings
 
 def test_dhcrelay_searchrelay(api_config):
     base_url, key, secret = api_config

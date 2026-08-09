@@ -1,4 +1,4 @@
-from opnsense.radvd.api.settings import Settings
+from opnsense.radvd.settings import Settings
 
 
 def test_radvd_searchentry(api_config):

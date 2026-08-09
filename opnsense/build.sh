@@ -35,6 +35,7 @@ usage : $0 [options] target1 target2 ...
     lower
     spec
     api
+    install
 
     pytest
 
@@ -50,7 +51,8 @@ all()
 
 prepare()
 {
-  sudo apt -y install python3-pip python3-venv
+  #sudo apt -y install python3-pip python3-venv
+  :
 }
 
 init()
@@ -97,7 +99,8 @@ lower()
     echo "INFO: filepath is $filepath"
     
     dstpath="../$dstdir/$lower"
-    #dstpath=`echo $dstpath | sed 's|/api/|/|'`
+    dstpath=`echo $dstpath | sed 's|/api/|/|'`
+    echo "INFO: dstpath is $dstpath"
     mkdir -p `dirname $dstpath`
     cp -f "$filepath" "$dstpath"
   done
@@ -140,6 +143,13 @@ test()
   #PYTHONPATH=`pwd`/work/api/opnsense/core/api python3 example.py | jq .
 
   pytest
+}
+
+debug()
+{
+  cp -f apikey.shrc .env
+  echo "base_url=\"https://192.168.122.99\"" >> .env
+  pytest tests/test_core.py
 }
 
 install()

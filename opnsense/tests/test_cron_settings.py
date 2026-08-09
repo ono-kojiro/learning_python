@@ -1,5 +1,5 @@
 import json
-from opnsense.cron.api.settings import Settings
+from opnsense.cron.settings import Settings
 
 def test_cron_searchjobs(api_config):
     base_url, key, secret = api_config

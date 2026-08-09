@@ -1,4 +1,4 @@
-from opnsense.wireguard.api.service import Service
+from opnsense.wireguard.service import Service
 
 
 def test_wireguard_reconfigure(api_config):

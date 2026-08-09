@@ -1,5 +1,5 @@
 import json
-from opnsense.auth.api.user import User
+from opnsense.auth.user import User
 
 def test_auth_user_search(api_config):
     base_url, key, secret = api_config

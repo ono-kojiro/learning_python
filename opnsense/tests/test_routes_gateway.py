@@ -1,4 +1,4 @@
-from opnsense.routes.api.gateway import Gateway
+from opnsense.routes.gateway import Gateway
 
 
 def test_routes_gateway_status(api_config):

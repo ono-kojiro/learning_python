@@ -1,4 +1,4 @@
-from opnsense.syslog.api.service import Service
+from opnsense.syslog.service import Service
 
 
 def test_syslog_reset(api_config):

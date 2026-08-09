@@ -1,5 +1,5 @@
 import json
-from opnsense.core.api.firmware import Firmware
+from opnsense.core.firmware import Firmware
 
 def test_firmware_cleanup(api_config):
     base_url, key, secret = api_config

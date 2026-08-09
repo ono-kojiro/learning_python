@@ -1,5 +1,5 @@
 import json
-from opnsense.firewall.api.category import Category
+from opnsense.firewall.category import Category
 
 def test_firewall_category_searchitem(api_config):
     base_url, key, secret = api_config

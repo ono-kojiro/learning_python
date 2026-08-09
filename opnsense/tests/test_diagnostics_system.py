@@ -1,5 +1,5 @@
 import json
-from opnsense.diagnostics.api.system import System
+from opnsense.diagnostics.system import System
 
 def test_diagnostics_system_information(api_config):
     base_url, key, secret = api_config

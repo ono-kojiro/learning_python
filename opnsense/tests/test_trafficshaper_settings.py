@@ -1,4 +1,4 @@
-from opnsense.trafficshaper.api.settings import Settings
+from opnsense.trafficshaper.settings import Settings
 import json
 
 

@@ -1,4 +1,4 @@
-from opnsense.routing.api.settings import Settings
+from opnsense.routing.settings import Settings
 
 
 def test_routing_reconfigure(api_config):

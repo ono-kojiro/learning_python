@@ -1,4 +1,4 @@
-from opnsense.ntpd.api.service import Service
+from opnsense.ntpd.service import Service
 
 
 def test_ntpd_meta(api_config):

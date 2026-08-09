@@ -46,7 +46,7 @@ def extract_api_info(filepath):
         php = f.read()
 
     parts = filepath.split("/")
-    module = parts[-3].lower()
+    module = parts[-2].lower()
     controller = parts[-1].replace("controller.php", "").lower()
 
     actions = re.findall(r'function\s+(\w+)Action', php)

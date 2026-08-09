@@ -1,4 +1,4 @@
-from opnsense.openvpn.api.instances import Instances
+from opnsense.openvpn.instances import Instances
 
 
 def test_openvpn_search(api_config):
