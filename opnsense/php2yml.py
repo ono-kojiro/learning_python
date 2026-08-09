@@ -34,6 +34,37 @@ def extract_function_body(php, func):
     return ""
 
 
+def split_action_name(action):
+    """
+    getAlert → ("get", "alert")
+    setService → ("set", "service")
+    searchTest → ("search", "test")
+    toggleGeneral → ("toggle", "general")
+    importAlias → ("import", "alias")
+    exportAlias → ("export", "alias")
+    """
+    ops = ["get", "set", "add", "del", "search", "toggle", "check", "reconfigure", "import", "export"]
+
+    action_lower = action.lower()
+
+    for op in ops:
+        if action_lower.startswith(op):
+            return op, action_lower[len(op):]
+
+    return action_lower, ""
+
+
+# ★ Python予約語を安全な名前に変換する
+RESERVED_MAP = {
+    "import": "load",
+    "export": "save",
+}
+
+
+def safe_operation_name(op):
+    return RESERVED_MAP.get(op, op)
+
+
 def extract_api_info(filepath):
     with open(filepath, "r") as f:
         php = f.read()
@@ -47,7 +78,7 @@ def extract_api_info(filepath):
     api_list = []
 
     for func in actions:
-        action = func.replace("Action", "").lower()
+        action = func.replace("Action", "")
         body = extract_function_body(php, func)
 
         if "isPost()" in body or "getPost(" in body:
@@ -57,16 +88,23 @@ def extract_api_info(filepath):
         else:
             http_method = "GET"
 
-        api_path = f"/{module}/{controller}/{action}"
+        operation, subcategory = split_action_name(action)
+
+        # ★ 予約語変換
+        safe_op = safe_operation_name(operation)
+
+        api_path = f"/{module}/{controller}/{safe_op}{subcategory}"
 
         api_list.append({
             "function": func,
             "method": http_method,
             "path": api_path,
-            "summary": action
+            "operation": safe_op,
+            "subcategory": subcategory,
         })
 
     return module, controller, api_list
+
 
 def generate_openapi(api_list, title, module, controller):
     out = []
@@ -81,8 +119,11 @@ def generate_openapi(api_list, title, module, controller):
     for api in api_list:
         path = api["path"]
         method = api["method"].lower()
-        summary = api["summary"]
-        operationId = api["summary"]
+        operation = api["operation"]
+        subcategory = api["subcategory"]
+
+        summary = subcategory or operation
+        operationId = operation  # ★ 予約語変換済み
 
         out.append(f"  {path}:")
         out.append(f"    {method}:")
@@ -124,10 +165,8 @@ def main():
     else:
         out = sys.stdout
 
-    # ★ 空 API の場合はダミー OpenAPI を生成
     if len(api_list) == 0:
         out.write(f"# No API actions found in {input_file}\n")
-        out.write("# This file was automatically converted, but the controller has no API actions.\n\n")
         out.write("openapi: 3.0.3\n")
         out.write("info:\n")
         out.write(f"  title: OPNsense {module.capitalize()} {controller.capitalize()} API (Empty)\n")
@@ -137,19 +176,13 @@ def main():
             out.close()
         return
 
-    # コメント出力
     for api in api_list:
-        out.write(f"# {api['method']:5}  {api['path']:35}  {api['summary']}\n")
+        out.write(f"# {api['method']:5}  {api['path']:35}  {api['operation']} {api['subcategory']}\n")
 
     out.write("\n")
 
-    # OpenAPI YAML 出力
-    #title = f"OPNsense {module.capitalize()} {controller.capitalize()} API"
-    #out.write(generate_openapi(api_list, title) + "\n")
-
     title = f"OPNsense {module.capitalize()} {controller.capitalize()} API"
     out.write(generate_openapi(api_list, title, module, controller) + "\n")
-
 
     if output_file:
         out.close()

@@ -1,12 +1,10 @@
 import json
-from opnsense.firewall.category import Category
+from opnsense.firewall import Firewall
 
-def test_firewall_category_searchitem(api_config):
-    base_url, key, secret = api_config
-    api = Category(base_url, api_key=key, api_secret=secret)
 
-    r = api.searchitem()
-    data = r.json()
+def test_firewall_category_searchitem(client):
+    api = Firewall(client)
+    data = api.search_category()
 
     assert "rows" in data
     assert "rowCount" in data

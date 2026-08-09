@@ -3,22 +3,18 @@
 import os
 import pytest
 from dotenv import dotenv_values
-
 import urllib3
 
-def pytest_configure(config):
-    # 自己署名証明書の警告を抑制
-    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+from opnsense.basic_auth_client import BasicAuthClient
 
-    # Requests の CA バンドル設定（必要なら）
+
+def pytest_configure(config):
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     os.environ["REQUESTS_CA_BUNDLE"] = "/etc/ssl/certs/ca-certificates.crt"
+
 
 @pytest.fixture(autouse=True)
 def change_working_directory(monkeypatch, request):
-    """
-    以前のテスト環境と互換性を保つために残す。
-    テストファイルのディレクトリをカレントにする。
-    """
     monkeypatch.chdir(request.fspath.dirname)
     yield
 
@@ -35,3 +31,15 @@ def api_config():
         raise RuntimeError("ERROR: .env に base_url が設定されていません。")
 
     return base_url, key, secret
+
+
+@pytest.fixture(scope="session")
+def client(api_config):
+    base_url, key, secret = api_config
+
+    return BasicAuthClient(
+        base_url=base_url,
+        api_key=key,
+        api_secret=secret,
+        verify_ssl=False,
+    )

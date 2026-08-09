@@ -2,7 +2,8 @@
 
 import base64
 import httpx
-from .client import Client
+from opnsense.client import Client
+
 
 class BasicAuthClient(Client):
     def __init__(self, *, base_url: str, api_key: str, api_secret: str, **kwargs):

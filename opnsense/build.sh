@@ -126,6 +126,8 @@ spec()
   make -f ${top_dir}/generate_spec.mk
 
   cd ${top_dir}
+
+  merge
 }
 
 merge()
@@ -145,23 +147,45 @@ api()
   python3 replace_files.py
 
   cp -f basic_auth_client.py src/opnsense/
+  cp -f out/opnsense_client/__init__.py  src/opnsense/
+  cp -f out/opnsense_client/client.py    src/opnsense/
+  cp -f out/opnsense_client/errors.py    src/opnsense/
+  cp -f out/opnsense_client/types.py     src/opnsense/
 
+  wrapper
+}
+
+wrapper()
+{
+  python3 generate_wrappers.py -o src/opnsense/ openapi.yml
 }
 
 test()
 {
-  cp -f apikey.shrc .env
-  echo "base_url=\"https://192.168.122.99/api\"" >> .env
-  #PYTHONPATH=`pwd`/work/api/opnsense/core/api python3 example.py | jq .
+  #cp -f basic_auth_client.py src/opnsense/
+  #cp -f apikey.shrc .env
+  #echo "base_url=\"https://192.168.122.99/api\"" >> .env
 
-  pytest
+  #pytest
+
+  clean
+  lower
+  spec
+  api
+  debug
 }
 
 debug()
 {
+  cp -f basic_auth_client.py src/opnsense/
   cp -f apikey.shrc .env
   echo "base_url=\"https://192.168.122.99/api\"" >> .env
-  pytest tests/test_core.py
+  pytest -v \
+    tests/test_core.py \
+    tests/test_auth_user.py \
+    tests/test_captiveportal_settings.py \
+    tests/test_firewall.py \
+    tests/test_core_firmware.py
 }
 
 install()
