@@ -185,7 +185,11 @@ debug()
     tests/test_auth_user.py \
     tests/test_captiveportal_settings.py \
     tests/test_firewall.py \
-    tests/test_core_firmware.py
+    tests/test_cron_settings.py \
+    tests/test_dhcrelay_settings.py \
+    tests/test_diagnostics_system.py
+    
+#tests/test_core_firmware.py \
 }
 
 install()

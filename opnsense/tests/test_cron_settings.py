@@ -1,24 +1,18 @@
-import json
-from opnsense.cron.settings import Settings
+from opnsense.cron import Cron
 
-def test_cron_searchjobs(api_config):
-    base_url, key, secret = api_config
-    api = Settings(base_url, api_key=key, api_secret=secret)
 
-    r = api.searchjobs()
-    data = r.json()
+def test_cron_searchjobs(client):
+    api = Cron(client)
+    data = api.search_jobs()
 
     # searchjobs は "rows" を返す（空でもOK）
     assert "rows" in data
     assert isinstance(data["rows"], list)
 
 
-def test_cron_getjob(api_config):
-    base_url, key, secret = api_config
-    api = Settings(base_url, api_key=key, api_secret=secret)
-
-    r = api.getjob()
-    data = r.json()
+def test_cron_getjob(client):
+    api = Cron(client)
+    data = api.get_job()
 
     # getjob は job 情報を返す（空でもOK）
     # OPNsense 26.7 では "job" または "jobs" が返る
@@ -29,4 +23,3 @@ def test_cron_getjob(api_config):
 
     if "jobs" in data:
         assert isinstance(data["jobs"], list)
-

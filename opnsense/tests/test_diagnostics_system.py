@@ -1,12 +1,9 @@
-import json
-from opnsense.diagnostics.system import System
+from opnsense.diagnostics import Diagnostics
 
-def test_diagnostics_system_information(api_config):
-    base_url, key, secret = api_config
-    api = System(base_url, api_key=key, api_secret=secret)
 
-    r = api.systeminformation()
-    data = r.json()
+def test_diagnostics_system_information(client):
+    api = Diagnostics(client)
+    data = api.systeminformation_system()
 
     # systeminformation は "name" を必ず返す
     assert "name" in data
@@ -20,12 +17,9 @@ def test_diagnostics_system_information(api_config):
         assert isinstance(data["updates"], str)
 
 
-def test_diagnostics_system_time(api_config):
-    base_url, key, secret = api_config
-    api = System(base_url, api_key=key, api_secret=secret)
-
-    r = api.systemtime()
-    data = r.json()
+def test_diagnostics_system_time(client):
+    api = Diagnostics(client)
+    data = api.systemtime_system()
 
     # boottime は必ず存在する
     assert "boottime" in data
@@ -35,12 +29,9 @@ def test_diagnostics_system_time(api_config):
         assert isinstance(data["uptime"], str)
 
 
-def test_diagnostics_system_memory(api_config):
-    base_url, key, secret = api_config
-    api = System(base_url, api_key=key, api_secret=secret)
-
-    r = api.memory()
-    data = r.json()
+def test_diagnostics_system_memory(client):
+    api = Diagnostics(client)
+    data = api.memory_system()
 
     # vmstat → malloc-statistics → memory の階層構造
     assert "vmstat" in data
