@@ -9,5 +9,6 @@ api : $(APIS_PY)
 
 $(API_DIR)/%.py : $(SPEC_DIR)/%.yml
 	mkdir -p `dirname $@`
-	python3 $(TOP_DIR)/yml2py.py -o $@ $<
+	#python3 $(TOP_DIR)/yml2py.py -o $@ $<
+	openapi-python-client generate --overwrite --path $<
 

@@ -128,12 +128,24 @@ spec()
   cd ${top_dir}
 }
 
+merge()
+{
+  python3 merge_yaml.py -o openapi.yml spec/opnsense
+}
+
 api()
 {
-  cd work
-  rm -rf api
-  make -f ${top_dir}/generate_api.mk
-  cd ${top_dir}
+  #cd work
+  #rm -rf api
+  #make -f ${top_dir}/generate_api.mk
+  #cd ${top_dir}
+
+  openapi-python-client generate --overwrite \
+    --output-path out --path openapi.yml
+  python3 replace_files.py
+
+  cp -f basic_auth_client.py src/opnsense/
+
 }
 
 test()
@@ -162,6 +174,7 @@ clean()
   rm -rf ./src/
   rm -rf ./work/spec/
   rm -rf ./work/source/
+  rm -rf ./out/
 }
 
 mclean()

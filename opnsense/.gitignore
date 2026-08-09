@@ -5,3 +5,6 @@ apikey.shrc
 work/
 src/
 spec/
+out/
+openapi.yml
+

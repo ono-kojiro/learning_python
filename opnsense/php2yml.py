@@ -48,7 +48,6 @@ def extract_api_info(filepath):
 
     for func in actions:
         action = func.replace("Action", "").lower()
-
         body = extract_function_body(php, func)
 
         if "isPost()" in body or "getPost(" in body:
@@ -58,7 +57,6 @@ def extract_api_info(filepath):
         else:
             http_method = "GET"
 
-        # ★ /api を削除した OpenAPI 標準形式
         api_path = f"/{module}/{controller}/{action}"
 
         api_list.append({
@@ -68,16 +66,17 @@ def extract_api_info(filepath):
             "summary": action
         })
 
-    return api_list
+    return module, controller, api_list
 
-
-def generate_openapi(api_list, title):
+def generate_openapi(api_list, title, module, controller):
     out = []
     out.append("openapi: 3.0.3")
     out.append("info:")
     out.append(f"  title: {title}")
     out.append("  version: \"1.0.0\"")
     out.append("paths:")
+
+    tag = f"{module}_{controller}"
 
     for api in api_list:
         path = api["path"]
@@ -89,6 +88,7 @@ def generate_openapi(api_list, title):
         out.append(f"    {method}:")
         out.append(f"      summary: {summary}")
         out.append(f"      operationId: {operationId}")
+        out.append(f"      tags: [\"{tag}\"]")
         out.append(f"      responses:")
         out.append(f"        \"200\":")
         out.append(f"          description: OK")
@@ -117,31 +117,39 @@ def main():
         print("File not found:", input_file)
         sys.exit(1)
 
-    api_list = extract_api_info(input_file)
+    module, controller, api_list = extract_api_info(input_file)
 
     if output_file:
         out = open(output_file, "w")
     else:
         out = sys.stdout
 
+    # ★ 空 API の場合はダミー OpenAPI を生成
     if len(api_list) == 0:
         out.write(f"# No API actions found in {input_file}\n")
+        out.write("# This file was automatically converted, but the controller has no API actions.\n\n")
+        out.write("openapi: 3.0.3\n")
+        out.write("info:\n")
+        out.write(f"  title: OPNsense {module.capitalize()} {controller.capitalize()} API (Empty)\n")
+        out.write("  version: \"1.0.0\"\n")
+        out.write("paths: {}\n")
         if output_file:
             out.close()
         return
 
-    # ★ コメント出力も /api を削除
+    # コメント出力
     for api in api_list:
         out.write(f"# {api['method']:5}  {api['path']:35}  {api['summary']}\n")
 
     out.write("\n")
 
     # OpenAPI YAML 出力
-    module = api_list[0]['path'].split('/')[1].capitalize()
-    controller = api_list[0]['path'].split('/')[2].capitalize()
-    title = f"OPNsense {module} {controller} API"
+    #title = f"OPNsense {module.capitalize()} {controller.capitalize()} API"
+    #out.write(generate_openapi(api_list, title) + "\n")
 
-    out.write(generate_openapi(api_list, title) + "\n")
+    title = f"OPNsense {module.capitalize()} {controller.capitalize()} API"
+    out.write(generate_openapi(api_list, title, module, controller) + "\n")
+
 
     if output_file:
         out.close()

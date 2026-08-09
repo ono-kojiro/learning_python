@@ -4,6 +4,5 @@ requests==2.34.2
 python-dotenv==1.2.2
 pytest-order==1.4.0
 pyyaml==6.0.3
-
-
+openapi-python-client==0.29.0
 
