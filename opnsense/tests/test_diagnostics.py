@@ -1,20 +1,22 @@
-# file: tests/test_diagnostics_system.py
+# file: tests/test_diagnostics.py
 
 from opnsense.diagnostics.system import System
+from opnsense.diagnostics.firewall import Firewall
 
+
+# -------------------------
+# Diagnostics / System
+# -------------------------
 
 def test_diagnostics_system_information(client):
     api = System(client)
     data = api.systeminformation()
 
-    # systeminformation は "name" を必ず返す
     assert "name" in data
 
-    # "versions" が存在する場合は list であることを確認
     if "versions" in data:
         assert isinstance(data["versions"], list)
 
-    # "updates" が存在する場合は文字列であることを確認
     if "updates" in data:
         assert isinstance(data["updates"], str)
 
@@ -23,10 +25,8 @@ def test_diagnostics_system_time(client):
     api = System(client)
     data = api.systemtime()
 
-    # boottime は必ず存在する
     assert "boottime" in data
 
-    # uptime が存在する場合は文字列であることを確認
     if "uptime" in data:
         assert isinstance(data["uptime"], str)
 
@@ -35,10 +35,32 @@ def test_diagnostics_system_memory(client):
     api = System(client)
     data = api.memory()
 
-    # vmstat → malloc-statistics → memory の階層構造
     assert "vmstat" in data
     assert "malloc-statistics" in data["vmstat"]
     assert "memory" in data["vmstat"]["malloc-statistics"]
 
-    # memory は list である
     assert isinstance(data["vmstat"]["malloc-statistics"]["memory"], list)
+
+
+# -------------------------
+# Diagnostics / Firewall (GET 系のみ)
+# -------------------------
+
+def test_diagnostics_firewall_log(client):
+    api = Firewall(client)
+    data = api.log()
+
+    # log は list または dict のどちらもあり得る
+    assert isinstance(data, (dict, list))
+
+
+def test_diagnostics_firewall_logfilters(client):
+    api = Firewall(client)
+    data = api.logfilters()
+    assert isinstance(data, dict)
+
+
+def test_diagnostics_firewall_listruleids(client):
+    api = Firewall(client)
+    data = api.listruleids()
+    assert isinstance(data, dict)

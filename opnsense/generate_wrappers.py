@@ -15,12 +15,7 @@ def snake_to_camel(name: str) -> str:
 
 
 def extract_settings_subcategory(path: str):
-    """
-    /monit/settings/getalert → alert
-    /monit/settings/setservice → service
-    /monit/settings/gettest → test
-    """
-    last = path.split("/")[-1]  # getalert
+    last = path.split("/")[-1]
     ops = ["get", "set", "add", "del", "search", "toggle"]
     for op in ops:
         if last.startswith(op):
@@ -49,6 +44,7 @@ def main():
 
     paths = spec.get("paths", {})
 
+    # prefix → controller → methods
     prefix_map = {}
 
     for path, item in paths.items():
@@ -59,54 +55,64 @@ def main():
             if not operationId or not tags:
                 continue
 
-            tag = tags[0]  # monit_status
-            prefix, category = tag.split("_")  # monit, status
+            tag = tags[0]  # e.g., diagnostics_firewall
+            prefix, controller = tag.split("_")  # module, controller
 
-            # subcategory の決定
-            if category == "settings":
+            # subcategory の決定（settings のみ特別扱い）
+            if controller == "settings":
                 subcategory = extract_settings_subcategory(path)
             else:
-                subcategory = category  # status / service
+                subcategory = controller
 
-            method_name = f"{operationId}_{subcategory}".lower()
+            # ★ メソッド名は operationId のみ（冗長な suffix を削除）
+            method_name = operationId.lower()
 
-            # import パス
+            method_name = operationId.lower()
+            if method_name == "del":
+                method_name = "delete"
+
             filename = operationId
             if operationId in ["set", "del"]:
                 filename = operationId + "_"
 
-            import_path = f"opnsense.{prefix}.{category}.{filename}"
+            import_path = f"opnsense.{prefix}.{controller}.{filename}"
 
-            prefix_map.setdefault(prefix, [])
-            prefix_map[prefix].append({
+            prefix_map.setdefault(prefix, {})
+            prefix_map[prefix].setdefault(controller, [])
+            prefix_map[prefix][controller].append({
                 "method_name": method_name,
                 "import": import_path,
             })
 
     # 出力
-    for prefix, methods in prefix_map.items():
-        class_name = snake_to_camel(prefix)
+    for prefix, controllers in prefix_map.items():
+        for controller, methods in controllers.items():
+            class_name = snake_to_camel(controller)
 
-        target_dir = Path(output_dir) / prefix
-        target_dir.mkdir(parents=True, exist_ok=True)
-        filename = target_dir / "__init__.py"
+            target_dir = Path(output_dir) / prefix / controller
+            target_dir.mkdir(parents=True, exist_ok=True)
+            filename = target_dir / "__init__.py"
 
-        lines = []
-        lines.append("import json\n\n")
-        lines.append(f"class {class_name}:\n")
-        lines.append("    def __init__(self, client):\n")
-        lines.append("        self.client = client\n\n")
+            # ★ ファイルパスコメント
+            file_comment = f"# file: opnsense/{prefix}/{controller}/__init__.py\n\n"
 
-        for m in methods:
-            lines.append(f"    def {m['method_name']}(self):\n")
-            lines.append(f"        from {m['import']} import sync_detailed\n")
-            lines.append("        r = sync_detailed(client=self.client)\n")
-            lines.append("        return json.loads(r.content)\n\n")
+            lines = []
+            lines.append(file_comment)
+            lines.append("import json\n\n")
+            lines.append(f"class {class_name}:\n")
+            lines.append("    def __init__(self, client):\n")
+            lines.append("        self.client = client\n\n")
 
-        with open(filename, "w") as f:
-            f.write("".join(lines))
+            for m in methods:
+                lines.append(f"    def {m['method_name']}(self):\n")
+                lines.append(f"        from {m['import']} import sync_detailed\n")
+                lines.append("        r = sync_detailed(client=self.client)\n")
+                lines.append("        return json.loads(r.content)\n\n")
 
-        print(f"Generated: {filename}")
+            with open(filename, "w") as f:
+                f.write("".join(lines))
+
+            print(f"Generated: {filename}")
 
 
 if __name__ == "__main__":
