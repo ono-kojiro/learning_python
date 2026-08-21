@@ -1,32 +1,39 @@
-all : dist
+TOP_DIR = $(shell pwd)
 
-sdist :
-	python3 setup.py sdist --formats=xztar
+ENV_NAME = myenv
 
-develop :
-	python3 setup.py develop --user
+ACTIVATE = . $(TOP_DIR)/$(ENV_NAME)/bin/activate
+PYTHON   = $(ACTIVATE) && python3
 
-dist :
-	python3 setup.py bdist_wheel
+all : test package
+	
+prepare :
+	sudo apt -y install \
+		python3-pip python3-venv \
+		python3-pytest python3-dotenv \
+		python3-build
+
+env :
+	if [ ! -d "$(ENV_NAME)" ]; then \
+		python3 -m venv $(ENV_NAME); \
+	fi
+
+	$(PYTHON) -m pip install -r requirements.txt
+
+module-list :
+	$(PYTHON) -m pip list
+
+package :
+	$(PYTHON) -m build
 
 install :
-	python3 -m pip install ./dist/mymodule-0.0.1-py3-none-any.whl \
-		--force-reinstall --user
+	$(PYTHON) -m pip install -e .
 
-uninstall :
-	python3 -m pip uninstall mymodule --yes
+test : pytest
 
-test : test1 test2
-
-test1 :
-	PYTHONPATH=`pwd` python3 tests/test.py
-
-test2 :
-	cd tests && python3 test.py
-
-clean :
-	rm -rf *.egg-info __pycache__ build dist
+pytest :
+	cd tests && $(PYTHON) -m pytest
 
 .PHONY : \
-    all clean dist install uninstall
+	all clean test build
 
