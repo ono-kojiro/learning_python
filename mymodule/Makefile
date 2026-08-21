@@ -29,6 +29,9 @@ package :
 install :
 	$(PYTHON) -m pip install -e .
 
+test-cli :
+	$(PYTHON) -m pytest && which mycli
+
 test : pytest
 
 pytest :
